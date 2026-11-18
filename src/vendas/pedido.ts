@@ -39,6 +39,8 @@ export type CorpoVenda = {
   broadcast: 'NONE';
 };
 
+export const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
+
 export const CAMPOS_ENDERECO = ['logradouro', 'numero', 'bairro', 'cidade', 'uf'] as const;
 
 export function formatarReais(centavos: number): string {

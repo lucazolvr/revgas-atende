@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { FormaPagamento, Produto } from '../vendas/catalogo.js';
-import type { Endereco } from '../vendas/pedido.js';
+import { UFS, type Endereco } from '../vendas/pedido.js';
 
 export const INTENCOES = [
   'fazer_pedido',
@@ -32,7 +32,6 @@ export interface Interpretador {
 }
 
 const texto = (max: number) => z.string().trim().min(1).max(max);
-const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
 
 /** Cada campo é validado sozinho: um campo ruim é descartado sem perder os outros. */
 function campos(cat: Produto[]) {
