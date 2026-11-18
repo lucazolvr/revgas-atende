@@ -16,6 +16,9 @@ x-chatwoot: &chatwoot
     POSTGRES_DATABASE: chatwoot
     REDIS_URL: redis://redis:6379/0
     ENABLE_ACCOUNT_SIGNUP: "false"
+    # O bot e a Evolution moram na rede interna do Docker; sem isto o Chatwoot recusa os webhooks
+    # ("has no public ip addresses"). Seguro aqui: instalação de uma conta só, sem cadastro aberto.
+    SAFE_FETCH_ALLOW_PRIVATE_NETWORK: "true"
     ACTIVE_STORAGE_SERVICE: local
   volumes:
     - chatwoot_storage:/app/storage
