@@ -13,6 +13,8 @@ const esquema = z
     BOT_WEBHOOK_TOKEN: z.string().min(16, 'BOT_WEBHOOK_TOKEN precisa de 16+ caracteres'),
     REDIS_URL: opcional,
     GEMINI_API_KEY: opcional,
+    // O Google aposenta modelos com frequência: troque aqui sem mexer no código.
+    GEMINI_MODELO: z.string().trim().min(1).default('gemini-3.1-flash-lite'),
     NUMEROS_IA: z
       .string()
       .default('')

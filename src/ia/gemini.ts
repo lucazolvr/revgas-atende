@@ -69,7 +69,7 @@ export class InterpretadorGemini implements Interpretador {
     opts: { modelo?: string; timeoutMs?: number } = {},
   ) {
     this.ai = new GoogleGenAI({ apiKey });
-    this.modelo = opts.modelo ?? 'gemini-2.5-flash';
+    this.modelo = opts.modelo ?? 'gemini-3.1-flash-lite';
     this.timeoutMs = opts.timeoutMs ?? 8000;
   }
 

@@ -21,7 +21,7 @@ if (config.VENDA_REAL) {
 }
 const ids = { clienteId: config.REVGAS_CLIENTE_DEMO ?? 0, estabelecimentoId: config.REVGAS_ESTABELECIMENTO ?? 0 };
 
-const gemini = config.GEMINI_API_KEY ? new InterpretadorGemini(config.GEMINI_API_KEY, catalogo) : null;
+const gemini = config.GEMINI_API_KEY ? new InterpretadorGemini(config.GEMINI_API_KEY, catalogo, { modelo: config.GEMINI_MODELO }) : null;
 if (!gemini) console.log('Sem GEMINI_API_KEY: o bot atende só pelos menus.');
 
 const { app, ocioso } = criarServidor({
