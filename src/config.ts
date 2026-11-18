@@ -1,0 +1,46 @@
+import { z } from 'zod';
+
+const vazioParaUndefined = (v: unknown) => (typeof v === 'string' && v.trim() === '' ? undefined : v);
+const opcional = z.preprocess(vazioParaUndefined, z.string().trim().optional());
+const inteiroOpcional = z.preprocess(vazioParaUndefined, z.coerce.number().int().positive().optional());
+
+const esquema = z
+  .object({
+    PORTA: z.coerce.number().int().default(3000),
+    CHATWOOT_URL: z.string().url(),
+    CHATWOOT_ACCOUNT_ID: z.coerce.number().int().positive(),
+    CHATWOOT_BOT_TOKEN: z.string().min(1),
+    BOT_WEBHOOK_TOKEN: z.string().min(16, 'BOT_WEBHOOK_TOKEN precisa de 16+ caracteres'),
+    REDIS_URL: opcional,
+    GEMINI_API_KEY: opcional,
+    NUMEROS_IA: z
+      .string()
+      .default('')
+      .transform((s) => s.split(',').map((n) => n.replace(/\D/g, '')).filter(Boolean)),
+    VENDA_REAL: z
+      .string()
+      .default('false')
+      .transform((s) => s.trim().toLowerCase() === 'true'),
+    REVGAS_API_URL: z.string().url().default('https://api.revgas.com/v1'),
+    REVGAS_API_KEY: opcional,
+    REVGAS_CLIENTE_DEMO: inteiroOpcional,
+    REVGAS_ESTABELECIMENTO: inteiroOpcional,
+  })
+  .superRefine((c, ctx) => {
+    if (!c.VENDA_REAL) return;
+    for (const k of ['REVGAS_API_KEY', 'REVGAS_CLIENTE_DEMO', 'REVGAS_ESTABELECIMENTO'] as const) {
+      if (!c[k]) ctx.addIssue({ code: 'custom', path: [k], message: `${k} é obrigatório com VENDA_REAL=true` });
+    }
+  });
+
+export type Config = z.infer<typeof esquema>;
+
+export function carregarConfig(env: Record<string, string | undefined> = process.env): Config {
+  const r = esquema.safeParse(env);
+  if (!r.success) {
+    // Mostra só o nome da variável e o problema, nunca o valor.
+    const erros = r.error.issues.map((i) => `- ${i.path.join('.')}: ${i.message}`).join('\n');
+    throw new Error(`Configuração inválida no .env:\n${erros}`);
+  }
+  return r.data;
+}
