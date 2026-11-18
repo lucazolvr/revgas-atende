@@ -1,0 +1,107 @@
+# Sobe tudo: Chatwoot (painel), Evolution (WhatsApp), Postgres, Redis e o bot.
+# Portas publicadas só em 127.0.0.1: nada fica aberto para a rede.
+# Versões fixadas em 2026-11; confira as releases antes de atualizar.
+
+x-chatwoot: &chatwoot
+  image: chatwoot/chatwoot:v4.16.2
+  environment:
+    SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    RAILS_ENV: production
+    NODE_ENV: production
+    INSTALLATION_ENV: docker
+    FRONTEND_URL: http://localhost:3000
+    POSTGRES_HOST: postgres
+    POSTGRES_USERNAME: postgres
+    POSTGRES_DATABASE: chatwoot
+    REDIS_URL: redis://redis:6379/0
+    ENABLE_ACCOUNT_SIGNUP: "false"
+    ACTIVE_STORAGE_SERVICE: local
+  volumes:
+    - chatwoot_storage:/app/storage
+  depends_on:
+    postgres: { condition: service_healthy }
+    redis: { condition: service_started }
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./infra/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis:/data
+    restart: unless-stopped
+
+  chatwoot-migrar:
+    <<: *chatwoot
+    command: bundle exec rails db:chatwoot_prepare
+    restart: "no"
+
+  chatwoot:
+    <<: *chatwoot
+    entrypoint: docker/entrypoints/rails.sh
+    command: bundle exec rails s -p 3000 -b 0.0.0.0
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      chatwoot-migrar: { condition: service_completed_successfully }
+
+  chatwoot-sidekiq:
+    <<: *chatwoot
+    command: bundle exec sidekiq -C config/sidekiq.yml
+    depends_on:
+      chatwoot-migrar: { condition: service_completed_successfully }
+
+  evolution:
+    image: evoapicloud/evolution-api:v2.3.7
+    environment:
+      SERVER_URL: http://evolution:8080
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/evolution?schema=public
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://redis:6379/6
+      CACHE_LOCAL_ENABLED: "false"
+      CHATWOOT_ENABLED: "true"
+      CHATWOOT_MESSAGE_READ: "true"
+      LOG_LEVEL: ERROR,WARN
+    volumes:
+      - evolution_instances:/evolution/instances
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+    restart: unless-stopped
+
+  bot:
+    build: .
+    env_file: .env
+    environment:
+      CHATWOOT_URL: http://chatwoot:3000
+      REDIS_URL: redis://redis:6379/2
+      PORTA: "3000"
+    volumes:
+      - ./dados:/app/dados
+    depends_on: [redis, chatwoot]
+    restart: unless-stopped
+
+volumes:
+  postgres:
+  redis:
+  chatwoot_storage:
+  evolution_instances:

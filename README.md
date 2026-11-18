@@ -1,0 +1,83 @@
+# 🔥 RevGás Atende
+
+**Atendente virtual de pedidos de gás no WhatsApp, com central de atendimento humano (Chatwoot) e venda registrada direto no ERP RevGás.**
+
+Projeto de Extensão VI · Transformação Digital · 2026.2
+
+![Node](https://img.shields.io/badge/Node-22-339933?logo=nodedotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Chatwoot](https://img.shields.io/badge/Chatwoot-1F93FF?logo=chatwoot&logoColor=white)
+![WhatsApp](https://img.shields.io/badge/WhatsApp-25D366?logo=whatsapp&logoColor=white)
+![Gemini](https://img.shields.io/badge/IA-Gemini-8E75B2?logo=googlegemini&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+
+## O que faz
+
+- 🛒 **Pedido completo na conversa:** nome, produto, quantidade, endereço e pagamento (com troco). Aceita menus numerados **ou** texto livre: *"manda 2 botijão pra Rua Nova 10, Centro, Teresina PI, pago no pix"*.
+- ✅ **Só vende com confirmação:** mostra o resumo com o preço do catálogo e cria a venda (`POST /v1/sales`) só depois do "1 - Confirmar". Nunca duplica.
+- 🙋 **Humano de verdade:** "quero falar com um atendente", dúvida que o bot não entende ou falha na API → a conversa vai para a fila do Chatwoot com uma **nota-resumo** e **etiquetas**.
+- 🚨 **Vazamento de gás:** orientações de segurança na hora e conversa marcada como **urgente** no painel.
+- 🧠 **A IA só entende, quem decide é o código:** preço, produto e criação da venda nunca dependem da IA. Sem IA, tudo funciona pelos menus.
+
+## Arquitetura
+
+```mermaid
+flowchart LR
+    C([Cliente]) <--> WA[WhatsApp]
+    WA <--> EVO[Evolution API]
+    EVO <--> CW[Chatwoot]
+    CW -- webhook Agent Bot --> BOT[Bot RevGás Atende]
+    BOT -- responde / nota / etiqueta / transfere --> CW
+    BOT --> IA[Gemini]
+    BOT --> ERP{{API RevGás}}
+    BOT --> R[(Redis)]
+    AT([Atendente]) <--> CW
+```
+
+| Pasta | O que tem |
+|---|---|
+| `src/canal/` | Webhook e cliente da API do Chatwoot |
+| `src/conversa/` | Motor da conversa (máquina de estados), textos, emergência, sessões |
+| `src/ia/` | Interpretação de texto livre (Gemini) e validação da resposta |
+| `src/vendas/` | Catálogo, pedido, porta da API RevGás (falsa e real) |
+| `config/` | Catálogo de produtos e orientações de segurança |
+| `scripts/setup.ts` | Liga Evolution ↔ Chatwoot ↔ bot |
+| `docs/` | Design, plano e (em breve) relatório e roteiro de demo |
+
+Detalhes e decisões: [documento de design](docs/superpowers/specs/2026-11-18-revgas-atende-design.md).
+
+## Como rodar
+
+### Só os testes (sem Docker)
+
+```bash
+npm install
+npm test
+```
+
+### Tudo, com WhatsApp
+
+Precisa de **Docker Desktop** (≈ 4 GB de RAM livres) e de um **chip separado** (a Evolution não é a API oficial do WhatsApp; o número pode ser bloqueado).
+
+1. `cp .env.example .env` e preencha `POSTGRES_PASSWORD`, `SECRET_KEY_BASE`, `EVOLUTION_API_KEY` e `BOT_WEBHOOK_TOKEN` com valores aleatórios.
+2. `docker compose up -d` (a primeira vez demora: baixa as imagens e prepara o banco).
+3. Abra **http://localhost:3000**, crie a conta de administrador e copie o token de acesso do seu perfil para `CHATWOOT_ADMIN_TOKEN`.
+4. `npm install` e `npm run setup`: ele cria o Agent Bot, a instância do WhatsApp e a caixa de entrada.
+5. Coloque o `CHATWOOT_BOT_TOKEN` que o setup mostrou no `.env` e rode `docker compose up -d --build bot`.
+6. Abra **http://127.0.0.1:8080/manager**, entre na instância `revgas` e leia o QR code com o celular do chip (WhatsApp → Aparelhos conectados).
+7. Mande "oi" para o número do chip. 🎉
+
+**IA:** coloque `GEMINI_API_KEY` (cota grátis do [Google AI Studio](https://aistudio.google.com/)) e os números da equipe em `NUMEROS_IA`. Na cota grátis o Google pode usar as mensagens, então os outros números são atendidos pelos menus.
+
+**Venda real:** com `VENDA_REAL=true` e `REVGAS_API_KEY`, `REVGAS_CLIENTE_DEMO` e `REVGAS_ESTABELECIMENTO` preenchidos, cada pedido confirmado vira venda de verdade no ERP (sem avisar os entregadores). O bot avisa `VENDA REAL LIGADA` ao iniciar.
+
+## Equipe
+
+| | Responsável por |
+|---|---|
+| **Lucas Oliveira** | Base técnica, avaliação da IA e experimento com/sem IA |
+| **Eduardo** | Base de conhecimento (RAG) para dúvidas frequentes |
+| **João Vitor** | Venda real no ERP e deploy |
+| **Luiza** | Teste com usuários (SUS), roteiro da demo e relatório |
+
+As tarefas de cada um estão nas issues do GitHub. Veja [CONTRIBUTING.md](CONTRIBUTING.md).
