@@ -13,6 +13,7 @@ describe('extrairMensagem', () => {
     expect(extrairMensagem(webhook('oi', { event: 'conversation_created' }))).toBeNull();
     expect(extrairMensagem(webhook('oi', {}, { status: 'open' }))).toBeNull();
     expect(extrairMensagem(webhook(''))).toBeNull();
+    expect(extrairMensagem(webhook('', { attachments: [{ file_type: 'audio' }] }))).toMatchObject({ texto: '' });
     expect(extrairMensagem(null)).toBeNull();
   });
 });

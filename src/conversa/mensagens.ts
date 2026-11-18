@@ -20,6 +20,7 @@ export const PERGUNTA_TROCO = 'Vai precisar de troco? Responda o valor (ex.: 200
 export const MENU_CORRIGIR = 'O que você quer corrigir?\n1 - Nome\n2 - Produto e quantidade\n3 - Endereço\n4 - Pagamento';
 export const CANCELADO = 'Tudo bem, pedido cancelado. Quando quiser, é só mandar uma mensagem. 🙂';
 export const TRANSFERINDO = 'Um atendente vai falar com você agora. Só um instante. 🙋';
+export const SO_TEXTO = 'Por enquanto só consigo ler mensagens de texto. Pode escrever, por favor? 🙏';
 export const NAO_ENTENDI = 'Desculpe, não entendi. ';
 export const DUVIDA_SEM_RESPOSTA =
   'Ainda não sei responder essa dúvida. Posso anotar seu pedido ou, se preferir, digite "atendente".';

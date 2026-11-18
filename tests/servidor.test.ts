@@ -78,4 +78,23 @@ describe('servidor', () => {
     expect(interpretadorPara).toHaveBeenCalledWith('5586999990000');
     expect(interpretadorPara.mock.results[0]!.value).not.toBeNull();
   });
+
+  it('áudio sem texto recebe pedido para escrever', async () => {
+    const { ocioso, chatwoot, app } = montar();
+    await app.inject({ method: 'POST', url: `/webhook/${TOKEN}`, payload: webhook('', { attachments: [{}] }) });
+    await ocioso();
+    expect(chatwoot.responder).toHaveBeenCalledWith(7, expect.stringContaining('texto'));
+  });
+
+  it('depois da transferência a conversa recomeça do início', async () => {
+    const { ocioso, chatwoot, enviar } = montar();
+    await enviar('oi');
+    await enviar('Maria');
+    await enviar('quero um atendente');
+    await ocioso();
+    chatwoot.responder.mockClear();
+    await enviar('boa noite');
+    await ocioso();
+    expect(chatwoot.responder).toHaveBeenCalledWith(7, expect.stringContaining('Olá'));
+  });
 });

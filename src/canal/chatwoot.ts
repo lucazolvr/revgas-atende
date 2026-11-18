@@ -1,3 +1,4 @@
+/** `texto` vazio = só anexo (áudio, foto...). */
 export type MensagemRecebida = { conversaId: number; telefone: string; texto: string };
 
 /**
@@ -10,6 +11,7 @@ export function extrairMensagem(payload: unknown): MensagemRecebida | null {
     message_type?: string;
     private?: boolean;
     content?: string | null;
+    attachments?: unknown[];
     sender?: { phone_number?: string | null };
     conversation?: { id?: number; status?: string; meta?: { sender?: { phone_number?: string | null } } };
   } | null;
@@ -17,7 +19,8 @@ export function extrairMensagem(payload: unknown): MensagemRecebida | null {
   const conversa = p.conversation;
   if (!conversa?.id || conversa.status !== 'pending') return null;
   const texto = (p.content ?? '').trim();
-  if (!texto) return null; // áudio, imagem, figurinha: por ora sem texto
+  // Áudio, foto ou figurinha sem texto chegam como texto vazio: o servidor pede para escrever.
+  if (!texto && !p.attachments?.length) return null;
   const telefone = (conversa.meta?.sender?.phone_number ?? p.sender?.phone_number ?? '').replace(/\D/g, '');
   return { conversaId: conversa.id, telefone, texto: texto.slice(0, 2000) };
 }

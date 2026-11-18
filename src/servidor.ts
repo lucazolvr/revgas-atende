@@ -40,6 +40,7 @@ export function criarServidor(deps: DepsServidor) {
   const filas = new Map<number, Promise<void>>();
 
   async function atender(msg: MensagemRecebida) {
+    if (!msg.texto) return deps.chatwoot.responder(msg.conversaId, M.SO_TEXTO);
     const inicio = Date.now();
     const interpretador = deps.interpretadorPara(msg.telefone);
     const sessao = (await deps.sessoes.obter(msg.conversaId)) ?? novaSessao(msg.telefone);
@@ -53,7 +54,11 @@ export function criarServidor(deps: DepsServidor) {
       },
       responderDuvida: deps.responderDuvida,
     });
-    await deps.sessoes.salvar(msg.conversaId, nova);
+    // Depois de passar para um humano, se a conversa voltar ao bot começa um pedido novo
+    // (mantendo nome e endereço), em vez de retomar do meio.
+    const transferiu = acoes.some((a) => a.tipo === 'transferir');
+    const { nome, endereco } = nova.pedido;
+    await deps.sessoes.salvar(msg.conversaId, transferiu ? novaSessao(msg.telefone, { nome, endereco }) : nova);
     await executar(msg.conversaId, acoes);
     registrarEvento({
       conversaId: msg.conversaId,
