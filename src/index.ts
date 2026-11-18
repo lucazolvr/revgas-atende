@@ -2,13 +2,16 @@ import { ClienteChatwoot } from './canal/chatwoot.js';
 import { carregarConfig, chaveTelefone } from './config.js';
 import { SessoesMemoria, SessoesRedis } from './conversa/sessoes.js';
 import { InterpretadorGemini } from './ia/gemini.js';
+import { ConhecimentoGemini } from './conhecimento/gemini.js';
 import { criarServidor } from './servidor.js';
+import { configurarMetricas } from './metricas.js';
 import { ApiRevGasFalsa, ApiRevGasHttp, type ApiRevGas } from './vendas/api-revgas.js';
 import { carregarCatalogo } from './vendas/catalogo.js';
 import { corpoDaVenda } from './vendas/pedido.js';
 import { registrarVenda } from './vendas/registrar.js';
 
 const config = carregarConfig();
+configurarMetricas(config.METRICAS_RETENCAO_DIAS);
 const catalogo = carregarCatalogo();
 
 let api: ApiRevGas;
@@ -22,6 +25,12 @@ if (config.VENDA_REAL) {
 const ids = { clienteId: config.REVGAS_CLIENTE_DEMO ?? 0, estabelecimentoId: config.REVGAS_ESTABELECIMENTO ?? 0 };
 
 const gemini = config.GEMINI_API_KEY ? new InterpretadorGemini(config.GEMINI_API_KEY, catalogo, { modelo: config.GEMINI_MODELO }) : null;
+const conhecimento = config.GEMINI_API_KEY
+  ? await ConhecimentoGemini.criar(config.GEMINI_API_KEY, catalogo, { modelo: config.GEMINI_MODELO }).catch((erro: unknown) => {
+    console.warn(`FAQ sem IA: ${erro instanceof Error ? erro.message : 'falha ao indexar'}`);
+    return null;
+  })
+  : null;
 if (!gemini) console.log('Sem GEMINI_API_KEY: o bot atende só pelos menus.');
 
 const { app, ocioso } = criarServidor({
@@ -31,6 +40,7 @@ const { app, ocioso } = criarServidor({
   catalogo,
   // Cota grátis do Gemini pode usar os dados para treino: IA só para os números da equipe.
   interpretadorPara: (telefone) => (gemini && config.NUMEROS_IA.includes(chaveTelefone(telefone)) ? gemini : null),
+  responderDuvida: (texto) => conhecimento?.responder(texto) ?? Promise.resolve(null),
   registrar: (p) => registrarVenda(api, corpoDaVenda(p, catalogo, ids)),
 });
 

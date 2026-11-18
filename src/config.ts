@@ -12,6 +12,7 @@ export function chaveTelefone(telefone: string): string {
 const vazioParaUndefined = (v: unknown) => (typeof v === 'string' && v.trim() === '' ? undefined : v);
 const opcional = z.preprocess(vazioParaUndefined, z.string().trim().optional());
 const inteiroOpcional = z.preprocess(vazioParaUndefined, z.coerce.number().int().positive().optional());
+const inteiroPositivo = z.coerce.number().int().positive();
 
 const esquema = z
   .object({
@@ -19,7 +20,7 @@ const esquema = z
     CHATWOOT_URL: z.string().url(),
     CHATWOOT_ACCOUNT_ID: z.coerce.number().int().positive(),
     CHATWOOT_BOT_TOKEN: z.string().min(1),
-    BOT_WEBHOOK_TOKEN: z.string().min(16, 'BOT_WEBHOOK_TOKEN precisa de 16+ caracteres'),
+    BOT_WEBHOOK_TOKEN: z.string().min(32, 'BOT_WEBHOOK_TOKEN precisa de 32+ caracteres'),
     REDIS_URL: opcional,
     GEMINI_API_KEY: opcional,
     // O Google aposenta modelos com frequência: troque aqui sem mexer no código.
@@ -28,6 +29,8 @@ const esquema = z
       .string()
       .default('')
       .transform((s) => s.split(',').map(chaveTelefone).filter(Boolean)),
+    // Métricas não têm conteúdo de conversa; ainda assim, retenção curta reduz exposição.
+    METRICAS_RETENCAO_DIAS: inteiroPositivo.default(90),
     VENDA_REAL: z
       .string()
       .default('false')

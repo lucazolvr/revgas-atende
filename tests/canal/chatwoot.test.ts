@@ -16,6 +16,12 @@ describe('extrairMensagem', () => {
     expect(extrairMensagem(webhook('', { attachments: [{ file_type: 'audio' }] }))).toMatchObject({ texto: '' });
     expect(extrairMensagem(null)).toBeNull();
   });
+
+  it('rejeita ID de conversa inválido antes de montar chamadas autenticadas', () => {
+    expect(extrairMensagem(webhook('oi', {}, { id: '7' }))).toBeNull();
+    expect(extrairMensagem(webhook('oi', {}, { id: -1 }))).toBeNull();
+    expect(extrairMensagem(webhook('oi', {}, { id: 1.5 }))).toBeNull();
+  });
 });
 
 describe('ClienteChatwoot', () => {

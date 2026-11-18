@@ -8,10 +8,10 @@ import { corpoDaVenda } from '../src/vendas/pedido.js';
 import { registrarVenda } from '../src/vendas/registrar.js';
 import { webhook } from './ajuda.js';
 
-const TOKEN = 'token-secreto-de-teste-123';
+const TOKEN = 'token-secreto-de-teste-123-456789';
 const catalogo = carregarCatalogo();
 
-function montar(numerosIa: string[] = []) {
+function montar(numerosIa: string[] = [], limites?: { porConversa?: number; global?: number; janelaMs?: number; filasMaximas?: number }) {
   const api = new ApiRevGasFalsa();
   const chatwoot = {
     responder: vi.fn(async () => {}),
@@ -27,6 +27,7 @@ function montar(numerosIa: string[] = []) {
     sessoes: new SessoesMemoria(),
     catalogo,
     interpretadorPara,
+    limites,
     registrar: (p) => registrarVenda(api, corpoDaVenda(p, catalogo, { clienteId: 1, estabelecimentoId: 1 })),
   });
   const enviar = (texto: string, conversa: Record<string, unknown> = {}) =>
@@ -96,5 +97,13 @@ describe('servidor', () => {
     await enviar('boa noite');
     await ocioso();
     expect(chatwoot.responder).toHaveBeenCalledWith(7, expect.stringContaining('Olá'));
+  });
+
+  it('limita rajadas por conversa sem reenfileirar mensagens excedentes', async () => {
+    const { ocioso, chatwoot, enviar } = montar([], { porConversa: 1 });
+    await Promise.all([enviar('oi'), enviar('oi')]);
+    await ocioso();
+    // Uma saudação válida gera boas-vindas e a pergunta de nome; a segunda foi descartada.
+    expect(chatwoot.responder).toHaveBeenCalledTimes(2);
   });
 });

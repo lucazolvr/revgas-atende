@@ -69,6 +69,8 @@ Precisa de **Docker Desktop** (≈ 4 GB de RAM livres) e de um **chip separado**
 
 **IA:** coloque `GEMINI_API_KEY` (cota grátis do [Google AI Studio](https://aistudio.google.com/)) e os números da equipe em `NUMEROS_IA`. Na cota grátis o Google pode usar as mensagens, então os outros números são atendidos pelos menus.
 
+**Segurança:** mantenha o bot apenas na rede interna do Docker, use um `BOT_WEBHOOK_TOKEN` aleatório com ao menos 32 caracteres e troque-o se ele aparecer em logs ou configurações expostas. O bot limita rajadas de mensagens e as métricas sem conteúdo de conversa expiram em 90 dias por padrão (`METRICAS_RETENCAO_DIAS`).
+
 **Venda real:** com `VENDA_REAL=true` e `REVGAS_API_KEY`, `REVGAS_CLIENTE_DEMO` e `REVGAS_ESTABELECIMENTO` preenchidos, cada pedido confirmado vira venda de verdade no ERP (sem avisar os entregadores). O bot avisa `VENDA REAL LIGADA` ao iniciar.
 
 ## Equipe

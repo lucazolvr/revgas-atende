@@ -17,12 +17,15 @@ export function extrairMensagem(payload: unknown): MensagemRecebida | null {
   } | null;
   if (!p || p.event !== 'message_created' || p.message_type !== 'incoming' || p.private) return null;
   const conversa = p.conversation;
-  if (!conversa?.id || conversa.status !== 'pending') return null;
+  const conversaId = conversa?.id;
+  // O corpo do webhook é externo: TypeScript não valida tipos em tempo de execução.
+  // Nunca deixe um valor arbitrário virar parte da URL autenticada do Chatwoot.
+  if (!conversa || typeof conversaId !== 'number' || !Number.isSafeInteger(conversaId) || conversaId <= 0 || conversa.status !== 'pending') return null;
   const texto = (p.content ?? '').trim();
   // Áudio, foto ou figurinha sem texto chegam como texto vazio: o servidor pede para escrever.
   if (!texto && !p.attachments?.length) return null;
   const telefone = (conversa.meta?.sender?.phone_number ?? p.sender?.phone_number ?? '').replace(/\D/g, '');
-  return { conversaId: conversa.id, telefone, texto: texto.slice(0, 2000) };
+  return { conversaId, telefone, texto: texto.slice(0, 2000) };
 }
 
 export class ClienteChatwoot {
