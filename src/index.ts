@@ -1,5 +1,5 @@
 import { ClienteChatwoot } from './canal/chatwoot.js';
-import { carregarConfig } from './config.js';
+import { carregarConfig, chaveTelefone } from './config.js';
 import { SessoesMemoria, SessoesRedis } from './conversa/sessoes.js';
 import { InterpretadorGemini } from './ia/gemini.js';
 import { criarServidor } from './servidor.js';
@@ -30,7 +30,7 @@ const { app, ocioso } = criarServidor({
   sessoes: config.REDIS_URL ? new SessoesRedis(config.REDIS_URL) : new SessoesMemoria(),
   catalogo,
   // Cota grátis do Gemini pode usar os dados para treino: IA só para os números da equipe.
-  interpretadorPara: (telefone) => (gemini && config.NUMEROS_IA.includes(telefone) ? gemini : null),
+  interpretadorPara: (telefone) => (gemini && config.NUMEROS_IA.includes(chaveTelefone(telefone)) ? gemini : null),
   registrar: (p) => registrarVenda(api, corpoDaVenda(p, catalogo, ids)),
 });
 

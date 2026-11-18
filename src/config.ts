@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+/**
+ * Só dígitos, sem o 9 extra do celular brasileiro: o WhatsApp identifica alguns números
+ * como 55 DDD XXXXXXXX (12 dígitos) mesmo quando a pessoa usa 55 DDD 9XXXXXXXX (13).
+ */
+export function chaveTelefone(telefone: string): string {
+  const d = telefone.replace(/\D/g, '');
+  return d.length === 13 && d.startsWith('55') && d[4] === '9' ? d.slice(0, 4) + d.slice(5) : d;
+}
+
 const vazioParaUndefined = (v: unknown) => (typeof v === 'string' && v.trim() === '' ? undefined : v);
 const opcional = z.preprocess(vazioParaUndefined, z.string().trim().optional());
 const inteiroOpcional = z.preprocess(vazioParaUndefined, z.coerce.number().int().positive().optional());
@@ -18,7 +27,7 @@ const esquema = z
     NUMEROS_IA: z
       .string()
       .default('')
-      .transform((s) => s.split(',').map((n) => n.replace(/\D/g, '')).filter(Boolean)),
+      .transform((s) => s.split(',').map(chaveTelefone).filter(Boolean)),
     VENDA_REAL: z
       .string()
       .default('false')
