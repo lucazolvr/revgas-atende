@@ -1,0 +1,35 @@
+{
+  "name": "revgas-atende",
+  "version": "1.0.0",
+  "description": "Atendente de pedidos de gás no WhatsApp com Chatwoot e API RevGás",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "setup": "tsx scripts/setup.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@google/genai": "^3.5.0",
+    "fastify": "^5.12.8",
+    "ioredis": "^6.0.0",
+    "tsx": "^4.23.15",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}
