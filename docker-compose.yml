@@ -22,6 +22,7 @@ x-chatwoot: &chatwoot
     ACTIVE_STORAGE_SERVICE: local
   volumes:
     - chatwoot_storage:/app/storage
+    - ./marca:/app/public/marca:ro # logo, ícone e tema RevGás (scripts/aplicar-marca.rb)
   depends_on:
     postgres: { condition: service_healthy }
     redis: { condition: service_started }

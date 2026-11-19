@@ -66,6 +66,16 @@ Precisa de **Docker Desktop** (≈ 4 GB de RAM livres) e de um **chip separado**
 5. Coloque o `CHATWOOT_BOT_TOKEN` que o setup mostrou no `.env` e rode `docker compose up -d --build bot`.
 6. Abra **http://127.0.0.1:8080/manager**, entre na instância `revgas` e leia o QR code com o celular do chip (WhatsApp → Aparelhos conectados).
 7. Mande "oi" para o número do chip. 🎉
+8. *(Opcional)* `npm run marca`: aplica a identidade da RevGás no painel (logo, ícone, nome e cores laranja).
+
+### Marca RevGás no painel
+
+O Chatwoot é open source (MIT), e o `npm run marca` personaliza o painel **sem fork e sem tocar no código pago (Enterprise)**:
+
+- **Logo, ícone e nome:** grava as configurações do núcleo do Chatwoot (`scripts/aplicar-marca.rb`). Os arquivos ficam em `marca/` e são servidos pelo próprio Chatwoot em `/marca/`.
+- **Cores:** `scripts/marca.ts` lê o CSS compilado do Chatwoot e gera `marca/tema.css`, trocando a escala azul da marca pelo laranja RevGás (#FC692B), nos modos claro e escuro.
+
+Ao atualizar a versão do Chatwoot, rode `npm run marca` de novo.
 
 **IA:** coloque `GEMINI_API_KEY` (cota grátis do [Google AI Studio](https://aistudio.google.com/)) e os números da equipe em `NUMEROS_IA`. Na cota grátis o Google pode usar as mensagens, então os outros números são atendidos pelos menus.
 
