@@ -9,9 +9,12 @@ export type Estado =
   | 'INICIO' | 'NOME' | 'PRODUTO' | 'QUANTIDADE' | 'ENDERECO' | 'PAGAMENTO' | 'TROCO' | 'RESUMO' | 'CORRIGIR' | 'REGISTRADO';
 
 /** `trocoParaCentavos === 0` significa "não precisa de troco". */
-export type Sessao = { estado: Estado; pedido: Pedido; falhas: number; vendaId?: number };
+export type Sessao = { estado: Estado; pedido: Pedido; falhas: number; vendaId?: number; correcoes?: number };
 
-export type MotivoTransferencia = 'humano' | 'vazamento' | 'nao_entendi' | 'verificar_venda' | 'erro_venda';
+/** Pedidos de "corrigir" no resumo até transferir para humano (evita ciclos de correção). */
+export const LIMITE_CORRECOES = 3;
+
+export type MotivoTransferencia = 'humano' | 'vazamento' | 'nao_entendi' | 'verificar_venda' | 'erro_venda' | 'correcoes';
 export type Acao =
   | { tipo: 'responder'; texto: string }
   | { tipo: 'transferir'; motivo: MotivoTransferencia; resumo: string };
@@ -30,6 +33,7 @@ const DESCRICAO_MOTIVO: Record<MotivoTransferencia, string> = {
   nao_entendi: 'o bot não entendeu o cliente',
   verificar_venda: 'a API não respondeu ao criar a venda — conferir no ERP se a venda existe antes de refazer',
   erro_venda: 'a API recusou a venda',
+  correcoes: `o cliente pediu para corrigir o pedido ${LIMITE_CORRECOES} vezes`,
 };
 
 export function novaSessao(telefone: string, base: Partial<Pedido> = {}): Sessao {
@@ -72,7 +76,13 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
   // Números de menu não gastam chamada de IA.
   // A IA precisa saber qual parte do endereço foi perguntada: sem isso, "Dirceu" (o bairro) virava a rua.
   const etapa = s.estado === 'ENDERECO' ? `ENDERECO (pergunta atual: ${CAMPOS_ENDERECO.find((c) => !s.pedido.endereco?.[c])})` : s.estado;
-  const ia = deps.interpretador && !/^\s*\d+\s*$/.test(texto) ? await deps.interpretador.interpretar(texto, etapa) : null;
+  let ia = deps.interpretador && !/^\s*\d+\s*$/.test(texto) ? await deps.interpretador.interpretar(texto, etapa) : null;
+
+  // "cartão" sem dizer o tipo: a IA chutava crédito (achado da avaliação da issue #2). O bot pergunta.
+  const cartaoSemTipo = /\bcartao\b/.test(normalizar(texto)) && !/debito|credito/.test(normalizar(texto));
+  if (ia && cartaoSemTipo && ia.entidades.pagamento?.startsWith('CARTAO')) {
+    ia = { ...ia, entidades: { ...ia.entidades, pagamento: undefined } };
+  }
 
   if (ia?.intencao === 'emergencia_gas') {
     responder(M.SEGURANCA);
@@ -97,6 +107,8 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
       return transferir(r.tipo === 'incerta' ? 'verificar_venda' : 'erro_venda');
     }
     if (opcao === 2) {
+      s.correcoes = (s.correcoes ?? 0) + 1;
+      if (s.correcoes >= LIMITE_CORRECOES) return transferir('correcoes');
       s.estado = 'CORRIGIR';
       s.falhas = 0;
       responder(M.MENU_CORRIGIR);
@@ -124,6 +136,11 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
     s.estado = proximoEstado(s.pedido, cat);
     s.falhas = 0;
     responder(pergunta(s, cat));
+    return fim();
+  }
+
+  if (s.estado === 'PAGAMENTO' && cartaoSemTipo && !ia?.entidades.pagamento) {
+    responder(M.PERGUNTA_CARTAO); // esclarecimento, não conta como "não entendi"
     return fim();
   }
 

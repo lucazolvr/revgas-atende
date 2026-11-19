@@ -269,10 +269,12 @@ Seguindo a classificação de Wohlin et al. (2012):
 ## 6. Recomendações
 
 1. **Ampliar o conjunto com mensagens reais** do teste com usuários e da demo (anonimizadas) e reavaliar com `npm run eval:ia`. Isso mede se o efeito de teto existe.
-2. **Perguntar "débito ou crédito?"** quando o cliente disser só "cartão", em vez de aceitar o tipo inferido pela IA (erro 49).
+2. **Perguntar "débito ou crédito?"** quando o cliente disser só "cartão", em vez de aceitar o tipo inferido pela IA (erro 49). ✅ *Implementado após o estudo:* o bot descarta o tipo chutado pela IA e pergunta, sem contar como "não entendi".
 3. **Para produção, usar um plano pago do Gemini** ou um modelo com latência mais estável. Isso resolve a variação da Figura 7 e também a privacidade (a cota grátis pode usar as mensagens), que hoje obriga a liberar a IA só para os números da equipe.
 4. **Mostrar "digitando…" no WhatsApp** enquanto a IA responde. É uma melhoria barata para a percepção de espera.
-5. **Limitar o número de correções** no mesmo campo (por exemplo, 2) e transferir para humano depois disso, para que nenhum defeito futuro gere ciclos como o do perfil 5 na rodada 2.
+5. **Limitar o número de correções** e transferir para humano depois disso, para que nenhum defeito futuro gere ciclos como o do perfil 5 na rodada 2. ✅ *Implementado após o estudo:* no 3º pedido de "corrigir" do mesmo pedido, a conversa vai para um atendente com a etiqueta `muitas-correcoes`.
+
+> Os itens marcados como implementados entraram **depois** das medições: os resultados das seções 3 e 4 são da versão anterior a eles. Nenhum dos dois altera esses resultados. O item 2 só muda o caso "cartão" sem tipo (mensagem 49 da avaliação; no experimento, o único perfil com cartão diz "cartão de crédito") e o item 5 só age a partir da 3ª correção (o máximo observado na rodada final foi 0).
 
 ## 7. Como reproduzir
 
