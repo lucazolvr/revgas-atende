@@ -68,3 +68,25 @@ describe('registrarVenda', () => {
     expect(await registrarVenda(api, corpo)).toEqual({ tipo: 'erro', status: 500 });
   });
 });
+
+describe('ApiRevGasHttp: conferir e cancelar venda de teste', () => {
+  it('detalha com GET e cancela com PUT /sales/:id/cancel', async () => {
+    const f = fetchFalso(200, { data: {} });
+    const api = new ApiRevGasHttp('https://x/v1', 'K', { fetch: f, intervaloMs: 0 });
+    await api.detalharVenda(42);
+    await api.cancelarVenda(42);
+    expect(f.mock.calls.map(([u, i]) => [u, i?.method])).toEqual([
+      ['https://x/v1/sales/42', 'GET'],
+      ['https://x/v1/sales/42/cancel', 'PUT'],
+    ]);
+    expect(JSON.parse(String(f.mock.calls[1]![1]?.body))).toEqual({ motive_cancel_sale_id: null });
+  });
+
+  it('recusa id que não é inteiro positivo antes de chamar a API', () => {
+    const f = fetchFalso();
+    const api = new ApiRevGasHttp('https://x/v1', 'K', { fetch: f });
+    expect(() => api.cancelarVenda(-1)).toThrow();
+    expect(() => api.detalharVenda(1.5)).toThrow();
+    expect(f).not.toHaveBeenCalled();
+  });
+});

@@ -49,6 +49,14 @@ describe('pedido', () => {
     expect(corpo.observation).toContain('Troco para R$ 200,00');
   });
 
+  it('não manda complemento nem referência vazios (a API exige 1 a 255 caracteres)', () => {
+    const sem = corpoDaVenda(pedido, cat, ids);
+    expect('complement' in sem).toBe(false);
+    expect('landmark' in sem).toBe(false);
+    const com = corpoDaVenda({ ...pedido, endereco: { ...pedido.endereco, complemento: ' apto 302 ', referencia: 'perto da praça' } }, cat, ids);
+    expect(com).toMatchObject({ complement: 'apto 302', landmark: 'perto da praça' });
+  });
+
   it('recusa pedido incompleto', () => {
     expect(() => corpoDaVenda({ telefone: '1' }, cat, ids)).toThrow();
   });

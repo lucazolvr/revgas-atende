@@ -83,7 +83,7 @@ Ao atualizar a versão do Chatwoot, rode `npm run marca` de novo.
 
 **Segurança:** mantenha o bot apenas na rede interna do Docker, use um `BOT_WEBHOOK_TOKEN` aleatório com ao menos 32 caracteres e troque-o se ele aparecer em logs ou configurações expostas. O bot limita rajadas de mensagens e as métricas sem conteúdo de conversa expiram em 90 dias por padrão (`METRICAS_RETENCAO_DIAS`).
 
-**Venda real:** com `VENDA_REAL=true` e `REVGAS_API_KEY`, `REVGAS_CLIENTE_DEMO` e `REVGAS_ESTABELECIMENTO` preenchidos, cada pedido confirmado vira venda de verdade no ERP (sem avisar os entregadores). O bot avisa `VENDA REAL LIGADA` ao iniciar.
+**Venda no ERP (API de teste da RevGás):** a RevGás liberou, em parceria com a faculdade, uma **API de teste** (`api.revgas.com`, estabelecimento de demonstração 2580), separada da produção. Com `VENDA_REAL=true`, `REVGAS_API_KEY`, `REVGAS_CLIENTE_DEMO=5700355` e `REVGAS_ESTABELECIMENTO=2580`, cada pedido confirmado cria a venda nesse ambiente, sem avisar entregadores. Para limpar depois de testar: `npm run cancelar-venda -- <id>`.
 
 ## Equipe
 

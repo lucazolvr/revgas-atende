@@ -14,7 +14,7 @@ O RevGás Atende roda em **ambiente de teste** (demo e teste com usuários do Pr
 ## O que é real
 
 - **Métricas e resultados** da avaliação ([docs/relatorio/avaliacao-ia](relatorio/avaliacao-ia/README.md)): medidos de verdade, com o Gemini real.
-- **Integração com a API RevGás** (`POST /v1/sales`) e os IDs confirmados na [issue #3](https://github.com/lucazolvr/revgas-atende/issues/3).
+- **Integração com a API RevGás** (`POST /v1/sales`): chamada de verdade, na **API de teste** que a RevGás liberou em parceria com a faculdade (estabelecimento de demonstração 2580, cliente 5700355). Validada em 19/11/2026 com uma venda de teste criada, conferida e cancelada ([issue #3](https://github.com/lucazolvr/revgas-atende/issues/3)).
 - **Preço** do catálogo (`config/catalogo.json`), baseado nas vendas reais consultadas na API (precisa de confirmação da revenda).
 - As **orientações de segurança** para vazamento de gás (`config/faq/seguranca.md` e `config/seguranca.md`).
 
