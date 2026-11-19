@@ -48,6 +48,17 @@ export class ApiRevGasHttp implements ApiRevGas {
     return this.enfileirar(() => this.enviar('POST', '/sales', corpo));
   }
 
+  // Fora da porta ApiRevGas: só para conferir e limpar vendas de teste (npm run cancelar-venda).
+  detalharVenda(id: number): Promise<Resposta> {
+    const v = idValido(id);
+    return this.enfileirar(() => this.enviar('GET', `/sales/${v}`, undefined));
+  }
+
+  cancelarVenda(id: number): Promise<Resposta> {
+    const v = idValido(id);
+    return this.enfileirar(() => this.enviar('PUT', `/sales/${v}/cancel`, { motive_cancel_sale_id: null }));
+  }
+
   // A API limita a 1 req/s: as chamadas saem uma por vez, espaçadas.
   private enfileirar<T>(tarefa: () => Promise<T>): Promise<T> {
     const vez = this.fila.then(async () => {
@@ -81,4 +92,10 @@ export class ApiRevGasHttp implements ApiRevGas {
     }
     return { status: resposta.status, dados };
   }
+}
+
+/** O id vai para a URL autenticada: só inteiro positivo. */
+function idValido(id: number): number {
+  if (!Number.isSafeInteger(id) || id <= 0) throw new Error(`id de venda inválido: ${id}`);
+  return id;
 }
