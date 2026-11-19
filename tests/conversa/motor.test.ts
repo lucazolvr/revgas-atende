@@ -175,6 +175,46 @@ describe('motor da conversa (com IA)', () => {
   });
 });
 
+describe('recomendações da avaliação (issue #2)', () => {
+  const atePagamento = ['oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', 'PI'];
+
+  it('"cartão" sem tipo: pergunta débito ou crédito, sem contar como "não entendi"', async () => {
+    const d = deps();
+    const { sessao, acoes } = await conversa(d, [...atePagamento, 'cartão']);
+    expect(sessao.estado).toBe('PAGAMENTO');
+    expect(sessao.falhas).toBe(0);
+    expect(textoDe(acoes)).toContain('débito ou de crédito');
+    const r = await processar(sessao, 'débito', d);
+    expect(r.sessao.pedido.pagamento).toBe('CARTAO_DE_DEBITO');
+    expect(r.sessao.estado).toBe('RESUMO');
+  });
+
+  it('não aceita o tipo de cartão que a IA chutou', async () => {
+    const ia = new InterpretadorFalso({
+      cartão: { intencao: 'informar_dados', entidades: { pagamento: 'CARTAO_DE_CREDITO' } },
+      'cartão de crédito': { intencao: 'informar_dados', entidades: { pagamento: 'CARTAO_DE_CREDITO' } },
+    });
+    const d = deps({ interpretador: ia });
+    const { sessao } = await conversa(d, [...atePagamento, 'cartão']);
+    expect(sessao.pedido.pagamento).toBeUndefined();
+    expect(sessao.estado).toBe('PAGAMENTO');
+    // quando o cliente diz o tipo, vale normalmente
+    expect((await processar(sessao, 'cartão de crédito', d)).sessao.pedido.pagamento).toBe('CARTAO_DE_CREDITO');
+  });
+
+  it('na 3ª correção do mesmo pedido, transfere para um atendente', async () => {
+    const d = deps();
+    let { sessao } = await conversa(d, [...atePagamento, '1']);
+    for (let i = 1; i <= 2; i++) {
+      sessao = (await conversa(d, ['2', '4', '1'], sessao)).sessao; // corrigir → pagamento → PIX
+      expect(sessao.estado).toBe('RESUMO');
+    }
+    const { acoes } = await processar(sessao, '2', d);
+    expect(acoes).toContainEqual(expect.objectContaining({ tipo: 'transferir', motivo: 'correcoes' }));
+    expect(d.registrar).not.toHaveBeenCalled();
+  });
+});
+
 describe('ehEmergencia', () => {
   it('detecta variações', () => {
     expect(ehEmergencia('CHEIRO DE GÁS')).toBe(true);

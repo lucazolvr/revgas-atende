@@ -28,6 +28,7 @@ const ETIQUETAS: Record<MotivoTransferencia, string[]> = {
   nao_entendi: ['pedido-incompleto'],
   verificar_venda: ['verificar-venda'],
   erro_venda: ['erro-venda'],
+  correcoes: ['muitas-correcoes'],
 };
 
 function mesmoToken(a: string, b: string) {
