@@ -22,7 +22,8 @@ ${produtos}
 
 Pagamento: PIX, MONEY (dinheiro), CARTAO_DE_DEBITO, CARTAO_DE_CREDITO ("cartão" sem tipo: não preencha).
 trocoParaCentavos: "troco pra 200" = 20000.
-endereco.uf: sigla do estado (ex.: PI). Não preencha cidade/UF se o cliente não disse.`;
+endereco.uf: sigla do estado (ex.: PI). Não preencha cidade/UF se o cliente não disse.
+Se a etapa indicar "pergunta atual: <campo>", uma resposta curta (só um nome ou número) é o valor desse campo do endereço.`;
 }
 
 function esquema(cat: Produto[]) {
@@ -73,7 +74,11 @@ export class InterpretadorGemini implements Interpretador {
     this.timeoutMs = opts.timeoutMs ?? 8000;
   }
 
+  /** Motivo do último `null` (só para a avaliação distinguir cota/instabilidade de erro da IA). */
+  ultimoErro: string | null = null;
+
   async interpretar(texto: string, estado: string): Promise<Interpretacao | null> {
+    this.ultimoErro = null;
     try {
       const r = await this.ai.models.generateContent({
         model: this.modelo,
@@ -86,8 +91,11 @@ export class InterpretadorGemini implements Interpretador {
           abortSignal: AbortSignal.timeout(this.timeoutMs),
         },
       });
-      return validarInterpretacao(JSON.parse(r.text ?? ''), this.cat);
-    } catch {
+      const valida = validarInterpretacao(JSON.parse(r.text ?? ''), this.cat);
+      if (!valida) this.ultimoErro = 'resposta fora do esquema';
+      return valida;
+    } catch (e) {
+      this.ultimoErro = e instanceof Error ? e.message.slice(0, 200) : 'erro desconhecido';
       return null; // sem IA o fluxo segue pelos menus
     }
   }
