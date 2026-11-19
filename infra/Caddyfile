@@ -1,0 +1,6 @@
+# HTTPS automático (Let's Encrypt) para o painel do Chatwoot.
+# Só o painel fica público; Evolution (8080) e bot continuam na rede interna.
+{$DOMINIO} {
+	encode gzip
+	reverse_proxy 127.0.0.1:3000
+}

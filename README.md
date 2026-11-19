@@ -68,6 +68,10 @@ Precisa de **Docker Desktop** (≈ 4 GB de RAM livres) e de um **chip separado**
 7. Mande "oi" para o número do chip. 🎉
 8. *(Opcional)* `npm run marca`: aplica a identidade da RevGás no painel (logo, ícone, nome e cores laranja).
 
+### No ar 24h (servidor)
+
+Passo a passo para a Oracle Cloud Always Free (ARM), com HTTPS no painel: [docs/deploy.md](docs/deploy.md).
+
 ### Marca RevGás no painel
 
 O Chatwoot é open source (MIT), e o `npm run marca` personaliza o painel **sem fork e sem tocar no código pago (Enterprise)**:

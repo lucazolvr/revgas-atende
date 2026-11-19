@@ -10,7 +10,7 @@ x-chatwoot: &chatwoot
     RAILS_ENV: production
     NODE_ENV: production
     INSTALLATION_ENV: docker
-    FRONTEND_URL: http://localhost:3000
+    FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000} # no servidor: https://seu-dominio
     POSTGRES_HOST: postgres
     POSTGRES_USERNAME: postgres
     POSTGRES_DATABASE: chatwoot

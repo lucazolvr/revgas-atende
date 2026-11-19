@@ -1,0 +1,19 @@
+# Complemento para servidor (VPS): adiciona o Caddy com HTTPS na frente do Chatwoot.
+# Uso: docker compose -f docker-compose.yml -f infra/docker-compose.vps.yml up -d
+# Passo a passo: docs/deploy.md
+services:
+  caddy:
+    image: caddy:2-alpine
+    network_mode: host # alcança o Chatwoot em 127.0.0.1:3000 e escuta 80/443 da máquina
+    environment:
+      DOMINIO: ${DOMINIO:?defina DOMINIO no .env}
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [chatwoot]
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
