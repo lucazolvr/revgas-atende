@@ -12,7 +12,10 @@
     "start": "tsx src/index.ts",
     "setup": "tsx scripts/setup.ts",
     "typecheck": "tsc --noEmit",
-    "marca": "tsx scripts/marca.ts"
+    "marca": "tsx scripts/marca.ts",
+    "eval:ia": "tsx eval/avaliar-ia.ts",
+    "eval:experimento": "tsx eval/experimento.ts",
+    "eval:metricas": "tsx eval/resumir-metricas.ts"
   },
   "keywords": [],
   "author": "",

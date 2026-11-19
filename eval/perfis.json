@@ -1,0 +1,286 @@
+[
+  {
+    "id": 1,
+    "nome": "Ana Clara",
+    "quantidade": 2,
+    "pagamento": "PIX",
+    "endereco": {
+      "logradouro": "Rua Nova",
+      "numero": "10",
+      "bairro": "Centro",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "boa tarde, manda 2 botijão pra Rua Nova 10, Centro, Teresina PI, pago no pix"
+  },
+  {
+    "id": 2,
+    "nome": "José Ribamar",
+    "quantidade": 1,
+    "pagamento": "MONEY",
+    "trocoPara": 20000,
+    "endereco": {
+      "logradouro": "Rua Coelho de Resende",
+      "numero": "1520",
+      "bairro": "Ilhotas",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "quero 1 gas pra rua coelho de resende 1520 ilhotas teresina pi, dinheiro, troco pra 200"
+  },
+  {
+    "id": 3,
+    "nome": "Francisca",
+    "quantidade": 1,
+    "pagamento": "CARTAO_DE_DEBITO",
+    "endereco": {
+      "logradouro": "Avenida Frei Serafim",
+      "numero": "2000",
+      "bairro": "Centro",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "oi aqui é a Francisca, manda um bujão pra av frei serafim 2000 centro, teresina-pi, débito"
+  },
+  {
+    "id": 4,
+    "nome": "Marcos",
+    "quantidade": 3,
+    "pagamento": "PIX",
+    "endereco": {
+      "logradouro": "Rua São Pedro",
+      "numero": "345",
+      "bairro": "Piçarra",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "preciso de 3 gás"
+  },
+  {
+    "id": 5,
+    "nome": "Raimunda",
+    "quantidade": 1,
+    "pagamento": "MONEY",
+    "endereco": {
+      "logradouro": "Quadra 12",
+      "numero": "5",
+      "bairro": "Dirceu",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "acabou meu gás, manda outro"
+  },
+  {
+    "id": 6,
+    "nome": "Paulo Henrique",
+    "quantidade": 2,
+    "pagamento": "CARTAO_DE_CREDITO",
+    "endereco": {
+      "logradouro": "Avenida Kennedy",
+      "numero": "3000",
+      "bairro": "São Cristóvão",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "me ve 2 botijao pra avenida kennedy 3000 sao cristovao no credito"
+  },
+  {
+    "id": 7,
+    "nome": "Luana",
+    "quantidade": 1,
+    "pagamento": "PIX",
+    "endereco": {
+      "logradouro": "Rua 15",
+      "numero": "22",
+      "bairro": "Parque Alvorada",
+      "cidade": "Timon",
+      "uf": "MA"
+    },
+    "primeiraMensagem": "quero pedir gás pra Timon MA, rua 15 casa 22, bairro parque alvorada, no pics"
+  },
+  {
+    "id": 8,
+    "nome": "Antônio Carlos",
+    "quantidade": 1,
+    "pagamento": "MONEY",
+    "trocoPara": 15000,
+    "endereco": {
+      "logradouro": "Rua Olavo Bilac",
+      "numero": "500",
+      "bairro": "Centro Norte",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "bom dia, um gás pra r. olavo bilac 500 centro norte, vou pagar em dinheiro"
+  },
+  {
+    "id": 9,
+    "nome": "Juliana",
+    "quantidade": 2,
+    "pagamento": "PIX",
+    "endereco": {
+      "logradouro": "Rua Desembargador Freitas",
+      "numero": "1100",
+      "bairro": "Centro",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "Olá! Gostaria de 2 botijões de 13kg na Rua Desembargador Freitas, 1100, Centro, Teresina/PI. Pagamento via PIX. Meu nome é Juliana."
+  },
+  {
+    "id": 10,
+    "nome": "Seu Domingos",
+    "quantidade": 1,
+    "pagamento": "CARTAO_DE_DEBITO",
+    "endereco": {
+      "logradouro": "Rua Areolino de Abreu",
+      "numero": "780",
+      "bairro": "Centro",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "gas"
+  },
+  {
+    "id": 11,
+    "nome": "Fernanda",
+    "quantidade": 4,
+    "pagamento": "PIX",
+    "endereco": {
+      "logradouro": "Avenida Presidente Kennedy",
+      "numero": "1500",
+      "bairro": "Fátima",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "4 botijões pro restaurante, av presidente kennedy 1500, fatima"
+  },
+  {
+    "id": 12,
+    "nome": "Raimundo Nonato",
+    "quantidade": 1,
+    "pagamento": "MONEY",
+    "trocoPara": 20000,
+    "endereco": {
+      "logradouro": "Rua Rui Barbosa",
+      "numero": "90",
+      "bairro": "Vermelha",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "manda um gaz na rua rui barbosa 90 vermelha, pago em dinhero"
+  },
+  {
+    "id": 13,
+    "nome": "Camila",
+    "quantidade": 1,
+    "pagamento": "CARTAO_DE_CREDITO",
+    "endereco": {
+      "logradouro": "Rua Anísio de Abreu",
+      "numero": "250",
+      "bairro": "Jóquei",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "boa noite, ainda dá pra pedir? 1 botijão no crédito"
+  },
+  {
+    "id": 14,
+    "nome": "Maria das Graças",
+    "quantidade": 2,
+    "pagamento": "MONEY",
+    "endereco": {
+      "logradouro": "Rua Lizandro Nogueira",
+      "numero": "1800",
+      "bairro": "Centro",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "quero 2 gás, sou a Maria das Graças"
+  },
+  {
+    "id": 15,
+    "nome": "Pedro",
+    "quantidade": 1,
+    "pagamento": "PIX",
+    "endereco": {
+      "logradouro": "Rua Firmino Pires",
+      "numero": "640",
+      "bairro": "Centro",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "1 gas rua firmino pires 640 centro teresina pi pix nome pedro"
+  },
+  {
+    "id": 16,
+    "nome": "Sandra",
+    "quantidade": 1,
+    "pagamento": "CARTAO_DE_DEBITO",
+    "endereco": {
+      "logradouro": "Rua Paissandu",
+      "numero": "1200",
+      "bairro": "Centro",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "oi, boa tarde! tudo bem? queria saber se vocês podem me mandar um botijão hoje ainda"
+  },
+  {
+    "id": 17,
+    "nome": "Lucas Gabriel",
+    "quantidade": 2,
+    "pagamento": "PIX",
+    "endereco": {
+      "logradouro": "Avenida Miguel Rosa",
+      "numero": "3300",
+      "bairro": "Piçarra",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "2 bujão av miguel rosa 3300 piçarra"
+  },
+  {
+    "id": 18,
+    "nome": "Helena",
+    "quantidade": 1,
+    "pagamento": "MONEY",
+    "trocoPara": 15000,
+    "endereco": {
+      "logradouro": "Rua Barroso",
+      "numero": "77",
+      "bairro": "Centro",
+      "cidade": "Timon",
+      "uf": "MA"
+    },
+    "primeiraMensagem": "moça manda 1 gás aqui em timon, rua barroso 77 centro, dinheiro troco pra 150"
+  },
+  {
+    "id": 19,
+    "nome": "Thiago",
+    "quantidade": 3,
+    "pagamento": "CARTAO_DE_CREDITO",
+    "endereco": {
+      "logradouro": "Rua Senador Teodoro Pacheco",
+      "numero": "1010",
+      "bairro": "Centro",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "Preciso de três botijões no cartão de crédito"
+  },
+  {
+    "id": 20,
+    "nome": "Rosa",
+    "quantidade": 1,
+    "pagamento": "PIX",
+    "endereco": {
+      "logradouro": "Rua Treze de Maio",
+      "numero": "455",
+      "bairro": "Vermelha",
+      "cidade": "Teresina",
+      "uf": "PI"
+    },
+    "primeiraMensagem": "manda 1 gas pra mim por favor"
+  }
+]

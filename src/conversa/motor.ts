@@ -70,7 +70,9 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
   }
 
   // Números de menu não gastam chamada de IA.
-  const ia = deps.interpretador && !/^\s*\d+\s*$/.test(texto) ? await deps.interpretador.interpretar(texto, s.estado) : null;
+  // A IA precisa saber qual parte do endereço foi perguntada: sem isso, "Dirceu" (o bairro) virava a rua.
+  const etapa = s.estado === 'ENDERECO' ? `ENDERECO (pergunta atual: ${CAMPOS_ENDERECO.find((c) => !s.pedido.endereco?.[c])})` : s.estado;
+  const ia = deps.interpretador && !/^\s*\d+\s*$/.test(texto) ? await deps.interpretador.interpretar(texto, etapa) : null;
 
   if (ia?.intencao === 'emergencia_gas') {
     responder(M.SEGURANCA);
@@ -205,10 +207,13 @@ function aplicarTexto(s: Sessao, texto: string, cat: Produto[]): boolean | strin
   const t = texto.trim();
   const n = normalizar(t);
   switch (s.estado) {
-    case 'NOME':
-      if (t.length < 2 || t.length > 80 || !/\p{L}/u.test(t)) return false;
-      p.nome = t;
+    case 'NOME': {
+      // "meu nome é Ana" sem IA não pode virar o nome "meu nome é Ana"
+      const nome = t.replace(/^(meu nome (é|e)|me chamo|aqui (é|e)( (o|a))?|sou (o|a)|(é|e) (o|a))\s+/i, '').trim();
+      if (nome.length < 2 || nome.length > 80 || !/\p{L}/u.test(nome)) return false;
+      p.nome = nome;
       return true;
+    }
     case 'PRODUTO': {
       const i = numero(t);
       const produto =
@@ -275,7 +280,7 @@ function numero(texto: string): number | null {
 
 /** 1 confirmar · 2 corrigir · 3 cancelar · null não entendi. */
 function escolha(texto: string, ia: Interpretacao | null): 1 | 2 | 3 | null {
-  const n = normalizar(texto);
+  const n = normalizar(texto).replace(/^(quero|pode|vou|pra|para|da pra|tem como) /, ''); // "quero corrigir", "pode confirmar"
   if (/^(1|sim|s|confirmo|confirmar|confirma|ok|pode ser|isso)\b/.test(n) || ia?.intencao === 'confirmar') return 1;
   if (/^(2|corrigir|corrige|alterar|mudar)\b/.test(n) || ia?.intencao === 'corrigir') return 2;
   if (/^(3|cancelar|cancela|desistir)\b/.test(n) || ia?.intencao === 'cancelar') return 3;

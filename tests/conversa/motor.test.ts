@@ -102,6 +102,15 @@ describe('motor da conversa (menus, sem IA)', () => {
     expect(acoes).toContainEqual(expect.objectContaining({ tipo: 'transferir', motivo: 'verificar_venda' }));
   });
 
+  it('sem IA entende "meu nome é Ana", "pode confirmar" e "quero corrigir"', async () => {
+    const d = deps();
+    const base = ['oi', 'meu nome é Ana', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', 'PI', '1'];
+    const resumo = await conversa(d, base);
+    expect(resumo.sessao.pedido.nome).toBe('Ana');
+    expect((await processar(resumo.sessao, 'quero corrigir', d)).sessao.estado).toBe('CORRIGIR');
+    expect((await processar(resumo.sessao, 'pode confirmar', d)).sessao.estado).toBe('REGISTRADO');
+  });
+
   it('nova mensagem depois de registrado começa outro pedido', async () => {
     const { sessao } = await conversa(deps(), ['oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', 'PI', '1', '1', 'boa noite']);
     expect(sessao.vendaId).toBeUndefined();
@@ -129,6 +138,13 @@ describe('motor da conversa (com IA)', () => {
     const r = await processar(sessao, 'sou a Ana', deps({ interpretador: ia }));
     expect(r.sessao.estado).toBe('RESUMO');
     expect(r.sessao.pedido.nome).toBe('Ana');
+  });
+
+  it('diz à IA qual parte do endereço foi perguntada', async () => {
+    const etapas: string[] = [];
+    const espiao = { interpretar: async (_t: string, etapa: string) => (etapas.push(etapa), null) };
+    await conversa(deps({ interpretador: espiao }), ['oi', 'Maria', '1', '2', 'Quadra 12', '5', 'Dirceu']);
+    expect(etapas).toContain('ENDERECO (pergunta atual: bairro)');
   });
 
   it('IA fora do ar (null) cai nos menus', async () => {
