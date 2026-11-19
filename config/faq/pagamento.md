@@ -1,5 +1,5 @@
 # Formas de pagamento
 
-Aceitamos PIX, dinheiro, cartão de débito e cartão de crédito. Para pagamento em dinheiro, o cliente pode informar se precisa de troco e para qual valor.
+Aceitamos PIX, dinheiro, cartão de débito e cartão de crédito. Para pagamento em dinheiro, o cliente pode informar se precisa de troco e para qual valor. O entregador leva troco para até R$ 200,00.
 
-Taxas, parcelamento e condições especiais: **[CONFIRMAR COM A REVENDA]**.
+Não cobramos taxa de entrega nem taxa no cartão. O pagamento é sempre à vista: não fazemos parcelamento.
