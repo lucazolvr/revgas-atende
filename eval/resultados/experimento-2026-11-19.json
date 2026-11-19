@@ -1,131 +1,121 @@
 {
   "modelo": "gemini-3.1-flash-lite",
   "data": "2026-11-19",
-  "indisponiveis": 0,
+  "indisponiveis": 1,
   "latencias": [
-    2338,
-    2324,
-    1804,
-    2163,
+    5169,
+    10758,
+    9816,
+    12098,
+    13413,
+    11891,
+    12643,
+    5330,
+    13488,
+    11636,
+    8682,
+    8346,
+    8167,
+    10889,
+    797,
+    6669,
+    6577,
+    11558,
+    2594,
+    1023,
+    1428,
+    1151,
+    932,
+    1653,
+    12475,
+    7651,
+    4506,
+    5921,
+    6207,
+    6254,
+    9298,
+    9126,
+    6578,
+    6988,
+    5857,
+    4351,
+    3343,
+    2047,
+    1425,
+    1324,
+    1265,
+    1170,
     2670,
-    2798,
-    4132,
-    1147,
-    3056,
-    841,
-    905,
-    1012,
-    1254,
-    1073,
-    899,
-    1788,
-    1079,
-    883,
-    941,
-    925,
-    1070,
-    958,
-    845,
-    817,
-    992,
-    939,
-    869,
-    938,
-    927,
-    944,
-    2821,
-    3157,
-    1046,
-    2075,
-    1267,
-    2507,
-    6620,
-    2408,
-    11602,
-    2004,
-    3908,
-    3282,
-    781,
-    2440,
-    1016,
-    1603,
-    1198,
-    1270,
-    1547,
-    1945,
-    1366,
-    847,
-    953,
-    3168,
-    2064,
-    3254,
-    1642,
-    2422,
-    3265,
-    1650,
-    3275,
-    2364,
-    2518,
-    2125,
-    2297,
-    1344,
-    2953,
-    1864,
-    2458,
-    899,
-    2420,
-    2962,
-    1433,
-    1576,
-    2581,
-    1515,
-    2696,
-    2152,
-    2585,
-    4335,
-    1828,
-    3283,
-    3177,
-    2613,
-    2899,
-    2766,
-    2592,
-    1581,
-    3821,
-    1177,
-    948,
-    1119,
-    1135,
-    1144,
-    1107,
-    1018,
-    4093,
-    1717,
-    1579,
-    1196,
-    990,
-    926,
-    945,
-    1046,
-    843,
-    1052,
-    856,
-    996,
-    1059,
-    943,
-    1072,
-    5407,
-    1144,
-    1526,
-    938,
-    1201,
-    2629,
-    2019,
-    1432,
-    2061,
-    1465,
-    2060,
-    3052
+    3352,
+    6374,
+    6867,
+    5376,
+    2310,
+    2709,
+    3809,
+    13008,
+    12546,
+    6010,
+    4711,
+    6135,
+    5892,
+    11902,
+    5510,
+    5331,
+    9994,
+    6050,
+    5131,
+    2755,
+    1814,
+    4545,
+    975,
+    5498,
+    4082,
+    3311,
+    8178,
+    7573,
+    7118,
+    5399,
+    4960,
+    3149,
+    2880,
+    2327,
+    1524,
+    5386,
+    2867,
+    5836,
+    4342,
+    5117,
+    5797,
+    7908,
+    4994,
+    11184,
+    2185,
+    3220,
+    5720,
+    4745,
+    6559,
+    5882,
+    7350,
+    6299,
+    8054,
+    8376,
+    8342,
+    10859,
+    9499,
+    822,
+    4201,
+    1339,
+    2377,
+    2161,
+    1145,
+    2166,
+    1537,
+    3682,
+    3815,
+    3380,
+    1002,
+    2542
   ],
   "resultados": [
     {
@@ -136,7 +126,7 @@
       "mensagens": 11,
       "caracteres": 41,
       "correcoes": 0,
-      "msBot": 2.2107000000003154
+      "msBot": 2.7952999999998838
     },
     {
       "perfil": 1,
@@ -146,7 +136,7 @@
       "mensagens": 3,
       "caracteres": 110,
       "correcoes": 0,
-      "msBot": 6466
+      "msBot": 25743
     },
     {
       "perfil": 2,
@@ -156,7 +146,7 @@
       "mensagens": 12,
       "caracteres": 63,
       "correcoes": 0,
-      "msBot": 0.8330000000059954
+      "msBot": 1.4899999999906868
     },
     {
       "perfil": 2,
@@ -166,7 +156,7 @@
       "mensagens": 3,
       "caracteres": 124,
       "correcoes": 0,
-      "msBot": 7631
+      "msBot": 37402
     },
     {
       "perfil": 3,
@@ -176,7 +166,7 @@
       "mensagens": 11,
       "caracteres": 55,
       "correcoes": 0,
-      "msBot": 1.340199999995093
+      "msBot": 1.30199999998149
     },
     {
       "perfil": 3,
@@ -186,7 +176,7 @@
       "mensagens": 2,
       "caracteres": 104,
       "correcoes": 0,
-      "msBot": 5279
+      "msBot": 17973
     },
     {
       "perfil": 4,
@@ -196,7 +186,7 @@
       "mensagens": 11,
       "caracteres": 45,
       "correcoes": 0,
-      "msBot": 0.19689999998081475
+      "msBot": 0.19699999997101258
     },
     {
       "perfil": 4,
@@ -206,7 +196,7 @@
       "mensagens": 9,
       "caracteres": 83,
       "correcoes": 0,
-      "msBot": 10828
+      "msBot": 68674
     },
     {
       "perfil": 5,
@@ -216,17 +206,17 @@
       "mensagens": 12,
       "caracteres": 43,
       "correcoes": 0,
-      "msBot": 0.2036999999836553
+      "msBot": 0.6879999999364372
     },
     {
       "perfil": 5,
       "modo": "ia",
-      "concluiu": false,
-      "correto": false,
-      "mensagens": 25,
-      "caracteres": 181,
-      "correcoes": 2,
-      "msBot": 26000
+      "concluiu": true,
+      "correto": true,
+      "mensagens": 10,
+      "caracteres": 97,
+      "correcoes": 0,
+      "msBot": 39391
     },
     {
       "perfil": 6,
@@ -236,7 +226,7 @@
       "mensagens": 11,
       "caracteres": 62,
       "correcoes": 0,
-      "msBot": 0.4427000000141561
+      "msBot": 0.3816999999980908
     },
     {
       "perfil": 6,
@@ -246,7 +236,7 @@
       "mensagens": 5,
       "caracteres": 114,
       "correcoes": 0,
-      "msBot": 26542
+      "msBot": 30539
     },
     {
       "perfil": 7,
@@ -256,17 +246,17 @@
       "mensagens": 11,
       "caracteres": 41,
       "correcoes": 0,
-      "msBot": 0.30200000005424954
+      "msBot": 0.4504000000888482
     },
     {
       "perfil": 7,
       "modo": "ia",
       "concluiu": true,
       "correto": true,
-      "mensagens": 4,
-      "caracteres": 108,
+      "mensagens": 3,
+      "caracteres": 107,
       "correcoes": 0,
-      "msBot": 6503
+      "msBot": 25002
     },
     {
       "perfil": 8,
@@ -276,7 +266,7 @@
       "mensagens": 12,
       "caracteres": 63,
       "correcoes": 0,
-      "msBot": 1.006200000003446
+      "msBot": 0.6643000001786277
     },
     {
       "perfil": 8,
@@ -286,7 +276,7 @@
       "mensagens": 6,
       "caracteres": 136,
       "correcoes": 0,
-      "msBot": 8579
+      "msBot": 24011
     },
     {
       "perfil": 9,
@@ -296,7 +286,7 @@
       "mensagens": 11,
       "caracteres": 58,
       "correcoes": 0,
-      "msBot": 0.7151999999477994
+      "msBot": 0.40930000005755574
     },
     {
       "perfil": 9,
@@ -306,7 +296,7 @@
       "mensagens": 2,
       "caracteres": 145,
       "correcoes": 0,
-      "msBot": 2213
+      "msBot": 2589
     },
     {
       "perfil": 10,
@@ -316,7 +306,7 @@
       "mensagens": 11,
       "caracteres": 58,
       "correcoes": 0,
-      "msBot": 0.3049999999930151
+      "msBot": 0.2871000000741333
     },
     {
       "perfil": 10,
@@ -326,7 +316,7 @@
       "mensagens": 10,
       "caracteres": 87,
       "correcoes": 0,
-      "msBot": 18418
+      "msBot": 30828
     },
     {
       "perfil": 11,
@@ -336,17 +326,17 @@
       "mensagens": 11,
       "caracteres": 60,
       "correcoes": 0,
-      "msBot": 0.367000000027474
+      "msBot": 0.38049999985378236
     },
     {
       "perfil": 11,
       "modo": "ia",
       "concluiu": true,
       "correto": true,
-      "mensagens": 6,
-      "caracteres": 108,
+      "mensagens": 11,
+      "caracteres": 160,
       "correcoes": 0,
-      "msBot": 13923
+      "msBot": 64013
     },
     {
       "perfil": 12,
@@ -356,7 +346,7 @@
       "mensagens": 12,
       "caracteres": 59,
       "correcoes": 0,
-      "msBot": 0.557799999951385
+      "msBot": 0.36309999972581863
     },
     {
       "perfil": 12,
@@ -366,7 +356,7 @@
       "mensagens": 6,
       "caracteres": 123,
       "correcoes": 0,
-      "msBot": 13556
+      "msBot": 34771
     },
     {
       "perfil": 13,
@@ -376,7 +366,7 @@
       "mensagens": 11,
       "caracteres": 50,
       "correcoes": 0,
-      "msBot": 0.3665999999502674
+      "msBot": 0.2973000002093613
     },
     {
       "perfil": 13,
@@ -386,7 +376,7 @@
       "mensagens": 8,
       "caracteres": 120,
       "correcoes": 0,
-      "msBot": 14538
+      "msBot": 28403
     },
     {
       "perfil": 14,
@@ -396,7 +386,7 @@
       "mensagens": 12,
       "caracteres": 66,
       "correcoes": 0,
-      "msBot": 0.5402999999350868
+      "msBot": 0.26429999992251396
     },
     {
       "perfil": 14,
@@ -406,7 +396,7 @@
       "mensagens": 9,
       "caracteres": 101,
       "correcoes": 0,
-      "msBot": 23493
+      "msBot": 34930
     },
     {
       "perfil": 15,
@@ -416,7 +406,7 @@
       "mensagens": 11,
       "caracteres": 47,
       "correcoes": 0,
-      "msBot": 0.3585000000311993
+      "msBot": 0.2678000001469627
     },
     {
       "perfil": 15,
@@ -426,7 +416,7 @@
       "mensagens": 2,
       "caracteres": 75,
       "correcoes": 0,
-      "msBot": 5402
+      "msBot": 8253
     },
     {
       "perfil": 16,
@@ -436,7 +426,7 @@
       "mensagens": 11,
       "caracteres": 45,
       "correcoes": 0,
-      "msBot": 0.32909999997355044
+      "msBot": 0.442600000067614
     },
     {
       "perfil": 16,
@@ -446,7 +436,7 @@
       "mensagens": 9,
       "caracteres": 154,
       "correcoes": 0,
-      "msBot": 11741
+      "msBot": 47363
     },
     {
       "perfil": 17,
@@ -456,7 +446,7 @@
       "mensagens": 11,
       "caracteres": 59,
       "correcoes": 0,
-      "msBot": 0.5496999999741092
+      "msBot": 0.41599999996833503
     },
     {
       "perfil": 17,
@@ -466,7 +456,7 @@
       "mensagens": 6,
       "caracteres": 86,
       "correcoes": 0,
-      "msBot": 7353
+      "msBot": 33476
     },
     {
       "perfil": 18,
@@ -476,7 +466,7 @@
       "mensagens": 12,
       "caracteres": 41,
       "correcoes": 0,
-      "msBot": 0.7246999997878447
+      "msBot": 0.15120000042952597
     },
     {
       "perfil": 18,
@@ -486,7 +476,7 @@
       "mensagens": 4,
       "caracteres": 110,
       "correcoes": 0,
-      "msBot": 3797
+      "msBot": 31071
     },
     {
       "perfil": 19,
@@ -496,7 +486,7 @@
       "mensagens": 11,
       "caracteres": 59,
       "correcoes": 0,
-      "msBot": 0.6824999998789281
+      "msBot": 0.162099999608472
     },
     {
       "perfil": 19,
@@ -506,7 +496,7 @@
       "mensagens": 8,
       "caracteres": 123,
       "correcoes": 0,
-      "msBot": 12147
+      "msBot": 31258
     },
     {
       "perfil": 20,
@@ -516,17 +506,17 @@
       "mensagens": 11,
       "caracteres": 48,
       "correcoes": 0,
-      "msBot": 0.41409999993629754
+      "msBot": 0.1403999999165535
     },
     {
       "perfil": 20,
       "modo": "ia",
       "concluiu": true,
       "correto": true,
-      "mensagens": 10,
-      "caracteres": 107,
+      "mensagens": 9,
+      "caracteres": 99,
       "correcoes": 0,
-      "msBot": 16857
+      "msBot": 19269
     }
   ],
   "resumo": {
@@ -549,40 +539,40 @@
         "mediana": 56.5
       },
       "msBot": {
-        "mediana": 0.49149999997462146,
-        "p95": 1.383724999995355
+        "mediana": 0.3810999999259366,
+        "p95": 1.5552649999911476
       }
     },
     "ia": {
       "n": 20,
-      "concluiram": 19,
-      "corretos": 19,
+      "concluiram": 20,
+      "corretos": 20,
       "transferidos": 0,
-      "comCorrecao": 1,
+      "comCorrecao": 0,
       "mensagens": {
-        "media": 6.85,
+        "media": 6.25,
         "mediana": 6,
         "min": 2,
-        "max": 25,
-        "q1": 3.75,
+        "max": 11,
+        "q1": 3,
         "q3": 9
       },
       "caracteres": {
-        "media": 114.95,
+        "media": 112.9,
         "mediana": 110
       },
       "msBot": {
-        "mediana": 11284.5,
-        "p95": 26027.100000000002
+        "mediana": 30949.5,
+        "p95": 64246.05
       }
     },
     "reducaoMediana": 0.4545454545454546,
     "wilcoxonMensagens": {
-      "n": 20,
+      "n": 19,
       "wMais": 190,
-      "wMenos": 20,
-      "z": 3.1606734398248753,
-      "p": 0.0015741805663331832
+      "wMenos": 0,
+      "z": 3.815263387870673,
+      "p": 0.00013608484057536785
     },
     "wilcoxonCaracteres": {
       "n": 20,

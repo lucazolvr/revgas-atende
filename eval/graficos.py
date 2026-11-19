@@ -162,11 +162,12 @@ def fig_mensagens_por_perfil(exp):
         if not ia[p]["correto"]:
             ax.text(ia[p]["mensagens"] - 0.4, i, "✗", color=TINTA, ha="right", va="center", fontsize=9)
     ax.set_yticks(range(len(ordem)), [f"perfil {p}" for p in ordem])
-    ax.set_xlabel("mensagens enviadas pelo cliente até concluir")
+    ax.set_xlabel("mensagens enviadas pelo cliente até concluir", labelpad=2)
     s = exp["resumo"]
     pv = s["wilcoxonMensagens"]["p"]
     ax.set_title(f"Mensagens por pedido — Wilcoxon p {'< 0,001' if pv < 0.001 else '= ' + f'{pv:.3f}'.replace('.', ',')}")
-    ax.legend(loc="lower right", frameon=False)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.07), ncol=2, frameon=False)
+    ax.set_xlim(0.5, max(menu.values()) + 1)
     grade_x(ax)
     salvar(fig, "5-mensagens-por-perfil")
 
@@ -192,6 +193,34 @@ def fig_resumo_experimento(exp):
     salvar(fig, "6-resultado-experimento")
 
 
+def fig_latencia_rodadas():
+    """Mesma API, dias/horários diferentes: a latência da cota grátis varia muito."""
+    rodadas = []
+    for caminho, rotulo in [
+        ("eval/resultados/ia-2026-11-19-rodada1.json", "Avaliação\n(rodada 1)"),
+        ("eval/resultados/ia-2026-11-19.json", "Avaliação\n(final)"),
+        ("eval/resultados/experimento-2026-11-19-rodada2.json", "Experimento\n(rodada 2)"),
+        ("eval/resultados/experimento-2026-11-19.json", "Experimento\n(final)"),
+    ]:
+        if os.path.exists(caminho):
+            with open(caminho, encoding="utf-8") as f:
+                rodadas.append((rotulo, [x / 1000 for x in json.load(f)["latencias"]]))
+    fig, ax = plt.subplots(figsize=(7, 3.6))
+    caixas = ax.boxplot([v for _, v in rodadas], tick_labels=[r for r, _ in rodadas], patch_artist=True, widths=0.5,
+                        medianprops={"color": TINTA, "linewidth": 1.5}, flierprops={"markeredgecolor": TINTA_2, "markersize": 4})
+    for c in caixas["boxes"]:
+        c.set_facecolor(IA)
+        c.set_edgecolor(FUNDO)
+    ax.axhline(8, color=TINTA, linewidth=1, linestyle="--")
+    ax.text(0.55, 8.25, "limite do bot (8 s): acima disso ele usa o menu", va="bottom", ha="left", color=TINTA, fontsize=8,
+            bbox={"facecolor": FUNDO, "edgecolor": "none", "pad": 1})
+    ax.set_ylabel("segundos por chamada")
+    ax.set_title("Variação do tempo de resposta do Gemini (cota grátis) entre rodadas")
+    ax.grid(axis="y", color=GRADE, linewidth=0.8)
+    ax.set_axisbelow(True)
+    salvar(fig, "7-latencia-rodadas")
+
+
 if __name__ == "__main__":
     ia = ultimo("ia")
     fig_intencoes(ia)
@@ -201,3 +230,4 @@ if __name__ == "__main__":
     exp = ultimo("experimento")
     fig_mensagens_por_perfil(exp)
     fig_resumo_experimento(exp)
+    fig_latencia_rodadas()

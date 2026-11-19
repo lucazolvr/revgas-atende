@@ -46,6 +46,8 @@ flowchart LR
 
 Detalhes e decisões: [documento de design](docs/superpowers/specs/2026-11-18-revgas-atende-design.md).
 
+**Avaliação da IA:** intenção 100%, extração F1 97,2% e −45% de mensagens com IA (Wilcoxon p < 0,001). Estudo completo em [docs/relatorio/avaliacao-ia](docs/relatorio/avaliacao-ia/README.md).
+
 ## Como rodar
 
 ### Só os testes (sem Docker)
