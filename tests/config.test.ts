@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { carregarConfig, chaveTelefone } from '../src/config.js';
 
-const base = { CHATWOOT_URL: 'http://cw', CHATWOOT_ACCOUNT_ID: '1', CHATWOOT_BOT_TOKEN: 't', BOT_WEBHOOK_TOKEN: 'x'.repeat(16) };
+const base = { CHATWOOT_URL: 'http://cw', CHATWOOT_ACCOUNT_ID: '1', CHATWOOT_BOT_TOKEN: 't', BOT_WEBHOOK_TOKEN: 'x'.repeat(32) };
 
 describe('chaveTelefone', () => {
   it('trata com e sem o 9 extra como o mesmo número', () => {
@@ -21,6 +21,10 @@ describe('carregarConfig', () => {
       '558699990000',
       '558688881111',
     ]);
+  });
+
+  it('usa retenção segura de métricas por padrão', () => {
+    expect(carregarConfig(base).METRICAS_RETENCAO_DIAS).toBe(90);
   });
 
   it('venda real exige chave e IDs, sem mostrar valores', () => {

@@ -18,6 +18,8 @@ export type DepsServidor = {
   interpretadorPara: (telefone: string) => Interpretador | null;
   registrar: (p: Pedido) => Promise<ResultadoRegistro>;
   responderDuvida?: (texto: string) => Promise<string | null>;
+  /** Proteções contra rajadas; os padrões atendem uma conversa humana normal. */
+  limites?: { porConversa?: number; global?: number; janelaMs?: number; filasMaximas?: number };
 };
 
 const ETIQUETAS: Record<MotivoTransferencia, string[]> = {
@@ -35,9 +37,17 @@ function mesmoToken(a: string, b: string) {
 }
 
 export function criarServidor(deps: DepsServidor) {
-  const app = Fastify({ logger: { level: 'warn' } }); // sem log de corpo: as mensagens têm dados pessoais
+  const app = Fastify({ logger: { level: 'warn' }, bodyLimit: 64 * 1024 }); // sem log de corpo: as mensagens têm dados pessoais
   // Uma fila por conversa: mensagens da mesma conversa são processadas em ordem, nunca em paralelo.
   const filas = new Map<number, Promise<void>>();
+  const limite = {
+    porConversa: deps.limites?.porConversa ?? 20,
+    global: deps.limites?.global ?? 300,
+    janelaMs: deps.limites?.janelaMs ?? 60_000,
+    filasMaximas: deps.limites?.filasMaximas ?? 200,
+  };
+  const porConversa = new Map<number, { inicio: number; quantidade: number }>();
+  let janelaGlobal = { inicio: Date.now(), quantidade: 0 };
 
   async function atender(msg: MensagemRecebida) {
     if (!msg.texto) return deps.chatwoot.responder(msg.conversaId, M.SO_TEXTO);
@@ -52,7 +62,9 @@ export function criarServidor(deps: DepsServidor) {
         registrarEvento({ conversaId: msg.conversaId, tipo: 'venda', resultado: r.tipo });
         return r;
       },
-      responderDuvida: deps.responderDuvida,
+      // A mesma regra de privacidade da interpretação vale para o RAG: fora de
+      // NUMEROS_IA não enviamos a pergunta ao Gemini e o motor usa o fallback.
+      responderDuvida: interpretador ? deps.responderDuvida : undefined,
     });
     // Depois de passar para um humano, se a conversa voltar ao bot começa um pedido novo
     // (mantendo nome e endereço), em vez de retomar do meio.
@@ -83,7 +95,34 @@ export function criarServidor(deps: DepsServidor) {
     }
   }
 
+  /** Descarta excessos silenciosamente para o Chatwoot não tentar reenviar em rajada. */
+  function permitido(msg: MensagemRecebida): boolean {
+    const agora = Date.now();
+    if (agora - janelaGlobal.inicio >= limite.janelaMs) {
+      janelaGlobal = { inicio: agora, quantidade: 0 };
+      for (const [id, estado] of porConversa) {
+        if (agora - estado.inicio >= limite.janelaMs) porConversa.delete(id);
+      }
+    }
+    if (janelaGlobal.quantidade >= limite.global) return false;
+    const estado = porConversa.get(msg.conversaId);
+    const atual = !estado || agora - estado.inicio >= limite.janelaMs ? { inicio: agora, quantidade: 0 } : estado;
+    if (atual.quantidade >= limite.porConversa) return false;
+    janelaGlobal.quantidade++;
+    atual.quantidade++;
+    porConversa.set(msg.conversaId, atual);
+    return true;
+  }
+
   function enfileirar(msg: MensagemRecebida) {
+    if (!permitido(msg)) {
+      app.log.warn({ conversa: msg.conversaId }, 'limite de mensagens excedido');
+      return;
+    }
+    if (!filas.has(msg.conversaId) && filas.size >= limite.filasMaximas) {
+      app.log.warn({ conversa: msg.conversaId }, 'limite de filas excedido');
+      return;
+    }
     const anterior = filas.get(msg.conversaId) ?? Promise.resolve();
     const atual = anterior
       .then(() => atender(msg))

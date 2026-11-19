@@ -151,6 +151,28 @@ describe('motor da conversa (com IA)', () => {
     const { sessao } = await conversa(deps({ interpretador: new InterpretadorFalso({}) }), ['oi', 'Maria', '1']);
     expect(sessao.estado).toBe('QUANTIDADE');
   });
+
+  it('dúvida relevante usa a resposta da base de conhecimento', async () => {
+    const pergunta = 'vocês entregam no domingo?';
+    const rag = vi.fn(async () => 'Entregamos no domingo das 8h às 12h.');
+    const { acoes } = await conversa(deps({
+      interpretador: new InterpretadorFalso({ [pergunta]: { intencao: 'duvida', entidades: {} } }),
+      responderDuvida: rag,
+    }), [pergunta]);
+
+    expect(rag).toHaveBeenCalledWith(pergunta);
+    expect(textoDe(acoes)).toContain('domingo das 8h às 12h');
+  });
+
+  it('dúvida fora da base usa DUVIDA_SEM_RESPOSTA', async () => {
+    const pergunta = 'qual a previsão do tempo?';
+    const { acoes } = await conversa(deps({
+      interpretador: new InterpretadorFalso({ [pergunta]: { intencao: 'duvida', entidades: {} } }),
+      responderDuvida: async () => null,
+    }), [pergunta]);
+
+    expect(textoDe(acoes)).toContain('atendente');
+  });
 });
 
 describe('ehEmergencia', () => {
