@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 // A tag do menu é montada em Ruby (scripts/menu-html.rb), dentro do Chatwoot. Este teste roda o
@@ -16,7 +17,8 @@ const temDocker = (() => {
 
 describe('tag do menu "Pedidos de hoje" (Ruby)', () => {
   it.skipIf(!temDocker)('escapa o token e só aceita http(s)', () => {
-    const scripts = new URL('../../scripts', import.meta.url).pathname;
+    // fileURLToPath: no Windows, .pathname dá /C:/... e o docker -v não aceita.
+    const scripts = fileURLToPath(new URL('../../scripts', import.meta.url));
     const saida = execFileSync('docker', ['run', '--rm', '-v', `${scripts}:/s:ro`, '--entrypoint', 'ruby', imagem!, '/s/menu-html.test.rb'], {
       encoding: 'utf8',
       timeout: 120_000,
