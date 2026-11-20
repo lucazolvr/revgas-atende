@@ -108,7 +108,7 @@ services:
       chatwoot-migrar: { condition: service_completed_successfully }
 
   evolution:
-    image: evoapicloud/evolution-api:v2.3.7
+    image: evoapicloud/evolution-api:v2.3.6 # v2.3.7 não conecta aparelhos (issue #2696 da Evolution)
     environment:
       SERVER_URL: http://evolution:8080
       AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
