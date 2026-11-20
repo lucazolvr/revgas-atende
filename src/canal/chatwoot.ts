@@ -52,6 +52,14 @@ export class ClienteChatwoot {
     return this.post(`${id}/labels`, { labels });
   }
 
+  /**
+   * Dados do pedido na lateral da conversa. O Chatwoot substitui todos os atributos da
+   * conversa pelos enviados, então mande sempre o conjunto completo.
+   */
+  atributos(id: number, dados: Record<string, string | number>) {
+    return this.post(`${id}/custom_attributes`, { custom_attributes: dados });
+  }
+
   /** Tira a conversa do bot (pending → open) para a fila dos atendentes. */
   async transferir(id: number, prioridade?: 'urgent' | 'high') {
     await this.post(`${id}/toggle_status`, { status: 'open' });

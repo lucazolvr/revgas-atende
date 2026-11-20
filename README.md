@@ -42,6 +42,7 @@ flowchart LR
 | `src/vendas/` | Catálogo, pedido, porta da API RevGás (falsa e real) |
 | `config/` | Catálogo de produtos e orientações de segurança |
 | `scripts/setup.ts` | Liga Evolution ↔ Chatwoot ↔ bot |
+| `scripts/chatwoot-config.ts` | Etiquetas, respostas prontas, atributos e horário do painel (definições em `src/canal/painel.ts`) |
 | `docs/` | Design, plano e (em breve) relatório e roteiro de demo |
 
 Detalhes e decisões: [documento de design](docs/superpowers/specs/2026-11-18-revgas-atende-design.md).
@@ -69,6 +70,7 @@ Precisa de **Docker Desktop** (≈ 4 GB de RAM livres) e de um **chip separado**
 6. Abra **http://127.0.0.1:8080/manager**, entre na instância `revgas` e leia o QR code com o celular do chip (WhatsApp → Aparelhos conectados).
 7. Mande "oi" para o número do chip. 🎉
 8. *(Opcional)* `npm run marca`: aplica a identidade da RevGás no painel (logo, ícone, nome e cores laranja).
+9. `npm run chatwoot:config`: deixa o painel pronto para o atendente: etiquetas com cor, respostas prontas (`/saiu`, `/endereco`, `/seguranca`, `/horario`, `/obrigado`), dados do pedido na lateral da conversa e horário de atendimento da caixa. Pode rodar de novo sem duplicar nada.
 
 ### Marca RevGás no painel
 
