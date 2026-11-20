@@ -1,5 +1,5 @@
 # Ajustes que precisam rodar dentro do Chatwoot (rails runner), a cada `docker compose up`
-# (serviço chatwoot-ajustes, depois do chatwoot-config). Pode rodar de novo sem problema:
+# (serviço chatwoot-ajustes, independente do chatwoot-config). Pode rodar de novo sem problema:
 #   1. marca RevGás: nome, logo, ícone e tema laranja (aplicar-marca.rb);
 #   2. item "Pedidos de hoje" no menu lateral (aplicar-menu.rb);
 #   3. renova o cache do painel: o Chatwoot versiona o cache de etiquetas do navegador pelo segundo

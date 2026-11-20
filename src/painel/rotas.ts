@@ -51,6 +51,8 @@ type RespostaPainel = {
 
 type Falha = { codigo: number; erro: string };
 
+const NAO_REGISTRADA = 'a venda não foi registrada pelo bot nesta conversa';
+
 const ler = (nome: string) => readFileSync(new URL(`./publico/${nome}`, import.meta.url), 'utf8');
 
 function mesmoToken(a: string, b: string) {
@@ -159,7 +161,17 @@ export function registrarPainel(app: FastifyInstance, deps: DepsPainel) {
       if (typeof v === 'string' || typeof v === 'number') pedido[chave] = v;
     }
     const vendaId = Number(pedido.numero_venda);
-    const venda = Number.isSafeInteger(vendaId) && vendaId > 0 ? await consultarVenda(vendaId) : null;
+    let venda: VendaNoPainel | null = null;
+    if (Number.isSafeInteger(vendaId) && vendaId > 0) {
+      // O atendente pode editar "Nº da venda" na lateral do Chatwoot. Só vale a venda que o bot
+      // registrou nesta conversa: sem isso, dava para cancelar a venda de outro grupo do mesmo
+      // estabelecimento de teste. Fora do registro, nem consulta o ERP.
+      const registrado = await deps.pedidos.daVenda(vendaId);
+      venda =
+        registrado?.conversaId === conversa
+          ? await consultarVenda(vendaId)
+          : { id: vendaId, erro: NAO_REGISTRADA };
+    }
     return { conversa, modo: deps.modo, pedido, venda, podeCancelar: podeCancelar(venda) };
   }
 
@@ -179,6 +191,7 @@ export function registrarPainel(app: FastifyInstance, deps: DepsPainel) {
     const dados = await montarConversa(id);
     if (!dados) return seguro(reply).code(404).send({ erro: 'conversa não encontrada' });
     if (!dados.venda) return seguro(reply).code(409).send({ erro: 'esta conversa não tem venda registrada' });
+    if ('erro' in dados.venda && dados.venda.erro === NAO_REGISTRADA) return seguro(reply).code(403).send({ erro: NAO_REGISTRADA });
     const falha = await cancelar(dados.venda.id, id);
     if (falha) return seguro(reply).code(falha.codigo).send({ erro: falha.erro });
     return seguro(reply).send(await montarConversa(id));

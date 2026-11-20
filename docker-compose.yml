@@ -78,8 +78,9 @@ services:
       chatwoot: { condition: service_started }
     restart: "no"
 
-  # Depois do chatwoot-config: marca RevGás, menu "Pedidos de hoje" e cache do painel
-  # (scripts/chatwoot-ajustes.rb). Grava direto no banco do Chatwoot: não precisa de token.
+  # Marca RevGás, menu "Pedidos de hoje" e cache do painel (scripts/chatwoot-ajustes.rb). Grava
+  # direto no banco do Chatwoot: não precisa de token nem do Chatwoot no ar, e não depende do
+  # chatwoot-config (um erro lá, como um token errado, não deixa o painel sem marca e sem menu).
   chatwoot-ajustes:
     <<: *chatwoot
     command: bundle exec rails runner /revgas/chatwoot-ajustes.rb
@@ -90,7 +91,8 @@ services:
     volumes:
       - ./scripts:/revgas:ro
     depends_on:
-      chatwoot-config: { condition: service_completed_successfully }
+      chatwoot-migrar: { condition: service_completed_successfully }
+      redis: { condition: service_started }
     restart: "no"
 
   chatwoot-sidekiq:

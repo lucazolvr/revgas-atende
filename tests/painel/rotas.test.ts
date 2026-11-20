@@ -25,6 +25,7 @@ const registro = (vendaId: number, conversaId: number, quando: string): PedidoRe
 
 /**
  * Aba: conversa 7 com a venda 1 (estabelecimento 2580); conversa 8 sem venda; 9 não existe.
+ * Conversas 12 e 13: "Nº da venda" editado à mão para a venda 2 (de outra conversa) e para a 4.
  * Lista: venda 1 hoje cedo (conversa 7), venda 2 hoje à tarde (conversa 10), venda 3 ontem.
  * A venda 4 existe no ERP mas não foi registrada pelo bot.
  */
@@ -40,6 +41,8 @@ async function montar(opcoes: { estabelecimentoDaVenda?: number } = {}) {
   const atributos: Record<number, Record<string, unknown>> = {
     7: { numero_venda: 1, total: 'R$ 220,00', forma_pagamento: 'PIX', endereco: 'Rua Nova, 10 - Centro, Teresina/PI', quantidade: 2, outro: 'x' },
     8: { quantidade: 3 },
+    12: { numero_venda: 2 },
+    13: { numero_venda: 4 },
   };
   const chatwoot = {
     atributosDe: vi.fn(async (id: number) => atributos[id] ?? null),
@@ -119,6 +122,20 @@ describe('painel Pedido RevGás', () => {
     const { pedir, vendas } = await montar({ estabelecimentoDaVenda: 999 });
     expect((await pedir('/painel/api/conversas/7')).json()).toMatchObject({ venda: { doEstabelecimento: false }, podeCancelar: false });
     expect((await pedir('/painel/api/conversas/7/cancelar', 'POST')).statusCode).toBe(403);
+    expect(vendas.canceladas.size).toBe(0);
+  });
+
+  it('número da venda editado à mão na lateral não consulta nem cancela no ERP', async () => {
+    const { pedir, vendas } = await montar();
+    const detalhar = vi.spyOn(vendas, 'detalharVenda');
+    for (const conversa of [12, 13]) {
+      expect((await pedir(`/painel/api/conversas/${conversa}`)).json()).toMatchObject({
+        venda: { erro: 'a venda não foi registrada pelo bot nesta conversa' },
+        podeCancelar: false,
+      });
+      expect((await pedir(`/painel/api/conversas/${conversa}/cancelar`, 'POST')).statusCode).toBe(403);
+    }
+    expect(detalhar).not.toHaveBeenCalled();
     expect(vendas.canceladas.size).toBe(0);
   });
 

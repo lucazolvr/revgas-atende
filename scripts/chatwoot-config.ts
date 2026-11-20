@@ -80,6 +80,10 @@ try {
   const msg = e instanceof Error ? e.message : String(e);
   // Antes do npm run setup a caixa do WhatsApp não existe: no automático, só avisa.
   if (msg.includes('npm run setup')) pular(msg);
-  console.error(`✗ ${msg}`);
-  process.exit(1);
+  console.error(`✗ chatwoot-config: ${msg}`);
+  if (/→ 401:/.test(msg)) console.error('  Dica: o CHATWOOT_ADMIN_TOKEN do .env está errado ou foi trocado (Chatwoot → Perfil → Token de acesso).');
+  else if (/→ 404:/.test(msg)) console.error('  Dica: confira o CHATWOOT_ACCOUNT_ID do .env (o número em /app/accounts/N/ no endereço do Chatwoot).');
+  // No `docker compose up`, um erro aqui não derruba a subida: o bot e o Chatwoot seguem no ar,
+  // e o problema fica explicado no log (docker compose logs chatwoot-config).
+  process.exit(automatico ? 0 : 1);
 }
