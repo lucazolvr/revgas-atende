@@ -60,6 +60,19 @@ export class ClienteChatwoot {
     return this.post(`${id}/custom_attributes`, { custom_attributes: dados });
   }
 
+  /** Lê os dados do pedido que o bot gravou na conversa. `null` = conversa não existe. */
+  async atributosDe(id: number): Promise<Record<string, unknown> | null> {
+    if (!Number.isSafeInteger(id) || id <= 0) return null; // vira parte da URL autenticada
+    const r = await this.fetchFn(`${this.base}/${id}`, {
+      headers: { api_access_token: this.token },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error(`Chatwoot respondeu ${r.status} em :id`);
+    const d = (await r.json()) as { custom_attributes?: Record<string, unknown> | null };
+    return d.custom_attributes ?? {};
+  }
+
   /** Tira a conversa do bot (pending → open) para a fila dos atendentes. */
   async transferir(id: number, prioridade?: 'urgent' | 'high') {
     await this.post(`${id}/toggle_status`, { status: 'open' });

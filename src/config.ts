@@ -39,6 +39,13 @@ const esquema = z
     REVGAS_API_KEY: opcional,
     REVGAS_CLIENTE_DEMO: inteiroOpcional,
     REVGAS_ESTABELECIMENTO: inteiroOpcional,
+    // Painel "Pedido RevGás" (aba na conversa e "Pedidos de hoje" no menu): sem token, não existe.
+    PAINEL_TOKEN: z.preprocess(vazioParaUndefined, z.string().trim().min(32, 'PAINEL_TOKEN precisa de 32+ caracteres').optional()),
+    PAINEL_ORIGENS: z
+      .string()
+      .default('http://localhost:3000,http://127.0.0.1:3000')
+      .transform((s) => s.split(',').map((o) => o.trim()).filter(Boolean))
+      .pipe(z.array(z.string().regex(/^https?:\/\/[^\s/;,'"]+$/, 'PAINEL_ORIGENS: só origens como http://localhost:3000')).min(1)),
   })
   .superRefine((c, ctx) => {
     if (!c.VENDA_REAL) return;

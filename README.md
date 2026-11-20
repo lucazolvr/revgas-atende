@@ -42,7 +42,8 @@ flowchart LR
 | `src/vendas/` | Catálogo, pedido, porta da API RevGás (falsa e real) |
 | `config/` | Catálogo de produtos e orientações de segurança |
 | `scripts/setup.ts` | Liga Evolution ↔ Chatwoot ↔ bot |
-| `scripts/chatwoot-config.ts` | Etiquetas, respostas prontas, atributos e horário do painel (definições em `src/canal/painel.ts`) |
+| `scripts/chatwoot-config.ts` | Etiquetas, respostas prontas, atributos, horário, aba "Pedido RevGás" e menu "Pedidos de hoje" (definições em `src/canal/painel.ts`) |
+| `src/painel/` | Aba "Pedido RevGás" na conversa e lista "Pedidos de hoje" no menu: venda no ERP e cancelamento de venda de teste |
 | `docs/` | Design, plano e (em breve) relatório e roteiro de demo |
 
 Detalhes e decisões: [documento de design](docs/superpowers/specs/2026-11-18-revgas-atende-design.md).
@@ -71,6 +72,7 @@ Precisa de **Docker Desktop** (≈ 4 GB de RAM livres) e de um **chip separado**
 7. Mande "oi" para o número do chip. 🎉
 8. *(Opcional)* `npm run marca`: aplica a identidade da RevGás no painel (logo, ícone, nome e cores laranja).
 9. `npm run chatwoot:config`: deixa o painel pronto para o atendente: etiquetas com cor, respostas prontas (`/saiu`, `/endereco`, `/seguranca`, `/horario`, `/obrigado`), dados do pedido na lateral da conversa e horário de atendimento da caixa. Pode rodar de novo sem duplicar nada.
+10. *(Opcional)* **Painel de pedidos:** coloque um `PAINEL_TOKEN` aleatório (32+ caracteres) no `.env`, rode `docker compose up -d --build bot` e `npm run chatwoot:config` de novo. Aparecem a aba **Pedido RevGás** em cada conversa (o pedido, a venda no ERP e "Cancelar venda de teste") e o item **Pedidos de hoje** no menu lateral, que abre por cima do Chatwoot a lista de todos os pedidos do dia. As páginas só funcionam dentro do Chatwoot. A porta do painel só existe em `127.0.0.1` e a API exige o token.
 
 ### Marca RevGás no painel
 

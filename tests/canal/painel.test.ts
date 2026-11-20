@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ATRIBUTOS, ETIQUETAS, HORARIO, NOME_CAIXA, TODAS_ETIQUETAS, configurarPainel, type ApiConta } from '../../src/canal/painel.js';
+import { ATRIBUTOS, ETIQUETAS, HORARIO, NOME_CAIXA, TODAS_ETIQUETAS, configurarPainel, htmlDoMenu, type ApiConta } from '../../src/canal/painel.js';
 import { RESPOSTAS_PRONTAS, SEGURANCA } from '../../src/conversa/mensagens.js';
 
 type Registro = Record<string, unknown> & { id: number };
@@ -10,6 +10,7 @@ function chatwootFalso(caixas: string[] = [NOME_CAIXA]) {
     labels: [],
     canned_responses: [],
     custom_attribute_definitions: [],
+    dashboard_apps: [],
     inboxes: caixas.map((name, i) => ({ id: i + 1, name })),
   };
   const chamadas: { metodo: string; caminho: string; corpo?: unknown }[] = [];
@@ -17,6 +18,7 @@ function chatwootFalso(caixas: string[] = [NOME_CAIXA]) {
     labels: 'label',
     canned_responses: 'canned_response',
     custom_attribute_definitions: 'custom_attribute_definition',
+    dashboard_apps: 'dashboard_app',
   };
   let proximoId = 100;
 
@@ -31,7 +33,7 @@ function chatwootFalso(caixas: string[] = [NOME_CAIXA]) {
       return (recurso === 'labels' || recurso === 'inboxes' ? { payload: tabela } : tabela) as T;
     }
     if (metodo === 'POST') {
-      const chave = recurso === 'labels' ? 'title' : recurso === 'canned_responses' ? 'short_code' : 'attribute_key';
+      const chave = { labels: 'title', canned_responses: 'short_code', dashboard_apps: 'title' }[recurso] ?? 'attribute_key';
       // Como no Chatwoot: a chave do atributo é única por modelo (conversa, contato...), não na conta.
       const mesmoModelo = (r: Registro) => recurso !== 'custom_attribute_definitions' || r.attribute_model === dados.attribute_model;
       if (tabela.some((r) => r[chave] === dados[chave] && mesmoModelo(r))) throw new Error(`422: ${chave} duplicado`);
@@ -100,6 +102,21 @@ describe('configurarPainel', () => {
     expect(db.custom_attribute_definitions!.filter((a) => a.attribute_key === 'endereco')).toHaveLength(2);
   });
 
+  it('aba Pedido RevGás: só com URL, sem duplicar, e atualiza quando o token muda', async () => {
+    const { cw, db } = chatwootFalso();
+    await configurarPainel(cw);
+    expect(db.dashboard_apps).toEqual([]);
+    const url = 'http://127.0.0.1:3001/painel#token=abc';
+    expect(await configurarPainel(cw, { urlAba: url })).toContain('+ aba Pedido RevGás');
+    expect(await configurarPainel(cw, { urlAba: url })).toContain('= aba Pedido RevGás');
+    const log = await configurarPainel(cw, { urlAba: 'http://127.0.0.1:3001/painel#token=novo' });
+    expect(log).toContain('~ aba Pedido RevGás');
+    expect(log.join('\n')).not.toContain('token');
+    expect(db.dashboard_apps).toEqual([
+      { id: expect.any(Number), title: 'Pedido RevGás', content: [{ type: 'frame', url: 'http://127.0.0.1:3001/painel#token=novo' }] },
+    ]);
+  });
+
   it('sem a caixa do WhatsApp pede para rodar o setup', async () => {
     const { cw } = chatwootFalso(['Outra caixa']);
     await expect(configurarPainel(cw)).rejects.toThrow('npm run setup');
@@ -127,5 +144,23 @@ describe('definições do painel', () => {
 
   it('códigos das respostas prontas sem espaço nem barra', () => {
     for (const codigo of Object.keys(RESPOSTAS_PRONTAS)) expect(codigo).toMatch(/^[a-z0-9_-]+$/);
+  });
+});
+
+describe('menu "Pedidos de hoje"', () => {
+  it('monta a tag do script com o token num atributo', () => {
+    expect(htmlDoMenu('http://127.0.0.1:3001', 'abc_DEF-123')).toBe(
+      '<script src="http://127.0.0.1:3001/painel/menu.js" data-token="abc_DEF-123" defer></script>',
+    );
+  });
+
+  it('escapa o token: nada do .env vira HTML dentro do Chatwoot', () => {
+    const html = htmlDoMenu('http://127.0.0.1:3001/', 'x"><img src=x onerror=alert(1)>');
+    expect(html).not.toContain('<img');
+    expect(html).toContain('data-token="x&quot;&gt;&lt;img src=x onerror=alert(1)&gt;"');
+  });
+
+  it('só aceita endereço http(s) para o painel', () => {
+    expect(() => htmlDoMenu('javascript:alert(1)', 't')).toThrow('http');
   });
 });

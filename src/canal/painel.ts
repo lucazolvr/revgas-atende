@@ -75,7 +75,24 @@ const itens = <T>(r: Lista<T>) => (Array.isArray(r) ? r : r.payload);
  * Cria o que falta e corrige o que está diferente; rodar de novo não duplica nada.
  * Devolve uma linha por item, para o script mostrar o que fez.
  */
-export async function configurarPainel(cw: ApiConta): Promise<string[]> {
+
+const TITULO_ABA = 'Pedido RevGás';
+
+const escaparAtributo = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/**
+ * Tag que o Chatwoot põe em todas as telas (DASHBOARD_SCRIPTS) para o item "Pedidos de hoje" no
+ * menu lateral. O token vai num atributo, escapado: nada do .env pode virar HTML no Chatwoot.
+ */
+export function htmlDoMenu(urlPainel: string, token: string): string {
+  const base = new URL(urlPainel);
+  if (base.protocol !== 'http:' && base.protocol !== 'https:') throw new Error('PAINEL_URL precisa ser http(s)');
+  const src = new URL('/painel/menu.js', base.origin).href;
+  return `<script src="${escaparAtributo(src)}" data-token="${escaparAtributo(token)}" defer></script>`;
+}
+
+export async function configurarPainel(cw: ApiConta, opcoes: { urlAba?: string } = {}): Promise<string[]> {
   const log: string[] = [];
 
   // 1. Etiquetas
@@ -144,6 +161,23 @@ export async function configurarPainel(cw: ApiConta): Promise<string[]> {
   // fora do horário (o cliente não recebe duas mensagens). O horário aparece no painel e nos relatórios.
   await cw(`/inboxes/${caixa.id}`, 'PATCH', { working_hours_enabled: true, timezone: FUSO, working_hours: HORARIO });
   log.push(`✓ horário da caixa "${NOME_CAIXA}"`);
+
+  // 5. Aba "Pedido RevGás" dentro da conversa (Dashboard App). A URL leva o token: nunca vai pro log.
+  if (opcoes.urlAba) {
+    type Aba = ComId & { title: string; content: { type: string; url: string }[] };
+    const abas = itens(await cw<Lista<Aba>>('/dashboard_apps'));
+    const corpo = { dashboard_app: { title: TITULO_ABA, content: [{ type: 'frame', url: opcoes.urlAba }] } };
+    const atual = abas.find((a) => a.title === TITULO_ABA);
+    if (!atual) {
+      await cw('/dashboard_apps', 'POST', corpo);
+      log.push(`+ aba ${TITULO_ABA}`);
+    } else if (atual.content.length !== 1 || atual.content[0]?.url !== opcoes.urlAba || atual.content[0]?.type !== 'frame') {
+      await cw(`/dashboard_apps/${atual.id}`, 'PATCH', corpo);
+      log.push(`~ aba ${TITULO_ABA}`);
+    } else {
+      log.push(`= aba ${TITULO_ABA}`);
+    }
+  }
 
   return log;
 }

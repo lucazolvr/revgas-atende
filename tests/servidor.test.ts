@@ -11,7 +11,11 @@ import { webhook } from './ajuda.js';
 const TOKEN = 'token-secreto-de-teste-123-456789';
 const catalogo = carregarCatalogo();
 
-function montar(numerosIa: string[] = [], limites?: { porConversa?: number; global?: number; janelaMs?: number; filasMaximas?: number }) {
+function montar(
+  numerosIa: string[] = [],
+  limites?: { porConversa?: number; global?: number; janelaMs?: number; filasMaximas?: number },
+  pedidos?: { adicionar: (p: never) => Promise<void> },
+) {
   const api = new ApiRevGasFalsa();
   const chatwoot = {
     responder: vi.fn(async () => {}),
@@ -29,6 +33,7 @@ function montar(numerosIa: string[] = [], limites?: { porConversa?: number; glob
     catalogo,
     interpretadorPara,
     limites,
+    pedidos,
     registrar: (p) => registrarVenda(api, corpoDaVenda(p, catalogo, { clienteId: 1, estabelecimentoId: 1 })),
   });
   const enviar = (texto: string, conversa: Record<string, unknown> = {}) =>
@@ -128,6 +133,28 @@ describe('servidor', () => {
       await enviar('1'); // "1" repetido não cria venda nem regrava
       await ocioso();
       expect(chatwoot.atributos).toHaveBeenCalledOnce();
+    });
+
+    it('venda registrada entra nos pedidos do dia (e falha ali não atrapalha)', async () => {
+      const adicionar = vi.fn(async (_p: unknown) => {});
+      const { ocioso, chatwoot, enviar } = montar([], undefined, { adicionar });
+      for (const m of [...PEDIDO, '1']) await enviar(m);
+      await ocioso();
+      expect(adicionar).toHaveBeenCalledExactlyOnceWith({
+        vendaId: 1,
+        conversaId: 7,
+        quando: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+        nome: 'Maria',
+        produto: 'Botijão de gás P13',
+        quantidade: 2,
+        total: 'R$ 220,00',
+        pagamento: 'PIX',
+        endereco: 'Rua Nova, 10 - Centro, Teresina/PI',
+      });
+      adicionar.mockRejectedValue(new Error('Redis fora'));
+      for (const m of [...PEDIDO, '1']) await enviar(m, { id: 8 }); // outro cliente, outra conversa
+      await ocioso();
+      expect(chatwoot.responder).toHaveBeenLastCalledWith(8, expect.stringContaining('Pedido registrado'));
     });
 
     it('transferência grava o que já foi coletado', async () => {

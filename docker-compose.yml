@@ -99,6 +99,11 @@ services:
       CHATWOOT_URL: http://chatwoot:3000
       REDIS_URL: redis://redis:6379/2
       PORTA: "3000"
+    ports:
+      # Painel "Pedido RevGás" (aba na conversa e lista "Pedidos de hoje" do menu do Chatwoot).
+      # Só no 127.0.0.1: os dados do pedido
+      # são pessoais e não podem ficar abertos na rede. A API do painel ainda exige PAINEL_TOKEN.
+      - "127.0.0.1:3001:3000"
     volumes:
       - ./dados:/app/dados
     depends_on: [redis, chatwoot]
