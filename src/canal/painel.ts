@@ -4,6 +4,7 @@
  * O bot usa as mesmas definições (ETIQUETAS), então etiqueta nova aqui já sai com cor no painel.
  */
 import type { MotivoTransferencia } from '../conversa/motor.js';
+import { HORARIO_REVENDA } from '../conversa/horario.js';
 import { RESPOSTAS_PRONTAS } from '../conversa/mensagens.js';
 
 export const NOME_CAIXA = 'WhatsApp RevGás';
@@ -48,19 +49,13 @@ export const ATRIBUTOS = [
 export type ChaveAtributo = (typeof ATRIBUTOS)[number]['attribute_key'];
 
 /**
- * Mesmo horário da FAQ (config/faq/horario.md): seg–sáb 7h–20h, domingo 8h–13h.
- * O Chatwoot não tem feriados; neles vale o horário do dia da semana.
- * `day_of_week`: 0 = domingo.
+ * Horário da caixa, gerado de HORARIO_REVENDA (src/conversa/horario.ts).
+ * O Chatwoot não tem feriados; neles vale o horário do dia da semana. `day_of_week`: 0 = domingo.
  */
-export const HORARIO = [0, 1, 2, 3, 4, 5, 6].map((dia) => ({
-  day_of_week: dia,
-  closed_all_day: false,
-  open_all_day: false,
-  open_hour: dia === 0 ? 8 : 7,
-  open_minutes: 0,
-  close_hour: dia === 0 ? 13 : 20,
-  close_minutes: 0,
-}));
+export const HORARIO = [0, 1, 2, 3, 4, 5, 6].map((dia) => {
+  const h = dia === 0 ? HORARIO_REVENDA.domingo : HORARIO_REVENDA.semana;
+  return { day_of_week: dia, closed_all_day: false, open_all_day: false, open_hour: h.abre, open_minutes: 0, close_hour: h.fecha, close_minutes: 0 };
+});
 
 export const FUSO = 'America/Fortaleza'; // Teresina: UTC−3, sem horário de verão
 

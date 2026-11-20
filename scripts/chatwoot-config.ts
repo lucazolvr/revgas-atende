@@ -13,6 +13,7 @@
  */
 import { loadEnvFile } from 'node:process';
 import { configurarPainel } from '../src/canal/painel.js';
+import { TOKEN_PAINEL_MINIMO, tokenPainelValido } from '../src/config.js';
 
 // No Docker as variáveis já vêm do env_file; à mão, do .env.
 try {
@@ -66,11 +67,19 @@ async function esperarChatwoot() {
 await esperarChatwoot();
 try {
   // Aba "Pedido RevGás": só com PAINEL_TOKEN. O token vai depois do # (o navegador não o envia ao servidor).
-  const tokenPainel = process.env.PAINEL_TOKEN?.trim();
+  // Com token curto o bot desliga o painel; a aba também fica de fora, para não aparecer quebrada.
+  const bruto = process.env.PAINEL_TOKEN?.trim();
+  const tokenPainel = tokenPainelValido(bruto) ? bruto : undefined;
   const urlPainel = (process.env.PAINEL_URL?.trim() || 'http://127.0.0.1:3001').replace(/\/+$/, '');
   const urlAba = tokenPainel ? `${urlPainel}/painel#token=${encodeURIComponent(tokenPainel)}` : undefined;
   const log = await configurarPainel(cw, { urlAba });
-  if (!urlAba) log.push('· aba Pedido RevGás desligada (sem PAINEL_TOKEN no .env)');
+  if (!urlAba) {
+    log.push(
+      bruto
+        ? `· aba Pedido RevGás desligada (PAINEL_TOKEN com menos de ${TOKEN_PAINEL_MINIMO} caracteres)`
+        : '· aba Pedido RevGás desligada (sem PAINEL_TOKEN no .env)',
+    );
+  }
   for (const linha of log) console.log(linha);
   console.log('\nPronto (+ criado · ~ atualizado · = já estava certo).');
   if (!automatico) {

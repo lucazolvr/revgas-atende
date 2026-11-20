@@ -7,6 +7,10 @@ const token = new URLSearchParams(location.hash.slice(1)).get('token');
 const $ = (id) => document.getElementById(id);
 let conversaId = null;
 let ocupado = false;
+let ultimaCarga = 0;
+// Ao voltar para a janela, só consulta o ERP de novo se a conversa mudou ou depois disto: a API
+// real aceita 1 requisição por segundo. O botão "Atualizar" sempre consulta.
+const RECARGA_MINIMA_MS = 60_000;
 
 const ROTULOS = [
   ['numero_venda', 'Nº da venda'],
@@ -80,6 +84,7 @@ async function carregar() {
   $('atualizar').disabled = true;
   try {
     mostrar(await chamar(`/painel/api/conversas/${conversaId}`));
+    ultimaCarga = Date.now();
   } catch (e) {
     $('pedido').hidden = true;
     $('venda').hidden = true;
@@ -121,12 +126,13 @@ window.addEventListener('message', (e) => {
   const mudou = id !== conversaId;
   conversaId = id;
   if (mudou) $('resultado').textContent = '';
-  carregar();
+  if (mudou || Date.now() - ultimaCarga >= RECARGA_MINIMA_MS) carregar();
 });
 
 $('atualizar').addEventListener('click', () => (conversaId ? carregar() : pedirContexto()));
 $('cancelar').addEventListener('click', cancelar);
-// Ao voltar para a aba, busca de novo (a conversa pode ter mudado ou a venda ter sido registrada).
+// Ao voltar para a aba, pergunta qual conversa está aberta (sem custo); o ERP só é consultado se
+// a conversa mudou ou se a última consulta passou de RECARGA_MINIMA_MS.
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') pedirContexto();
 });

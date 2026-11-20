@@ -26,7 +26,12 @@ describe('carregarConfig', () => {
   it('painel: desligado sem token, recusa token curto e lê as origens', () => {
     expect(carregarConfig(base).PAINEL_TOKEN).toBeUndefined();
     expect(carregarConfig(base).PAINEL_ORIGENS).toEqual(['http://localhost:3000', 'http://127.0.0.1:3000']);
-    expect(() => carregarConfig({ ...base, PAINEL_TOKEN: 'curto' })).toThrow('PAINEL_TOKEN');
+    // Token curto não derruba o bot: só desliga o painel, com aviso (sem mostrar o valor).
+    const curto = carregarConfig({ ...base, PAINEL_TOKEN: 'curto-demais' });
+    expect(curto.PAINEL_TOKEN).toBeUndefined();
+    expect(curto.avisos).toEqual([expect.stringContaining('PAINEL_TOKEN tem menos de 32 caracteres')]);
+    expect(curto.avisos.join()).not.toContain('curto-demais');
+    expect(carregarConfig(base).avisos).toEqual([]);
     expect(carregarConfig({ ...base, PAINEL_TOKEN: 'p'.repeat(32), PAINEL_ORIGENS: ' http://cw.local:3000 ' }).PAINEL_ORIGENS).toEqual([
       'http://cw.local:3000',
     ]);

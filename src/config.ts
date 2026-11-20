@@ -9,6 +9,10 @@ export function chaveTelefone(telefone: string): string {
   return d.length === 13 && d.startsWith('55') && d[4] === '9' ? d.slice(0, 4) + d.slice(5) : d;
 }
 
+/** Tamanho mínimo do PAINEL_TOKEN; menor que isso, o painel de pedidos fica desligado. */
+export const TOKEN_PAINEL_MINIMO = 32;
+export const tokenPainelValido = (t: string | undefined): t is string => !!t && t.trim().length >= TOKEN_PAINEL_MINIMO;
+
 const vazioParaUndefined = (v: unknown) => (typeof v === 'string' && v.trim() === '' ? undefined : v);
 const opcional = z.preprocess(vazioParaUndefined, z.string().trim().optional());
 const inteiroOpcional = z.preprocess(vazioParaUndefined, z.coerce.number().int().positive().optional());
@@ -40,7 +44,9 @@ const esquema = z
     REVGAS_CLIENTE_DEMO: inteiroOpcional,
     REVGAS_ESTABELECIMENTO: inteiroOpcional,
     // Painel "Pedido RevGás" (aba na conversa e "Pedidos de hoje" no menu): sem token, não existe.
-    PAINEL_TOKEN: z.preprocess(vazioParaUndefined, z.string().trim().min(32, 'PAINEL_TOKEN precisa de 32+ caracteres').optional()),
+    // Curto demais vira "painel desligado" com aviso (ver carregarConfig): é recurso opcional e
+    // não pode impedir o bot de atender o WhatsApp.
+    PAINEL_TOKEN: z.preprocess(vazioParaUndefined, z.string().trim().transform((t) => (tokenPainelValido(t) ? t : undefined)).optional()),
     PAINEL_ORIGENS: z
       .string()
       .default('http://localhost:3000,http://127.0.0.1:3000')
@@ -54,7 +60,10 @@ const esquema = z
     }
   });
 
-export type Config = z.infer<typeof esquema>;
+export type Config = z.infer<typeof esquema> & {
+  /** Problemas que não impedem o bot de subir (o index.ts mostra no log). */
+  avisos: string[];
+};
 
 export function carregarConfig(env: Record<string, string | undefined> = process.env): Config {
   const r = esquema.safeParse(env);
@@ -63,5 +72,9 @@ export function carregarConfig(env: Record<string, string | undefined> = process
     const erros = r.error.issues.map((i) => `- ${i.path.join('.')}: ${i.message}`).join('\n');
     throw new Error(`Configuração inválida no .env:\n${erros}`);
   }
-  return r.data;
+  const avisos: string[] = [];
+  if (env.PAINEL_TOKEN?.trim() && !r.data.PAINEL_TOKEN) {
+    avisos.push(`PAINEL_TOKEN tem menos de ${TOKEN_PAINEL_MINIMO} caracteres: o painel de pedidos ficou desligado.`);
+  }
+  return { ...r.data, avisos };
 }
