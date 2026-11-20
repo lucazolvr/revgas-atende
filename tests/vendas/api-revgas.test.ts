@@ -69,6 +69,18 @@ describe('registrarVenda', () => {
   });
 });
 
+describe('ApiRevGasFalsa: conferir e cancelar', () => {
+  it('detalha no formato da API real e cancela', async () => {
+    const api = new ApiRevGasFalsa();
+    await api.criarVenda(corpo);
+    expect((await api.detalharVenda(1)).dados).toMatchObject({ id: 1, establishment_id: corpo.establishment_id, status: 'OPEN' });
+    expect((await api.cancelarVenda(1)).status).toBe(204);
+    expect((await api.detalharVenda(1)).dados).toMatchObject({ status: 'CANCEL' });
+    expect((await api.detalharVenda(2)).status).toBe(404);
+    await expect(api.detalharVenda(-1)).rejects.toThrow('inválido');
+  });
+});
+
 describe('ApiRevGasHttp: conferir e cancelar venda de teste', () => {
   it('detalha com GET e cancela com PUT /sales/:id/cancel', async () => {
     const f = fetchFalso(200, { data: {} });

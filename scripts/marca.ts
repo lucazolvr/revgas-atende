@@ -45,7 +45,40 @@ export function mapaDeCores(original: { claro: Escala; escuro: Escala }): Map<st
       mapa.set(hex(rgb), hex(novo));
       mapa.set(rgb, novo);
       mapa.set(rgb.replaceAll(' ', ','), novo.replaceAll(' ', ','));
+      mapa.set(rgb.replaceAll(' ', ', '), novo.replaceAll(' ', ', ')); // ex.: --border-blue: 39, 129, 246, .5
     }
+  }
+  return mapa;
+}
+
+/** Declarações `--var: r g b` dos blocos exatamente `seletor{...}` (o último valor vence). */
+function lerVariaveis(css: string, seletor: string): Map<string, string> {
+  const vars = new Map<string, string>();
+  const re = new RegExp(`(?:^|})${seletor.replace('.', '\\.')}\\{([^}]*)}`, 'g');
+  for (const [, bloco] of css.matchAll(re)) {
+    for (const [, nome, rgb] of bloco!.matchAll(/(--[\w-]+):\s*(\d+ \d+ \d+)/g)) vars.set(nome!, rgb!);
+  }
+  return vars;
+}
+
+/**
+ * Variáveis derivadas da escala (ex.: --solid-blue, o balão da mensagem enviada) usam no claro um
+ * passo exato da escala, mas no escuro um tom próprio, que o mapa não reconhecia: o balão ficava
+ * com a cor do tema claro no modo escuro. Aqui o tom escuro vira o mesmo passo do laranja escuro.
+ */
+export function mapaDeVariaveisEscuras(css: string, original: { claro: Escala; escuro: Escala }): Map<string, string> {
+  const mapa = new Map<string, string>();
+  const passoClaro = new Map(Object.entries(original.claro).map(([n, rgb]) => [rgb, Number(n)]));
+  const tonsEscuros = new Set(Object.values(original.escuro));
+  const escuras = lerVariaveis(css, '.dark');
+  for (const [nome, rgbClaro] of lerVariaveis(css, ':root')) {
+    const passo = passoClaro.get(rgbClaro);
+    const rgbEscuro = escuras.get(nome);
+    if (/^--blue-\d+$/.test(nome) || !passo || !rgbEscuro || tonsEscuros.has(rgbEscuro)) continue;
+    const novo = LARANJA.escuro[passo];
+    if (!novo) continue;
+    mapa.set(rgbEscuro, novo);
+    mapa.set(rgbEscuro.replaceAll(' ', ','), novo.replaceAll(' ', ','));
   }
   return mapa;
 }
@@ -72,9 +105,16 @@ export function trocarCores(css: string, mapa: Map<string, string>): string {
       buffer = '';
       const seletor = pilha.pop() ?? '';
       if (seletor.startsWith('@') || !usa.test(corpo)) continue;
-      const decls = corpo
-        .split(';')
-        .filter((d) => usa.test(d) && !/^\s*--blue-\d+\s*:/.test(d)) // as variáveis vão no bloco próprio
+      const todas = corpo.split(';');
+      const propriedade = (d: string) => d.split(':')[0]!.trim();
+      // O Tailwind compila `cor fixa; cor por variável` (ex.: .bg-n-solid-blue{background-color:#daecff;
+      // background-color:rgb(var(--solid-blue) / 1)}). A fixa é só reserva: copiá-la para este tema,
+      // que vem depois, passaria por cima da variável e travaria a cor do tema claro no modo escuro
+      // (balão da mensagem enviada ilegível). Essa cor já muda pelas variáveis trocadas acima.
+      const reservaDeVariavel = (d: string, i: number) =>
+        todas.slice(i + 1).some((p) => propriedade(p) === propriedade(d) && p.includes('var(--') && !usa.test(p));
+      const decls = todas
+        .filter((d, i) => usa.test(d) && !/^\s*--blue-\d+\s*:/.test(d) && !reservaDeVariavel(d, i)) // --blue-N vão no bloco próprio
         .map((d) => d.replace(re, (c) => mapa.get(c.toLowerCase()) ?? mapa.get(c) ?? c));
       if (!decls.length) continue;
       let regra = `${seletor}{${decls.join(';')}}`;
@@ -95,7 +135,7 @@ export function gerarTema(css: string): string {
     '/* Gerado por scripts/marca.ts a partir do CSS do Chatwoot. Não edite: rode npm run marca. */',
     `:root{${variaveis(LARANJA.claro)}}`,
     `.dark{${variaveis(LARANJA.escuro)}}`,
-    trocarCores(css, mapaDeCores(original)),
+    trocarCores(css, new Map([...mapaDeVariaveisEscuras(css, original), ...mapaDeCores(original)])),
   ].join('\n');
 }
 

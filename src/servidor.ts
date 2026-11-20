@@ -2,8 +2,10 @@ import { timingSafeEqual } from 'node:crypto';
 import Fastify from 'fastify';
 import { extrairMensagem, type ClienteChatwoot, type MensagemRecebida } from './canal/chatwoot.js';
 import * as M from './conversa/mensagens.js';
-import { novaSessao, processar, type Acao, type MotivoTransferencia } from './conversa/motor.js';
+import { ETIQUETAS } from './canal/painel.js';
+import { novaSessao, processar, type Acao, type Sessao } from './conversa/motor.js';
 import type { Sessoes } from './conversa/sessoes.js';
+import type { RegistroPedidos } from './painel/pedidos.js';
 import type { Interpretador } from './ia/interpretacao.js';
 import { registrarEvento } from './metricas.js';
 import type { Produto } from './vendas/catalogo.js';
@@ -12,23 +14,16 @@ import type { ResultadoRegistro } from './vendas/registrar.js';
 
 export type DepsServidor = {
   webhookToken: string;
-  chatwoot: Pick<ClienteChatwoot, 'responder' | 'nota' | 'etiquetar' | 'transferir'>;
+  chatwoot: Pick<ClienteChatwoot, 'responder' | 'nota' | 'etiquetar' | 'transferir' | 'atributos'>;
   sessoes: Sessoes;
   catalogo: Produto[];
   interpretadorPara: (telefone: string) => Interpretador | null;
   registrar: (p: Pedido) => Promise<ResultadoRegistro>;
   responderDuvida?: (texto: string) => Promise<string | null>;
+  /** Lista de pedidos do dia ("Pedidos de hoje" no menu do Chatwoot). */
+  pedidos?: Pick<RegistroPedidos, 'adicionar'>;
   /** Proteções contra rajadas; os padrões atendem uma conversa humana normal. */
   limites?: { porConversa?: number; global?: number; janelaMs?: number; filasMaximas?: number };
-};
-
-const ETIQUETAS: Record<MotivoTransferencia, string[]> = {
-  vazamento: ['vazamento', 'urgente'],
-  humano: ['pediu-atendente'],
-  nao_entendi: ['pedido-incompleto'],
-  verificar_venda: ['verificar-venda'],
-  erro_venda: ['erro-venda'],
-  correcoes: ['muitas-correcoes'],
 };
 
 function mesmoToken(a: string, b: string) {
@@ -73,6 +68,10 @@ export function criarServidor(deps: DepsServidor) {
     const { nome, endereco } = nova.pedido;
     await deps.sessoes.salvar(msg.conversaId, transferiu ? novaSessao(msg.telefone, { nome, endereco }) : nova);
     await executar(msg.conversaId, acoes);
+    // Venda recém-registrada ou conversa indo para um humano: dados do pedido na lateral do painel.
+    const registrou = nova.estado === 'REGISTRADO' && nova.vendaId !== sessao.vendaId;
+    if (registrou || transferiu) await gravarAtributos(msg.conversaId, nova);
+    if (registrou) await anotarPedido(msg.conversaId, nova);
     registrarEvento({
       conversaId: msg.conversaId,
       tipo: 'mensagem',
@@ -80,6 +79,38 @@ export function criarServidor(deps: DepsServidor) {
       ms: Date.now() - inicio,
       ia: interpretador !== null,
     });
+  }
+
+  /** Melhor esforço: o cliente já recebeu a resposta; uma falha aqui não pode virar "falha ao atender". */
+  async function gravarAtributos(id: number, s: Sessao) {
+    const dados = M.atributosDoPedido(s.pedido, deps.catalogo, s.vendaId);
+    if (!Object.keys(dados).length) return; // nada coletado: mantém o que já estava na lateral
+    try {
+      await deps.chatwoot.atributos(id, dados);
+    } catch (e) {
+      app.log.warn({ conversa: id, erro: e instanceof Error ? e.message : 'desconhecido' }, 'falha ao gravar dados do pedido');
+    }
+  }
+
+  /** Melhor esforço, como os atributos: a venda já foi registrada e o cliente já foi avisado. */
+  async function anotarPedido(id: number, s: Sessao) {
+    if (!deps.pedidos || !s.vendaId) return;
+    const a = M.atributosDoPedido(s.pedido, deps.catalogo, s.vendaId);
+    try {
+      await deps.pedidos.adicionar({
+        vendaId: s.vendaId,
+        conversaId: id,
+        quando: new Date().toISOString(),
+        nome: s.pedido.nome ?? '',
+        produto: deps.catalogo.find((x) => x.codigo === s.pedido.produto)?.nome ?? '',
+        quantidade: s.pedido.quantidade ?? 0,
+        total: String(a.total ?? ''),
+        pagamento: String(a.forma_pagamento ?? ''),
+        endereco: String(a.endereco ?? ''),
+      });
+    } catch (e) {
+      app.log.warn({ conversa: id, erro: e instanceof Error ? e.message : 'desconhecido' }, 'falha ao anotar o pedido do dia');
+    }
   }
 
   async function executar(id: number, acoes: Acao[]) {
@@ -90,7 +121,7 @@ export function criarServidor(deps: DepsServidor) {
       }
       registrarEvento({ conversaId: id, tipo: 'transferencia', motivo: a.motivo });
       await deps.chatwoot.nota(id, a.resumo);
-      await deps.chatwoot.etiquetar(id, ETIQUETAS[a.motivo]);
+      await deps.chatwoot.etiquetar(id, ETIQUETAS[a.motivo].map((e) => e.title));
       await deps.chatwoot.responder(id, M.TRANSFERINDO);
       await deps.chatwoot.transferir(id, a.motivo === 'vazamento' ? 'urgent' : undefined);
     }

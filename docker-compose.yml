@@ -4,7 +4,7 @@
 
 x-chatwoot: &chatwoot
   image: chatwoot/chatwoot:v4.16.2
-  environment:
+  environment: &chatwoot-env
     SECRET_KEY_BASE: ${SECRET_KEY_BASE}
     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     RAILS_ENV: production
@@ -63,6 +63,36 @@ services:
     depends_on:
       chatwoot-migrar: { condition: service_completed_successfully }
 
+  # Configura o painel a cada `docker compose up` (sem rodar nada à mão): etiquetas, respostas
+  # prontas, atributos, horário e aba "Pedido RevGás" (scripts/chatwoot-config.ts, pela API).
+  # Antes da primeira instalação (sem CHATWOOT_ADMIN_TOKEN ou sem npm run setup) só avisa e sai.
+  chatwoot-config:
+    build: .
+    image: revgas-atende-bot
+    command: ["npx", "tsx", "scripts/chatwoot-config.ts"]
+    env_file: .env
+    environment:
+      CHATWOOT_CONFIG_URL: http://chatwoot:3000
+      CHATWOOT_CONFIG_AUTOMATICO: "1"
+    depends_on:
+      chatwoot: { condition: service_started }
+    restart: "no"
+
+  # Depois do chatwoot-config: marca RevGás, menu "Pedidos de hoje" e cache do painel
+  # (scripts/chatwoot-ajustes.rb). Grava direto no banco do Chatwoot: não precisa de token.
+  chatwoot-ajustes:
+    <<: *chatwoot
+    command: bundle exec rails runner /revgas/chatwoot-ajustes.rb
+    environment:
+      <<: *chatwoot-env
+      PAINEL_TOKEN: ${PAINEL_TOKEN:-}
+      PAINEL_URL: ${PAINEL_URL:-}
+    volumes:
+      - ./scripts:/revgas:ro
+    depends_on:
+      chatwoot-config: { condition: service_completed_successfully }
+    restart: "no"
+
   chatwoot-sidekiq:
     <<: *chatwoot
     command: bundle exec sidekiq -C config/sidekiq.yml
@@ -94,11 +124,17 @@ services:
 
   bot:
     build: .
+    image: revgas-atende-bot
     env_file: .env
     environment:
       CHATWOOT_URL: http://chatwoot:3000
       REDIS_URL: redis://redis:6379/2
       PORTA: "3000"
+    ports:
+      # Painel "Pedido RevGás" (aba na conversa e lista "Pedidos de hoje" do menu do Chatwoot).
+      # Só no 127.0.0.1: os dados do pedido
+      # são pessoais e não podem ficar abertos na rede. A API do painel ainda exige PAINEL_TOKEN.
+      - "127.0.0.1:3001:3000"
     volumes:
       - ./dados:/app/dados
     depends_on: [redis, chatwoot]

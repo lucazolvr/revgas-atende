@@ -9,10 +9,34 @@ export interface ApiRevGas {
   criarVenda(corpo: CorpoVenda): Promise<Resposta>;
 }
 
+/** Consultar e cancelar vendas: usado pelo painel "Pedido RevGás" e pelo npm run cancelar-venda. */
+export interface ConsultaVendas {
+  detalharVenda(id: number): Promise<Resposta>;
+  cancelarVenda(id: number): Promise<Resposta>;
+}
+
 /** Imita o ERP em memória. Padrão nos testes e na demo sem VENDA_REAL. */
-export class ApiRevGasFalsa implements ApiRevGas {
+export class ApiRevGasFalsa implements ApiRevGas, ConsultaVendas {
   vendas: CorpoVenda[] = [];
+  canceladas = new Set<number>();
   proximaResposta?: Resposta | 'timeout';
+
+  /** Mesmo formato do detalhe da API real (sem o envelope `data`). */
+  async detalharVenda(id: number): Promise<Resposta> {
+    const v = this.vendas[idValido(id) - 1];
+    if (!v) return { status: 404, dados: null };
+    const total = (v.products ?? []).reduce((s, p) => s + p.value * p.quantity, 0);
+    return {
+      status: 200,
+      dados: { id, establishment_id: v.establishment_id, status: this.canceladas.has(id) ? 'CANCEL' : 'OPEN', total },
+    };
+  }
+
+  async cancelarVenda(id: number): Promise<Resposta> {
+    if (!this.vendas[idValido(id) - 1]) return { status: 404, dados: null };
+    this.canceladas.add(id);
+    return { status: 204, dados: null };
+  }
 
   async criarVenda(corpo: CorpoVenda): Promise<Resposta> {
     const forcada = this.proximaResposta;
@@ -24,7 +48,7 @@ export class ApiRevGasFalsa implements ApiRevGas {
   }
 }
 
-export class ApiRevGasHttp implements ApiRevGas {
+export class ApiRevGasHttp implements ApiRevGas, ConsultaVendas {
   private readonly base: string;
   private readonly fetch: typeof fetch;
   private readonly intervaloMs: number;
@@ -48,7 +72,7 @@ export class ApiRevGasHttp implements ApiRevGas {
     return this.enfileirar(() => this.enviar('POST', '/sales', corpo));
   }
 
-  // Fora da porta ApiRevGas: só para conferir e limpar vendas de teste (npm run cancelar-venda).
+  // Fora da porta ApiRevGas: conferir e limpar vendas de teste (painel e npm run cancelar-venda).
   detalharVenda(id: number): Promise<Resposta> {
     const v = idValido(id);
     return this.enfileirar(() => this.enviar('GET', `/sales/${v}`, undefined));

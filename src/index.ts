@@ -5,7 +5,9 @@ import { InterpretadorGemini } from './ia/gemini.js';
 import { ConhecimentoGemini } from './conhecimento/gemini.js';
 import { criarServidor } from './servidor.js';
 import { configurarMetricas } from './metricas.js';
-import { ApiRevGasFalsa, ApiRevGasHttp, type ApiRevGas } from './vendas/api-revgas.js';
+import { RegistroPedidosMemoria, RegistroPedidosRedis } from './painel/pedidos.js';
+import { registrarPainel } from './painel/rotas.js';
+import { ApiRevGasFalsa, ApiRevGasHttp, type ApiRevGas, type ConsultaVendas } from './vendas/api-revgas.js';
 import { carregarCatalogo } from './vendas/catalogo.js';
 import { corpoDaVenda } from './vendas/pedido.js';
 import { registrarVenda } from './vendas/registrar.js';
@@ -14,7 +16,7 @@ const config = carregarConfig();
 configurarMetricas(config.METRICAS_RETENCAO_DIAS);
 const catalogo = carregarCatalogo();
 
-let api: ApiRevGas;
+let api: ApiRevGas & ConsultaVendas;
 if (config.VENDA_REAL) {
   api = new ApiRevGasHttp(config.REVGAS_API_URL, config.REVGAS_API_KEY!);
   console.warn('\n⚠  VENDA REAL LIGADA: cada pedido confirmado cria uma venda de verdade no ERP RevGás.\n');
@@ -33,16 +35,38 @@ const conhecimento = config.GEMINI_API_KEY
   : null;
 if (!gemini) console.log('Sem GEMINI_API_KEY: o bot atende só pelos menus.');
 
+const chatwoot = new ClienteChatwoot(config.CHATWOOT_URL, config.CHATWOOT_ACCOUNT_ID, config.CHATWOOT_BOT_TOKEN);
+// Pedidos do dia (nome e endereço): só guardados se o painel que os mostra estiver ligado.
+const pedidos = config.PAINEL_TOKEN
+  ? config.REDIS_URL
+    ? new RegistroPedidosRedis(config.REDIS_URL)
+    : new RegistroPedidosMemoria()
+  : undefined;
 const { app, ocioso } = criarServidor({
   webhookToken: config.BOT_WEBHOOK_TOKEN,
-  chatwoot: new ClienteChatwoot(config.CHATWOOT_URL, config.CHATWOOT_ACCOUNT_ID, config.CHATWOOT_BOT_TOKEN),
+  chatwoot,
   sessoes: config.REDIS_URL ? new SessoesRedis(config.REDIS_URL) : new SessoesMemoria(),
   catalogo,
   // Cota grátis do Gemini pode usar os dados para treino: IA só para os números da equipe.
   interpretadorPara: (telefone) => (gemini && config.NUMEROS_IA.includes(chaveTelefone(telefone)) ? gemini : null),
   responderDuvida: (texto) => conhecimento?.responder(texto) ?? Promise.resolve(null),
   registrar: (p) => registrarVenda(api, corpoDaVenda(p, catalogo, ids)),
+  pedidos,
 });
+
+if (config.PAINEL_TOKEN && pedidos) {
+  registrarPainel(app, {
+    token: config.PAINEL_TOKEN,
+    origensChatwoot: config.PAINEL_ORIGENS,
+    contaChatwoot: config.CHATWOOT_ACCOUNT_ID,
+    chatwoot,
+    pedidos,
+    vendas: api,
+    estabelecimentoId: ids.estabelecimentoId,
+    modo: config.VENDA_REAL ? 'teste' : 'memoria',
+  });
+  console.log('Painel "Pedido RevGás" ligado: aba nas conversas e "Pedidos de hoje" no menu do Chatwoot.');
+}
 
 for (const sinal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(sinal, async () => {

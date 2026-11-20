@@ -1,0 +1,115 @@
+/* Painel "Pedido RevGás". Contrastes conferidos nos dois temas (texto ≥ 4,5:1). */
+:root {
+  --fundo: #ffffff;
+  --cartao: #f7f7f8;
+  --borda: #e3e3e8;
+  --texto: #1c2024;
+  --sutil: #60646c;
+  --marca: #c84812; /* laranja RevGás escurecido: 5,0:1 sobre branco */
+  --marca-texto: #ffffff;
+  --perigo: #b42318;
+  --perigo-texto: #ffffff;
+  --ok-fundo: #e6f4ea;
+  --ok-texto: #1e6b34;
+  --cancel-fundo: #fde8e7;
+  --cancel-texto: #a11d14;
+  --neutro-fundo: #eef0f3;
+  --neutro-texto: #3b4048;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fundo: #111113;
+    --cartao: #1b1b1e;
+    --borda: #2e3135;
+    --texto: #edeef0;
+    --sutil: #b0b4ba;
+    --marca: #fc692b;
+    --marca-texto: #111113;
+    --perigo: #ff8a80;
+    --perigo-texto: #111113;
+    --ok-fundo: #12321d;
+    --ok-texto: #8fe0a8;
+    --cancel-fundo: #3d1614;
+    --cancel-texto: #ffb4ab;
+    --neutro-fundo: #26292d;
+    --neutro-texto: #d4d7dc;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--texto);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+main { padding: 16px; max-width: 560px; }
+
+header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+h1 { font-size: 16px; margin: 0; color: var(--marca); }
+h2 { font-size: 12px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: .04em; color: var(--sutil); }
+.sutil { color: var(--sutil); margin: 0; font-size: 12px; }
+
+section {
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; margin: 0; }
+dt { color: var(--sutil); }
+dd { margin: 0; overflow-wrap: anywhere; }
+
+.linha { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
+
+.selo { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--neutro-fundo); color: var(--neutro-texto); }
+.selo.ok { background: var(--ok-fundo); color: var(--ok-texto); }
+.selo.cancelada { background: var(--cancel-fundo); color: var(--cancel-texto); }
+
+#aviso { margin: 0 0 12px; color: var(--sutil); }
+#aviso:empty { display: none; }
+.erro { color: var(--perigo); margin: 0 0 10px; }
+
+button {
+  font: inherit;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
+.secundario { background: transparent; color: var(--texto); border-color: var(--borda); }
+.perigo { background: var(--perigo); color: var(--perigo-texto); width: 100%; }
+
+/* Lista "Pedidos de hoje" (janela do menu do Chatwoot) */
+main.larga { max-width: 960px; margin: 0 auto; }
+.lista { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.cartao { background: var(--cartao); border: 1px solid var(--borda); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.cartao dl { font-size: 13px; }
+.cartao .erro, .cartao .resultado { margin: 0; }
+.cartao .resultado:empty { display: none; }
+.cartao.apagado { border-style: dashed; }
+.cartao.apagado .titulo { text-decoration: line-through; }
+.topo { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.acoes { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: auto; }
+/* No cartão, o cancelar segue o formato do "Atualizar": tamanho natural e contornado. */
+.acoes .cancelar { width: auto; padding: 5px 10px; font-size: 13px; white-space: nowrap; background: transparent; color: var(--perigo); border-color: var(--perigo); }
+a { color: var(--marca); font-weight: 600; }
+a:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }

@@ -23,6 +23,17 @@ describe('carregarConfig', () => {
     ]);
   });
 
+  it('painel: desligado sem token, recusa token curto e lê as origens', () => {
+    expect(carregarConfig(base).PAINEL_TOKEN).toBeUndefined();
+    expect(carregarConfig(base).PAINEL_ORIGENS).toEqual(['http://localhost:3000', 'http://127.0.0.1:3000']);
+    expect(() => carregarConfig({ ...base, PAINEL_TOKEN: 'curto' })).toThrow('PAINEL_TOKEN');
+    expect(carregarConfig({ ...base, PAINEL_TOKEN: 'p'.repeat(32), PAINEL_ORIGENS: ' http://cw.local:3000 ' }).PAINEL_ORIGENS).toEqual([
+      'http://cw.local:3000',
+    ]);
+    // Origem vira parte do cabeçalho CSP: nada de espaço, ; ou caminho.
+    expect(() => carregarConfig({ ...base, PAINEL_ORIGENS: "http://x; script-src 'unsafe-inline'" })).toThrow('PAINEL_ORIGENS');
+  });
+
   it('usa retenção segura de métricas por padrão', () => {
     expect(carregarConfig(base).METRICAS_RETENCAO_DIAS).toBe(90);
   });

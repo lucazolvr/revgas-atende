@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gerarTema, lerEscala, mapaDeCores, trocarCores } from '../scripts/marca.js';
+import { gerarTema, lerEscala, mapaDeCores, mapaDeVariaveisEscuras, trocarCores } from '../scripts/marca.js';
 
 const css = [
   ':root{--slate-1: 1 1 1;--blue-9: 39 129 246;--blue-10: 16 115 233}',
@@ -44,5 +44,40 @@ describe('tema da marca', () => {
     const tema = gerarTema(css);
     expect(tema).toMatch(/:root\{[^}]*--blue-9: 252 105 43;/);
     expect(tema).toMatch(/\.dark\{[^}]*--blue-9: 252 105 43;/);
+  });
+
+  describe('balão da mensagem enviada (--solid-blue) no modo escuro', () => {
+    // Como no Chatwoot v4: no claro é o passo 4 da escala; no escuro, um tom fora da escala.
+    // A classe tem cor fixa de reserva seguida da cor por variável. O modo escuro é `body.dark`.
+    const cssBalao = [
+      ':root{--blue-4: 218 236 255;--blue-9: 39 129 246;--solid-blue: 218 236 255}',
+      '.dark{--blue-4: 10 49 99;--blue-9: 39 129 246;--solid-blue: 15 57 102}',
+      '.bg-n-solid-blue{--tw-bg-opacity: 1;background-color:#daecff;background-color:rgb(var(--solid-blue) / var(--tw-bg-opacity, 1))}',
+    ].join('');
+    const tema = gerarTema(cssBalao);
+    const original = { claro: lerEscala(cssBalao, ':root'), escuro: lerEscala(cssBalao, '.dark') };
+
+    it('não copia a cor fixa de reserva, que passaria por cima da variável', () => {
+      expect(tema).not.toContain('.bg-n-solid-blue');
+    });
+
+    it('a variável vira laranja nos dois temas', () => {
+      expect(tema).toContain(':root{--solid-blue: 255 224 207}');
+      expect(tema).toContain('.dark{--solid-blue: 79 31 12}');
+      expect(mapaDeVariaveisEscuras(cssBalao, original).get('15 57 102')).toBe('79 31 12');
+    });
+
+    it('não mexe em variável escura que já está na escala nem nas próprias --blue-N', () => {
+      expect([...mapaDeVariaveisEscuras(cssBalao, original).keys()]).toEqual(['15 57 102', '15,57,102']);
+    });
+
+    it('reconhece a cor escrita com vírgula e espaço', () => {
+      const t = gerarTema(':root{--blue-9: 39 129 246;--border-blue: 39, 129, 246, .5}.dark{--blue-9: 39 129 246}');
+      expect(t).toContain(':root{--border-blue: 252, 105, 43, .5}');
+    });
+
+    it('cor fixa sem variável depois continua sendo trocada', () => {
+      expect(saida).toContain('.bg-n-brand{background-color:#fc692b}');
+    });
   });
 });
