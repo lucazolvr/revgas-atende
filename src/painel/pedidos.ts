@@ -1,4 +1,4 @@
-import { Redis } from 'ioredis';
+import type { Redis } from 'ioredis';
 
 /** Fuso da revenda (Teresina, UTC−3): "hoje" é o dia de lá, não o do servidor. */
 const FUSO_REVENDA = 'America/Fortaleza';
@@ -35,25 +35,33 @@ export interface RegistroPedidos {
 
 const DIAS_GUARDADOS = 2;
 
-/** Some ao reiniciar o bot; use Redis (REDIS_URL) fora dos testes. */
+/**
+ * Some ao reiniciar o bot (usado com o ERP de demonstração, que também some). Descarta pedidos com
+ * mais de 2 dias, como o Redis: nome e endereço não ficam guardados além disso.
+ */
 export class RegistroPedidosMemoria implements RegistroPedidos {
   private lista: PedidoRegistrado[] = [];
+  constructor(private readonly agora: () => number = Date.now) {}
+
+  private validos() {
+    const limite = this.agora() - DIAS_GUARDADOS * 86_400_000;
+    this.lista = this.lista.filter((p) => Date.parse(p.quando) >= limite);
+    return this.lista;
+  }
   async adicionar(p: PedidoRegistrado) {
-    this.lista.push(p);
+    this.validos().push(p);
   }
   async doDia(dia: string) {
-    return this.lista.filter((p) => diaDaRevenda(new Date(p.quando)) === dia);
+    return this.validos().filter((p) => diaDaRevenda(new Date(p.quando)) === dia);
   }
   async daVenda(vendaId: number) {
-    return this.lista.findLast((p) => p.vendaId === vendaId) ?? null;
+    return this.validos().findLast((p) => p.vendaId === vendaId) ?? null;
   }
 }
 
+/** Recebe a conexão pronta (a mesma das sessões do bot). */
 export class RegistroPedidosRedis implements RegistroPedidos {
-  private readonly redis: Redis;
-  constructor(url: string) {
-    this.redis = new Redis(url);
-  }
+  constructor(private readonly redis: Redis) {}
   async adicionar(p: PedidoRegistrado) {
     const ttl = DIAS_GUARDADOS * 86_400;
     const chaveDia = `pedidos:dia:${diaDaRevenda(new Date(p.quando))}`;

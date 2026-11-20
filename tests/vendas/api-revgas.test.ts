@@ -32,6 +32,38 @@ describe('ApiRevGasHttp', () => {
     expect(Date.now() - t0).toBeGreaterThanOrEqual(55);
   });
 
+  it('venda de cliente passa na frente das consultas do painel, sem quebrar o espaçamento', async () => {
+    const ordem: string[] = [];
+    const momentos: number[] = [];
+    const f = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      ordem.push(`${init?.method} ${String(url).replace('https://x/v1', '')}`);
+      momentos.push(Date.now());
+      return new Response(JSON.stringify({ data: { id: 1 } }), { status: 200 });
+    });
+    const api = new ApiRevGasHttp('https://x/v1', 'K', { fetch: f, intervaloMs: 40 });
+    // O painel abre a lista (três consultas) e logo depois um cliente confirma o pedido.
+    const consultas = [api.detalharVenda(1), api.detalharVenda(2), api.detalharVenda(3)];
+    const venda = api.criarVenda(corpo);
+    await Promise.all([...consultas, venda]);
+    expect(ordem).toEqual(['GET /sales/1', 'POST /sales', 'GET /sales/2', 'GET /sales/3']);
+    for (let i = 1; i < momentos.length; i++) expect(momentos[i]! - momentos[i - 1]!).toBeGreaterThanOrEqual(35);
+  });
+
+  it('uma chamada com erro não trava a fila', async () => {
+    let primeira = true;
+    const f = vi.fn(async () => {
+      if (primeira) {
+        primeira = false;
+        throw new TypeError('fetch failed');
+      }
+      return new Response(JSON.stringify({ data: { id: 7 } }), { status: 201 });
+    });
+    const api = new ApiRevGasHttp('https://x/v1', 'K', { fetch: f, intervaloMs: 0 });
+    const [falhou, deu] = await Promise.allSettled([api.detalharVenda(1), api.criarVenda(corpo)]);
+    expect(falhou.status).toBe('rejected');
+    expect(deu).toMatchObject({ status: 'fulfilled', value: { status: 201 } });
+  });
+
   it('falha de rede vira TempoEsgotado', async () => {
     const f = vi.fn(async () => {
       throw new TypeError('fetch failed');

@@ -4,8 +4,7 @@
 # Usa DASHBOARD_SCRIPTS, configuração do núcleo open source (MIT) para scripts no painel; não usa
 # código do plano Enterprise. A configuração é dividida com o tema (aplicar-marca.rb): cada script
 # troca só o seu bloco, entre <!-- revgas:NOME --> e <!-- /revgas:NOME -->.
-require 'erb'
-require 'uri'
+require_relative 'menu-html' # html_do_menu
 
 def com_bloco(atual, nome, html)
   ini = "<!-- revgas:#{nome} -->"
@@ -14,16 +13,12 @@ def com_bloco(atual, nome, html)
   html.to_s.empty? ? sem : "#{sem}#{ini}#{html}#{fim}\n"
 end
 
-# Tag do menu. O token vai num atributo, escapado: nada do .env pode virar HTML no Chatwoot.
-def html_do_menu(url_painel, token)
-  uri = URI.parse(url_painel)
-  raise 'PAINEL_URL precisa ser http(s)' unless %w[http https].include?(uri.scheme) && uri.host
-  porta = uri.port == uri.default_port ? '' : ":#{uri.port}"
-  src = "#{uri.scheme}://#{uri.host}#{porta}/painel/menu.js"
-  %(<script src="#{ERB::Util.html_escape(src)}" data-token="#{ERB::Util.html_escape(token)}" defer></script>)
-end
 
 token = ENV.fetch('PAINEL_TOKEN', '').strip
+if !token.empty? && token.length < 32 # mesmo mínimo do bot (TOKEN_PAINEL_MINIMO em src/config.ts)
+  puts '! PAINEL_TOKEN com menos de 32 caracteres: o bot desliga o painel, então o menu também fica de fora'
+  token = ''
+end
 url = ENV.fetch('PAINEL_URL', '').strip
 url = 'http://127.0.0.1:3001' if url.empty?
 html = token.empty? ? '' : html_do_menu(url, token)

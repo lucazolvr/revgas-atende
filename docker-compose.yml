@@ -70,16 +70,22 @@ services:
     build: .
     image: revgas-atende-bot
     command: ["npx", "tsx", "scripts/chatwoot-config.ts"]
-    env_file: .env
+    # Só o que o script usa (não o .env inteiro): menor privilégio para um container de configuração.
     environment:
       CHATWOOT_CONFIG_URL: http://chatwoot:3000
       CHATWOOT_CONFIG_AUTOMATICO: "1"
+      CHATWOOT_ACCOUNT_ID: ${CHATWOOT_ACCOUNT_ID:-}
+      CHATWOOT_ADMIN_TOKEN: ${CHATWOOT_ADMIN_TOKEN:-}
+      PAINEL_TOKEN: ${PAINEL_TOKEN:-}
+      PAINEL_URL: ${PAINEL_URL:-}
     depends_on:
       chatwoot: { condition: service_started }
     restart: "no"
 
-  # Depois do chatwoot-config: marca RevGás, menu "Pedidos de hoje" e cache do painel
-  # (scripts/chatwoot-ajustes.rb). Grava direto no banco do Chatwoot: não precisa de token.
+  # Marca RevGás, menu "Pedidos de hoje" e cache do painel (scripts/chatwoot-ajustes.rb). Grava
+  # direto no banco do Chatwoot (não precisa de token). Roda depois do chatwoot-config para renovar
+  # o cache só depois de as etiquetas existirem; o chatwoot-config sai com 0 mesmo quando dá erro
+  # (ex.: token errado, explicado no log), então essa espera não derruba a subida.
   chatwoot-ajustes:
     <<: *chatwoot
     command: bundle exec rails runner /revgas/chatwoot-ajustes.rb
@@ -90,7 +96,9 @@ services:
     volumes:
       - ./scripts:/revgas:ro
     depends_on:
+      chatwoot-migrar: { condition: service_completed_successfully }
       chatwoot-config: { condition: service_completed_successfully }
+      redis: { condition: service_started }
     restart: "no"
 
   chatwoot-sidekiq:

@@ -1,4 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { HORARIO_REVENDA } from '../../src/conversa/horario.js';
 import { ATRIBUTOS, ETIQUETAS, HORARIO, NOME_CAIXA, TODAS_ETIQUETAS, configurarPainel, type ApiConta } from '../../src/canal/painel.js';
 import { RESPOSTAS_PRONTAS, SEGURANCA } from '../../src/conversa/mensagens.js';
 
@@ -135,11 +137,20 @@ describe('definições do painel', () => {
     expect(ETIQUETAS.vazamento.map((e) => e.title)).toEqual(['vazamento', 'urgente']);
   });
 
-  it('horário igual ao da FAQ: seg–sáb 7h–20h, domingo 8h–13h', () => {
+  it('horário da caixa: seg–sáb 7h–20h, domingo 8h–13h', () => {
     const domingo = HORARIO.find((h) => h.day_of_week === 0)!;
     expect([domingo.open_hour, domingo.close_hour]).toEqual([8, 13]);
     for (const h of HORARIO.filter((x) => x.day_of_week !== 0)) expect([h.open_hour, h.close_hour]).toEqual([7, 20]);
     expect(HORARIO).toHaveLength(7);
+  });
+
+  it('a FAQ e a resposta /horario dizem o mesmo horário da caixa', () => {
+    const faq = readFileSync(new URL('../../config/faq/horario.md', import.meta.url), 'utf8');
+    const { semana, domingo } = HORARIO_REVENDA;
+    for (const texto of [faq, RESPOSTAS_PRONTAS.horario!]) {
+      expect(texto).toContain(`das ${semana.abre}h às ${semana.fecha}h`);
+      expect(texto).toContain(`das ${domingo.abre}h às ${domingo.fecha}h`);
+    }
   });
 
   it('códigos das respostas prontas sem espaço nem barra', () => {

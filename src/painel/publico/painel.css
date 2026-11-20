@@ -111,5 +111,4 @@ main.larga { max-width: 960px; margin: 0 auto; }
 .acoes { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: auto; }
 /* No cartão, o cancelar segue o formato do "Atualizar": tamanho natural e contornado. */
 .acoes .cancelar { width: auto; padding: 5px 10px; font-size: 13px; white-space: nowrap; background: transparent; color: var(--perigo); border-color: var(--perigo); }
-a { color: var(--marca); font-weight: 600; }
-a:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
+button.link { background: none; border: 0; padding: 0; color: var(--marca); text-decoration: underline; text-underline-offset: 2px; }

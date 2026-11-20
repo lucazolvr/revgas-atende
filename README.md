@@ -79,7 +79,7 @@ A cada `docker compose up`, dois serviços rodam uma vez e terminam (podem rodar
 - **`chatwoot-config`** (`scripts/chatwoot-config.ts`, pela API do Chatwoot): etiquetas com cor, respostas prontas (`/saiu`, `/endereco`, `/seguranca`, `/horario`, `/obrigado`), dados do pedido na lateral da conversa, horário de atendimento da caixa e a aba **Pedido RevGás** em cada conversa (o pedido, a venda no ERP e "Cancelar venda de teste").
 - **`chatwoot-ajustes`** (`scripts/chatwoot-ajustes.rb`, dentro do Chatwoot): marca RevGás (logo, ícone, nome e cores laranja), item **Pedidos de hoje** no menu lateral (abre por cima do Chatwoot a lista de todos os pedidos do dia) e renovação do cache do painel.
 
-Antes da primeira instalação (sem `CHATWOOT_ADMIN_TOKEN` ou sem o `npm run setup`), o `chatwoot-config` só avisa no log e não trava nada. A aba e o menu só aparecem com `PAINEL_TOKEN`; as páginas do painel só funcionam dentro do Chatwoot, a porta dele só existe em `127.0.0.1` e a API exige o token. Para rodar à mão: `docker compose run --rm chatwoot-config` e `docker compose run --rm chatwoot-ajustes` (ou `npm run chatwoot:config`, de fora do Docker).
+Antes da primeira instalação (sem `CHATWOOT_ADMIN_TOKEN` ou sem o `npm run setup`), o `chatwoot-config` só avisa no log e não trava nada. A aba e o menu só aparecem com `PAINEL_TOKEN` (32+ caracteres) e apontam para o painel em `http://127.0.0.1:3001`; se publicar o painel em outro endereço, defina `PAINEL_URL`. As páginas do painel só funcionam dentro do Chatwoot, a porta dele só existe em `127.0.0.1` e a API exige o token. Para rodar à mão: `docker compose run --rm chatwoot-config` e `docker compose run --rm chatwoot-ajustes` (ou `npm run chatwoot:config`, de fora do Docker).
 
 ### Marca RevGás no painel
 

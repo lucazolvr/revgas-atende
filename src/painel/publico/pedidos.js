@@ -50,9 +50,10 @@ function montarCartao(p) {
   cartao.querySelector('.titulo').textContent = `${hora} · Venda nº ${p.vendaId}`;
   const campos = { nome: p.nome, itens: `${p.quantidade}x ${p.produto}`, total: p.total, pagamento: p.pagamento, endereco: p.endereco };
   for (const [campo, valor] of Object.entries(campos)) cartao.querySelector(`[data-campo="${campo}"]`).textContent = valor || '—';
-  const abrir = cartao.querySelector('.abrir');
-  if (/^https?:\/\//.test(p.link)) abrir.href = p.link;
-  else abrir.hidden = true;
+  // O menu.js (na página do Chatwoot) abre a conversa no endereço em uso e fecha esta janela.
+  cartao.querySelector('.abrir').addEventListener('click', () => {
+    window.parent.postMessage({ tipo: 'revgas:abrir-conversa', conversa: p.conversaId }, '*'); // só o número
+  });
   cartao.querySelector('.cancelar').addEventListener('click', () => cancelar(cartao, p.vendaId));
   return cartao;
 }

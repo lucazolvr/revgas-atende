@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { FORMAS_PAGAMENTO, type Produto } from '../vendas/catalogo.js';
 import { formatarReais, produtoDo, totalCentavos, type Pedido } from '../vendas/pedido.js';
 import type { ChaveAtributo } from '../canal/painel.js';
+import { HORARIO_REVENDA } from './horario.js';
 
 // Todos os textos que o cliente vê ficam aqui, para revisar o tom num lugar só.
 
@@ -104,7 +105,9 @@ export const RESPOSTAS_PRONTAS: Record<string, string> = {
   saiu: 'Seu pedido saiu para entrega! 🛵',
   endereco: 'Pode me passar o endereço completo, com rua, número, bairro e ponto de referência?',
   seguranca: SEGURANCA,
-  // Mesmo horário de config/faq/horario.md e do horário da caixa (src/canal/painel.ts).
-  horario: 'Nosso horário de atendimento e entrega é de segunda a sábado, das 7h às 20h. Aos domingos e feriados, das 8h às 13h. 🕗',
+  // Gerado de HORARIO_REVENDA, a mesma fonte do horário da caixa no Chatwoot.
+  horario:
+    `Nosso horário de atendimento e entrega é de segunda a sábado, das ${HORARIO_REVENDA.semana.abre}h às ${HORARIO_REVENDA.semana.fecha}h. ` +
+    `Aos domingos e feriados, das ${HORARIO_REVENDA.domingo.abre}h às ${HORARIO_REVENDA.domingo.fecha}h. 🕗`,
   obrigado: 'Obrigado pela preferência! 😊 Se precisar de mais alguma coisa, é só chamar aqui.',
 };

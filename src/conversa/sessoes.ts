@@ -1,4 +1,4 @@
-import { Redis } from 'ioredis';
+import type { Redis } from 'ioredis';
 import type { Sessao } from './motor.js';
 
 export interface Sessoes {
@@ -17,11 +17,12 @@ export class SessoesMemoria implements Sessoes {
   }
 }
 
+/** Recebe a conexão pronta: o bot abre uma só e divide com o registro de pedidos do painel. */
 export class SessoesRedis implements Sessoes {
-  private readonly redis: Redis;
-  constructor(url: string, private readonly ttlSegundos = 7200) {
-    this.redis = new Redis(url);
-  }
+  constructor(
+    private readonly redis: Redis,
+    private readonly ttlSegundos = 7200,
+  ) {}
   async obter(id: number) {
     const v = await this.redis.get(`sessao:${id}`);
     return v ? (JSON.parse(v) as Sessao) : null;

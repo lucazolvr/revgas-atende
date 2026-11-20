@@ -25,6 +25,7 @@ const registro = (vendaId: number, conversaId: number, quando: string): PedidoRe
 
 /**
  * Aba: conversa 7 com a venda 1 (estabelecimento 2580); conversa 8 sem venda; 9 não existe.
+ * Conversas 12 e 13: "Nº da venda" editado à mão para a venda 2 (de outra conversa) e para a 4.
  * Lista: venda 1 hoje cedo (conversa 7), venda 2 hoje à tarde (conversa 10), venda 3 ontem.
  * A venda 4 existe no ERP mas não foi registrada pelo bot.
  */
@@ -33,13 +34,15 @@ async function montar(opcoes: { estabelecimentoDaVenda?: number } = {}) {
   for (let i = 0; i < 4; i++) {
     await vendas.criarVenda(corpoDaVenda(PEDIDO, catalogo, { clienteId: 1, estabelecimentoId: opcoes.estabelecimentoDaVenda ?? 2580 }));
   }
-  const pedidos = new RegistroPedidosMemoria();
+  const pedidos = new RegistroPedidosMemoria(() => AGORA.getTime()); // relógio fixo: datas do teste não "vencem"
   await pedidos.adicionar(registro(1, 7, '2026-11-21T10:30:00Z'));
   await pedidos.adicionar(registro(2, 10, '2026-11-21T14:00:00Z'));
   await pedidos.adicionar(registro(3, 11, '2026-11-21T02:00:00Z')); // 23h do dia 20 em Teresina
   const atributos: Record<number, Record<string, unknown>> = {
     7: { numero_venda: 1, total: 'R$ 220,00', forma_pagamento: 'PIX', endereco: 'Rua Nova, 10 - Centro, Teresina/PI', quantidade: 2, outro: 'x' },
     8: { quantidade: 3 },
+    12: { numero_venda: 2 },
+    13: { numero_venda: 4 },
   };
   const chatwoot = {
     atributosDe: vi.fn(async (id: number) => atributos[id] ?? null),
@@ -48,7 +51,6 @@ async function montar(opcoes: { estabelecimentoDaVenda?: number } = {}) {
   const deps: DepsPainel = {
     token: TOKEN,
     origensChatwoot: ['http://localhost:3000'],
-    contaChatwoot: 1,
     chatwoot,
     vendas,
     pedidos,
@@ -105,6 +107,16 @@ describe('painel Pedido RevGás', () => {
     expect((await pedir('/painel/api/conversas/9')).statusCode).toBe(404);
   });
 
+  it('cancelar faz só duas chamadas ao ERP (conferir e cancelar), pela aba e pela lista', async () => {
+    const { pedir, vendas } = await montar();
+    const detalhar = vi.spyOn(vendas, 'detalharVenda');
+    const cancelarNoErp = vi.spyOn(vendas, 'cancelarVenda');
+    expect((await pedir('/painel/api/conversas/7/cancelar', 'POST')).json()).toMatchObject({ venda: { id: 1, status: 'CANCEL', total: 220 } });
+    expect([detalhar.mock.calls.length, cancelarNoErp.mock.calls.length]).toEqual([1, 1]);
+    expect((await pedir('/painel/api/vendas/2/cancelar', 'POST')).json()).toMatchObject({ venda: { id: 2, status: 'CANCEL' } });
+    expect([detalhar.mock.calls.length, cancelarNoErp.mock.calls.length]).toEqual([2, 2]);
+  });
+
   it('cancela a venda da conversa, registra nota e não cancela duas vezes', async () => {
     const { pedir, vendas, chatwoot } = await montar();
     const r = await pedir('/painel/api/conversas/7/cancelar', 'POST');
@@ -119,6 +131,20 @@ describe('painel Pedido RevGás', () => {
     const { pedir, vendas } = await montar({ estabelecimentoDaVenda: 999 });
     expect((await pedir('/painel/api/conversas/7')).json()).toMatchObject({ venda: { doEstabelecimento: false }, podeCancelar: false });
     expect((await pedir('/painel/api/conversas/7/cancelar', 'POST')).statusCode).toBe(403);
+    expect(vendas.canceladas.size).toBe(0);
+  });
+
+  it('número da venda editado à mão na lateral não consulta nem cancela no ERP', async () => {
+    const { pedir, vendas } = await montar();
+    const detalhar = vi.spyOn(vendas, 'detalharVenda');
+    for (const conversa of [12, 13]) {
+      expect((await pedir(`/painel/api/conversas/${conversa}`)).json()).toMatchObject({
+        venda: { erro: expect.stringContaining('não está no registro do bot') },
+        podeCancelar: false,
+      });
+      expect((await pedir(`/painel/api/conversas/${conversa}/cancelar`, 'POST')).statusCode).toBe(403);
+    }
+    expect(detalhar).not.toHaveBeenCalled();
     expect(vendas.canceladas.size).toBe(0);
   });
 
@@ -139,13 +165,14 @@ describe('painel Pedido RevGás', () => {
 
 
   describe('pedidos de hoje (menu do Chatwoot)', () => {
-    it('lista só os pedidos de hoje em Teresina, do mais recente, com link para a conversa', async () => {
+    it('lista só os pedidos de hoje em Teresina, do mais recente, com o número da conversa', async () => {
       const { pedir } = await montar();
       expect((await pedir('/painel/api/pedidos', 'GET', null)).statusCode).toBe(401);
       const d = (await pedir('/painel/api/pedidos')).json();
       expect(d.dia).toBe('2026-11-21');
       expect(d.pedidos.map((p: PedidoRegistrado) => p.vendaId)).toEqual([2, 1]);
-      expect(d.pedidos[0]).toMatchObject({ nome: 'Cliente 2', conversaId: 10, link: 'http://localhost:3000/app/accounts/1/conversations/10' });
+      expect(d.pedidos[0]).toMatchObject({ nome: 'Cliente 2', conversaId: 10 });
+      expect(d.pedidos[0]).not.toHaveProperty('link'); // o menu.js abre a conversa no endereço em uso
     });
 
     it('consulta a venda de um pedido do bot', async () => {

@@ -18,6 +18,20 @@
 
   // --- Janela com a lista -----------------------------------------------------------------------
   let janela = null;
+  let quadro = null;
+
+  // "Abrir conversa" na lista: abre no próprio Chatwoot, no endereço em uso (localhost ou
+  // 127.0.0.1), sem recarregar. Só aceita o pedido vindo da lista que esta janela abriu.
+  window.addEventListener('message', (e) => {
+    if (!quadro || e.source !== quadro.contentWindow || e.origin !== origem) return;
+    const d = e.data;
+    if (!d || d.tipo !== 'revgas:abrir-conversa' || !Number.isSafeInteger(d.conversa) || d.conversa <= 0) return;
+    const conta = location.pathname.match(/\/app\/accounts\/(\d+)\//)?.[1];
+    if (!conta) return;
+    fechar();
+    history.pushState({}, '', `/app/accounts/${conta}/conversations/${d.conversa}`);
+    dispatchEvent(new PopStateEvent('popstate')); // o roteador do Chatwoot (Vue) segue o novo endereço
+  });
 
   function escuro() {
     return document.body.classList.contains('dark');
@@ -27,6 +41,7 @@
     if (!janela) return;
     janela.remove();
     janela = null;
+    quadro = null;
     document.removeEventListener('keydown', aoTeclar, true);
   }
 
@@ -68,7 +83,7 @@
     fecharBotao.addEventListener('click', fechar);
     barra.append(titulo, fecharBotao);
 
-    const quadro = document.createElement('iframe');
+    quadro = document.createElement('iframe');
     quadro.src = urlLista;
     quadro.title = ROTULO;
     quadro.referrerPolicy = 'no-referrer';
@@ -145,16 +160,28 @@
   }
 
   // O Chatwoot remonta o menu ao trocar de tela ou recolher: recoloca o item quando ele some.
+  // Vigia só o menu lateral (<aside>), não a página inteira, que muda a cada mensagem.
   let agendado = false;
-  new MutationObserver(() => {
+  const observador = new MutationObserver(() => {
     if (agendado) return;
     agendado = true;
     requestAnimationFrame(() => {
       agendado = false;
       colocar();
     });
-  }).observe(document.body, { childList: true, subtree: true });
+  });
+  let vigiado = null;
+  function vigiarMenu() {
+    const aside = document.querySelector('aside');
+    if (aside === vigiado) return;
+    observador.disconnect();
+    vigiado = aside;
+    if (aside) observador.observe(aside, { childList: true, subtree: true });
+    colocar();
+  }
+  // Checagem leve: o <aside> pode ainda não existir ou ser trocado inteiro pelo Chatwoot.
+  setInterval(vigiarMenu, 2000);
 
-  colocar();
+  vigiarMenu();
   setTimeout(() => colocar() || flutuante(), 8000); // menu não apareceu: botão flutuante
 })();
