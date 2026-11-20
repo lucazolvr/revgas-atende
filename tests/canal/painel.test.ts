@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ATRIBUTOS, ETIQUETAS, HORARIO, NOME_CAIXA, TODAS_ETIQUETAS, configurarPainel, htmlDoMenu, type ApiConta } from '../../src/canal/painel.js';
+import { ATRIBUTOS, ETIQUETAS, HORARIO, NOME_CAIXA, TODAS_ETIQUETAS, configurarPainel, type ApiConta } from '../../src/canal/painel.js';
 import { RESPOSTAS_PRONTAS, SEGURANCA } from '../../src/conversa/mensagens.js';
 
 type Registro = Record<string, unknown> & { id: number };
@@ -144,23 +144,5 @@ describe('definições do painel', () => {
 
   it('códigos das respostas prontas sem espaço nem barra', () => {
     for (const codigo of Object.keys(RESPOSTAS_PRONTAS)) expect(codigo).toMatch(/^[a-z0-9_-]+$/);
-  });
-});
-
-describe('menu "Pedidos de hoje"', () => {
-  it('monta a tag do script com o token num atributo', () => {
-    expect(htmlDoMenu('http://127.0.0.1:3001', 'abc_DEF-123')).toBe(
-      '<script src="http://127.0.0.1:3001/painel/menu.js" data-token="abc_DEF-123" defer></script>',
-    );
-  });
-
-  it('escapa o token: nada do .env vira HTML dentro do Chatwoot', () => {
-    const html = htmlDoMenu('http://127.0.0.1:3001/', 'x"><img src=x onerror=alert(1)>');
-    expect(html).not.toContain('<img');
-    expect(html).toContain('data-token="x&quot;&gt;&lt;img src=x onerror=alert(1)&gt;"');
-  });
-
-  it('só aceita endereço http(s) para o painel', () => {
-    expect(() => htmlDoMenu('javascript:alert(1)', 't')).toThrow('http');
   });
 });

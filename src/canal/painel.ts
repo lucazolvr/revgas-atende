@@ -78,20 +78,6 @@ const itens = <T>(r: Lista<T>) => (Array.isArray(r) ? r : r.payload);
 
 const TITULO_ABA = 'Pedido RevGás';
 
-const escaparAtributo = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-/**
- * Tag que o Chatwoot põe em todas as telas (DASHBOARD_SCRIPTS) para o item "Pedidos de hoje" no
- * menu lateral. O token vai num atributo, escapado: nada do .env pode virar HTML no Chatwoot.
- */
-export function htmlDoMenu(urlPainel: string, token: string): string {
-  const base = new URL(urlPainel);
-  if (base.protocol !== 'http:' && base.protocol !== 'https:') throw new Error('PAINEL_URL precisa ser http(s)');
-  const src = new URL('/painel/menu.js', base.origin).href;
-  return `<script src="${escaparAtributo(src)}" data-token="${escaparAtributo(token)}" defer></script>`;
-}
-
 export async function configurarPainel(cw: ApiConta, opcoes: { urlAba?: string } = {}): Promise<string[]> {
   const log: string[] = [];
 

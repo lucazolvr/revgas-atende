@@ -42,7 +42,8 @@ flowchart LR
 | `src/vendas/` | Catálogo, pedido, porta da API RevGás (falsa e real) |
 | `config/` | Catálogo de produtos e orientações de segurança |
 | `scripts/setup.ts` | Liga Evolution ↔ Chatwoot ↔ bot |
-| `scripts/chatwoot-config.ts` | Etiquetas, respostas prontas, atributos, horário, aba "Pedido RevGás" e menu "Pedidos de hoje" (definições em `src/canal/painel.ts`) |
+| `scripts/chatwoot-config.ts` | Etiquetas, respostas prontas, atributos, horário e aba "Pedido RevGás" (definições em `src/canal/painel.ts`) |
+| `scripts/chatwoot-ajustes.rb` | Marca RevGás, menu "Pedidos de hoje" e cache do painel (dentro do Chatwoot) |
 | `src/painel/` | Aba "Pedido RevGás" na conversa e lista "Pedidos de hoje" no menu: venda no ERP e cancelamento de venda de teste |
 | `docs/` | Design, plano e (em breve) relatório e roteiro de demo |
 
@@ -63,25 +64,31 @@ npm test
 
 Precisa de **Docker Desktop** (≈ 4 GB de RAM livres) e de um **chip separado** (a Evolution não é a API oficial do WhatsApp; o número pode ser bloqueado).
 
-1. `cp .env.example .env` e preencha `POSTGRES_PASSWORD`, `SECRET_KEY_BASE`, `EVOLUTION_API_KEY` e `BOT_WEBHOOK_TOKEN` com valores aleatórios.
+1. `cp .env.example .env` e preencha `POSTGRES_PASSWORD`, `SECRET_KEY_BASE`, `EVOLUTION_API_KEY`, `BOT_WEBHOOK_TOKEN` e `PAINEL_TOKEN` com valores aleatórios (os tokens com 32+ caracteres).
 2. `docker compose up -d` (a primeira vez demora: baixa as imagens e prepara o banco).
 3. Abra **http://localhost:3000**, crie a conta de administrador e copie o token de acesso do seu perfil para `CHATWOOT_ADMIN_TOKEN`.
 4. `npm install` e `npm run setup`: ele cria o Agent Bot, a instância do WhatsApp e a caixa de entrada.
-5. Coloque o `CHATWOOT_BOT_TOKEN` que o setup mostrou no `.env` e rode `docker compose up -d --build bot`.
+5. Coloque o `CHATWOOT_BOT_TOKEN` que o setup mostrou no `.env` e rode `docker compose up -d --build`. A partir daqui, **todo `docker compose up` configura o painel sozinho** (veja abaixo).
 6. Abra **http://127.0.0.1:8080/manager**, entre na instância `revgas` e leia o QR code com o celular do chip (WhatsApp → Aparelhos conectados).
 7. Mande "oi" para o número do chip. 🎉
-8. *(Opcional)* `npm run marca`: aplica a identidade da RevGás no painel (logo, ícone, nome e cores laranja).
-9. `npm run chatwoot:config`: deixa o painel pronto para o atendente: etiquetas com cor, respostas prontas (`/saiu`, `/endereco`, `/seguranca`, `/horario`, `/obrigado`), dados do pedido na lateral da conversa e horário de atendimento da caixa. Pode rodar de novo sem duplicar nada.
-10. *(Opcional)* **Painel de pedidos:** coloque um `PAINEL_TOKEN` aleatório (32+ caracteres) no `.env`, rode `docker compose up -d --build bot` e `npm run chatwoot:config` de novo. Aparecem a aba **Pedido RevGás** em cada conversa (o pedido, a venda no ERP e "Cancelar venda de teste") e o item **Pedidos de hoje** no menu lateral, que abre por cima do Chatwoot a lista de todos os pedidos do dia. As páginas só funcionam dentro do Chatwoot. A porta do painel só existe em `127.0.0.1` e a API exige o token.
+
+### Painel configurado automaticamente
+
+A cada `docker compose up`, dois serviços rodam uma vez e terminam (podem rodar de novo sem duplicar nada):
+
+- **`chatwoot-config`** (`scripts/chatwoot-config.ts`, pela API do Chatwoot): etiquetas com cor, respostas prontas (`/saiu`, `/endereco`, `/seguranca`, `/horario`, `/obrigado`), dados do pedido na lateral da conversa, horário de atendimento da caixa e a aba **Pedido RevGás** em cada conversa (o pedido, a venda no ERP e "Cancelar venda de teste").
+- **`chatwoot-ajustes`** (`scripts/chatwoot-ajustes.rb`, dentro do Chatwoot): marca RevGás (logo, ícone, nome e cores laranja), item **Pedidos de hoje** no menu lateral (abre por cima do Chatwoot a lista de todos os pedidos do dia) e renovação do cache do painel.
+
+Antes da primeira instalação (sem `CHATWOOT_ADMIN_TOKEN` ou sem o `npm run setup`), o `chatwoot-config` só avisa no log e não trava nada. A aba e o menu só aparecem com `PAINEL_TOKEN`; as páginas do painel só funcionam dentro do Chatwoot, a porta dele só existe em `127.0.0.1` e a API exige o token. Para rodar à mão: `docker compose run --rm chatwoot-config` e `docker compose run --rm chatwoot-ajustes` (ou `npm run chatwoot:config`, de fora do Docker).
 
 ### Marca RevGás no painel
 
-O Chatwoot é open source (MIT), e o `npm run marca` personaliza o painel **sem fork e sem tocar no código pago (Enterprise)**:
+O Chatwoot é open source (MIT), e a marca personaliza o painel **sem fork e sem tocar no código pago (Enterprise)**:
 
-- **Logo, ícone e nome:** grava as configurações do núcleo do Chatwoot (`scripts/aplicar-marca.rb`). Os arquivos ficam em `marca/` e são servidos pelo próprio Chatwoot em `/marca/`.
-- **Cores:** `scripts/marca.ts` lê o CSS compilado do Chatwoot e gera `marca/tema.css`, trocando a escala azul da marca pelo laranja RevGás (#FC692B), nos modos claro e escuro.
+- **Logo, ícone e nome:** grava as configurações do núcleo do Chatwoot (`scripts/aplicar-marca.rb`, aplicado sozinho pelo serviço `chatwoot-ajustes`). Os arquivos ficam em `marca/` e são servidos pelo próprio Chatwoot em `/marca/`.
+- **Cores:** `scripts/marca.ts` lê o CSS compilado do Chatwoot e gera `marca/tema.css`, trocando a escala azul da marca pelo laranja RevGás (#FC692B), nos modos claro e escuro. O arquivo gerado fica no repositório.
 
-Ao atualizar a versão do Chatwoot, rode `npm run marca` de novo.
+Ao atualizar a versão do Chatwoot, rode `npm run marca` para gerar o `marca/tema.css` de novo e faça commit dele.
 
 **IA:** coloque `GEMINI_API_KEY` (cota grátis do [Google AI Studio](https://aistudio.google.com/)) e os números da equipe em `NUMEROS_IA`. Na cota grátis o Google pode usar as mensagens, então os outros números são atendidos pelos menus.
 
