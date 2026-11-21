@@ -41,7 +41,7 @@ flowchart LR
 | `src/ia/` | Interpretação de texto livre (Gemini) e validação da resposta |
 | `src/vendas/` | Catálogo, pedido, porta da API RevGás (falsa e real) |
 | `config/` | Catálogo de produtos e orientações de segurança |
-| `scripts/setup.ts` | Liga Evolution ↔ Chatwoot ↔ bot |
+| `scripts/setup.ts` | Liga WAHA ↔ Chatwoot ↔ bot |
 | `scripts/chatwoot-config.ts` | Etiquetas, respostas prontas, atributos, horário e aba "Pedido RevGás" (definições em `src/canal/painel.ts`) |
 | `scripts/chatwoot-ajustes.rb` | Marca RevGás, menu "Pedidos de hoje" e cache do painel (dentro do Chatwoot) |
 | `src/painel/` | Aba "Pedido RevGás" na conversa e lista "Pedidos de hoje" no menu: venda no ERP e cancelamento de venda de teste |
@@ -62,15 +62,23 @@ npm test
 
 ### Tudo, com WhatsApp
 
-Precisa de **Docker Desktop** (≈ 4 GB de RAM livres) e de um **chip separado** (a Evolution não é a API oficial do WhatsApp; o número pode ser bloqueado).
+Precisa de **Docker Desktop** (≈ 4 GB de RAM livres) e de um **chip separado** (o WAHA não é a API oficial do WhatsApp; o número pode ser bloqueado). **Não use número pessoal:** com o bot ligado, qualquer pessoa que escrever para o número recebe a resposta do bot.
 
-1. `cp .env.example .env` e preencha `POSTGRES_PASSWORD`, `SECRET_KEY_BASE`, `EVOLUTION_API_KEY`, `BOT_WEBHOOK_TOKEN` e `PAINEL_TOKEN` com valores aleatórios (os tokens com 32+ caracteres).
+1. `cp .env.example .env` e preencha `POSTGRES_PASSWORD`, `SECRET_KEY_BASE`, `WAHA_API_KEY`, `WAHA_DASHBOARD_PASSWORD`, `BOT_WEBHOOK_TOKEN` e `PAINEL_TOKEN` com valores aleatórios (os tokens com 32+ caracteres).
 2. `docker compose up -d` (a primeira vez demora: baixa as imagens e prepara o banco).
 3. Abra **http://localhost:3000**, crie a conta de administrador e copie o token de acesso do seu perfil para `CHATWOOT_ADMIN_TOKEN`.
-4. `npm install` e `npm run setup`: ele cria o Agent Bot, a instância do WhatsApp e a caixa de entrada.
+4. `npm install` e `npm run setup`: ele cria o Agent Bot, a caixa de entrada "WhatsApp RevGás", a integração do WAHA com o Chatwoot e a sessão do WhatsApp. Pode rodar de novo sem duplicar nada; numa instalação que vinha da Evolution, veja abaixo.
 5. Coloque o `CHATWOOT_BOT_TOKEN` que o setup mostrou no `.env` e rode `docker compose up -d --build`. A partir daqui, **todo `docker compose up` configura o painel sozinho** (veja abaixo).
-6. Abra **http://127.0.0.1:8080/manager**, entre na instância `revgas` e leia o QR code com o celular do chip (WhatsApp → Aparelhos conectados).
+6. Abra **http://127.0.0.1:3002/dashboard** (usuário e senha do `.env`). Na primeira vez, cole a `WAHA_API_KEY` no "Worker" (ícone de lápis) para ele enxergar as sessões. Na sessão `default`, leia o QR code com o celular do chip (WhatsApp → Aparelhos conectados). O QR expira em ~1 min; se a sessão ficar `FAILED`, clique em *Restart*.
+   - Evite conectar e desconectar o número várias vezes seguidas: o WhatsApp passa a recusar novos aparelhos por um tempo ("não é possível conectar novos dispositivos no momento").
 7. Mande "oi" para o número do chip. 🎉
+
+### Quem já rodava com a Evolution
+
+1. Coloque `WAHA_API_KEY` e `WAHA_DASHBOARD_PASSWORD` no `.env`, com valores aleatórios (sem elas, o `docker compose` não sobe).
+2. `docker compose up -d --remove-orphans`: sobe o WAHA e remove o container da Evolution, que senão continuaria ligado ao número.
+3. `npm run setup`: reaproveita a caixa "WhatsApp RevGás" e só troca o endereço dela para o WAHA. As conversas antigas ficam; o WAHA acha os contatos que já existem pelo telefone ou pelo identificador do WhatsApp.
+4. Leia o QR code como no passo 6 acima. O banco `evolution` no Postgres e o volume `evolution_instances` ficam sem uso; apague-os quando quiser.
 
 ### Painel configurado automaticamente
 

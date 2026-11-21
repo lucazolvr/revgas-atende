@@ -1,4 +1,4 @@
-# Sobe tudo: Chatwoot (painel), Evolution (WhatsApp), Postgres, Redis e o bot.
+# Sobe tudo: Chatwoot (painel), WAHA (WhatsApp), Postgres, Redis e o bot.
 # Portas publicadas só em 127.0.0.1: nada fica aberto para a rede.
 # Versões fixadas em 2026-11; confira as releases antes de atualizar.
 
@@ -16,7 +16,7 @@ x-chatwoot: &chatwoot
     POSTGRES_DATABASE: chatwoot
     REDIS_URL: redis://redis:6379/0
     ENABLE_ACCOUNT_SIGNUP: "false"
-    # O bot e a Evolution moram na rede interna do Docker; sem isto o Chatwoot recusa os webhooks
+    # O bot e o WAHA moram na rede interna do Docker; sem isto o Chatwoot recusa os webhooks
     # ("has no public ip addresses"). Seguro aqui: instalação de uma conta só, sem cadastro aberto.
     SAFE_FETCH_ALLOW_PRIVATE_NETWORK: "true"
     ACTIVE_STORAGE_SERVICE: local
@@ -36,7 +36,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres:/var/lib/postgresql/data
-      - ./infra/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -107,26 +106,29 @@ services:
     depends_on:
       chatwoot-migrar: { condition: service_completed_successfully }
 
-  evolution:
-    image: evoapicloud/evolution-api:v2.3.6 # v2.3.7 não conecta aparelhos (issue #2696 da Evolution)
+  # Ponte WhatsApp ↔ Chatwoot: WAHA Core (grátis, sem licença), motor GOWS (sem navegador, lida
+  # com remetentes @lid). Trocou a Evolution API, que travava ou não entregava mensagens (issue #15).
+  # A integração com o Chatwoot (app "chatwoot") é criada pelo npm run setup.
+  waha:
+    image: devlikeapro/waha:gows-2026.10.1
     environment:
-      SERVER_URL: http://evolution:8080
-      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
-      DATABASE_ENABLED: "true"
-      DATABASE_PROVIDER: postgresql
-      DATABASE_CONNECTION_URI: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/evolution?schema=public
-      CACHE_REDIS_ENABLED: "true"
-      CACHE_REDIS_URI: redis://redis:6379/6
-      CACHE_LOCAL_ENABLED: "false"
-      CHATWOOT_ENABLED: "true"
-      CHATWOOT_MESSAGE_READ: "true"
-      LOG_LEVEL: ERROR,WARN
+      WHATSAPP_DEFAULT_ENGINE: GOWS
+      # Sem chave ou senha, o WAHA subiria sem proteção: o compose recusa subir.
+      WAHA_API_KEY: ${WAHA_API_KEY:?defina WAHA_API_KEY no .env}
+      WAHA_API_KEY_PLAIN: ${WAHA_API_KEY:?defina WAHA_API_KEY no .env} # a integração com o Chatwoot exige a chave em texto puro
+      WAHA_DASHBOARD_USERNAME: ${WAHA_DASHBOARD_USERNAME:-revgas}
+      WAHA_DASHBOARD_PASSWORD: ${WAHA_DASHBOARD_PASSWORD:?defina WAHA_DASHBOARD_PASSWORD no .env}
+      WAHA_APPS_ENABLED: "True"
+      WAHA_APPS_ON: chatwoot
+      REDIS_URL: redis://redis:6379/7 # a integração com o Chatwoot usa filas no Redis
+      WAHA_PUBLIC_URL: http://waha:3000
+      WAHA_PRINT_QR: "False"
     volumes:
-      - evolution_instances:/evolution/instances
+      # Sessão do WhatsApp (o chip conectado). Dá acesso às conversas do número: nunca vai para o git.
+      - waha_sessoes:/app/.sessions
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:3002:3000" # painel do WAHA (QR code): http://127.0.0.1:3002/dashboard
     depends_on:
-      postgres: { condition: service_healthy }
       redis: { condition: service_started }
     restart: unless-stopped
 
@@ -152,4 +154,4 @@ volumes:
   postgres:
   redis:
   chatwoot_storage:
-  evolution_instances:
+  waha_sessoes:
