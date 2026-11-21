@@ -19,6 +19,7 @@ export const PERGUNTA_ENDERECO: Record<string, string> = {
   uf: 'Qual o estado? (a sigla, ex.: PI)',
 };
 export const PERGUNTA_CARTAO = 'No cartão de débito ou de crédito?';
+export const PERGUNTA_CIDADE_UF = 'Qual a cidade e o estado? (ex.: Teresina PI)';
 export const PERGUNTA_TROCO = 'Vai precisar de troco? Responda o valor (ex.: 200) ou "não".';
 export const MENU_CORRIGIR = 'O que você quer corrigir?\n1 - Nome\n2 - Produto e quantidade\n3 - Endereço\n4 - Pagamento';
 export const CANCELADO = 'Tudo bem, pedido cancelado. Quando quiser, é só mandar uma mensagem. 🙂';

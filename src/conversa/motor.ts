@@ -167,9 +167,34 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
   }
 
   s.falhas = 0;
+  completarUf(s.pedido);
   s.estado = proximoEstado(s.pedido, cat);
   responder(pergunta(s, cat));
   return fim();
+}
+
+/** Cidades da área de entrega (config/faq/area-entrega.md): o estado sai da cidade, sem perguntar. */
+const UF_DA_CIDADE: Record<string, string> = { teresina: 'PI', timon: 'MA' };
+/** Estado escrito por extenso na resposta "cidade e estado" (só os da área de entrega). */
+const UF_POR_NOME: Record<string, string> = { piaui: 'PI', maranhao: 'MA' };
+
+function completarUf(p: Pedido) {
+  const cidade = p.endereco?.cidade;
+  const uf = cidade && !p.endereco?.uf ? UF_DA_CIDADE[normalizar(cidade)] : undefined;
+  if (uf) p.endereco = { ...p.endereco, uf };
+}
+
+/** "Teresina PI", "Teresina - PI", "Parnaíba/Piauí" → cidade e UF; só "Teresina" → só a cidade. */
+export function separarCidadeUf(texto: string): { cidade: string; uf?: string } {
+  const partes = texto.trim().split(/[\s,/–-]+/).filter(Boolean);
+  const ultima = partes.at(-1) ?? '';
+  const uf = UFS.includes(ultima.toUpperCase()) ? ultima.toUpperCase() : UF_POR_NOME[normalizar(ultima)];
+  if (partes.length > 1 && uf) {
+    // tira a UF do fim e a pontuação que sobrar ("Teresina - PI")
+    const cidade = texto.trim().slice(0, texto.trim().lastIndexOf(ultima)).replace(/[\s,/–-]+$/, '');
+    return { cidade, uf };
+  }
+  return { cidade: texto.trim() };
 }
 
 /** Primeiro campo que falta, na ordem em que o pedido é perguntado. */
@@ -191,7 +216,11 @@ function pergunta(s: Sessao, cat: Produto[]): string {
     case 'NOME': return M.PERGUNTA_NOME;
     case 'PRODUTO': return M.menuProdutos(cat);
     case 'QUANTIDADE': return M.PERGUNTA_QUANTIDADE;
-    case 'ENDERECO': return M.PERGUNTA_ENDERECO[CAMPOS_ENDERECO.find((c) => !s.pedido.endereco?.[c])!]!;
+    case 'ENDERECO': {
+      const campo = CAMPOS_ENDERECO.find((c) => !s.pedido.endereco?.[c])!;
+      // Faltando os dois, uma pergunta só (a UF quase sempre sai da cidade, ver completarUf)
+      return campo === 'cidade' && !s.pedido.endereco?.uf ? M.PERGUNTA_CIDADE_UF : M.PERGUNTA_ENDERECO[campo]!;
+    }
     case 'PAGAMENTO': return M.menuPagamento();
     case 'TROCO': return M.PERGUNTA_TROCO;
     case 'RESUMO': return M.resumo(s.pedido, cat);
@@ -249,6 +278,12 @@ function aplicarTexto(s: Sessao, texto: string, cat: Produto[]): boolean | strin
     }
     case 'ENDERECO': {
       const campo = CAMPOS_ENDERECO.find((c) => !p.endereco?.[c])!;
+      if (campo === 'cidade' && !p.endereco?.uf) {
+        const { cidade, uf } = separarCidadeUf(t);
+        if (cidade.length < 2 || cidade.length > 120) return false;
+        p.endereco = { ...p.endereco, cidade, ...(uf && { uf }) };
+        return true;
+      }
       let valor = t;
       if (campo === 'uf') {
         valor = t.toUpperCase();

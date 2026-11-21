@@ -18,14 +18,14 @@ const entidadesCertas = {
 };
 
 describe('cliente simulado', () => {
-  it('menu: conclui certo em 11 mensagens (oi, nome, produto, qtd, 5 de endereço, pagamento, confirmar)', async () => {
+  it('menu: conclui certo em 10 mensagens (oi, nome, produto, qtd, 4 de endereço (a UF sai da cidade), pagamento, confirmar)', async () => {
     const r = await simular(perfil, 'menu', { catalogo, interpretador: null });
-    expect(r).toMatchObject({ concluiu: true, correto: true, mensagens: 11, correcoes: 0 });
+    expect(r).toMatchObject({ concluiu: true, correto: true, mensagens: 10, correcoes: 0 });
   });
 
-  it('menu com dinheiro e troco: 12 mensagens', async () => {
+  it('menu com dinheiro e troco: 11 mensagens', async () => {
     const r = await simular({ ...perfil, pagamento: 'MONEY', trocoPara: 30000 }, 'menu', { catalogo, interpretador: null });
-    expect(r).toMatchObject({ concluiu: true, correto: true, mensagens: 12 });
+    expect(r).toMatchObject({ concluiu: true, correto: true, mensagens: 11 });
   });
 
   it('IA: frase livre + nome + confirmar = 3 mensagens', async () => {
@@ -47,7 +47,7 @@ describe('cliente simulado', () => {
     });
     const r = await simular(perfil, 'ia', { catalogo, interpretador: ia });
     expect(r).toMatchObject({ concluiu: true, correto: true, correcoes: 1 });
-    expect(r.mensagens).toBe(3 + 1 + 1 + 5); // + "corrigir" + "3" + endereço de novo
+    expect(r.mensagens).toBe(3 + 1 + 1 + 4); // + "corrigir" + "3" + endereço de novo (a UF sai da cidade)
   });
 
   it('IA fora do ar: cai nos menus e ainda conclui', async () => {
@@ -73,6 +73,6 @@ describe('experimento', () => {
     expect(s.ia.corretos).toBe(6);
     expect(s.ia.mensagens.mediana).toBe(3);
     expect(s.wilcoxonMensagens.wMenos).toBe(0); // IA sempre menor
-    expect(relatorioMarkdown(resultados, { modelo: 'falso', data: 'x' })).toContain('| 1 | 11 | 3 | 0 | ✅ | — |');
+    expect(relatorioMarkdown(resultados, { modelo: 'falso', data: 'x' })).toContain('| 1 | 10 | 3 | 0 | ✅ | — |');
   });
 });

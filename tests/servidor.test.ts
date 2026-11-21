@@ -55,7 +55,7 @@ describe('servidor', () => {
 
   it('dois "1" ao mesmo tempo no resumo criam uma venda só', async () => {
     const { ocioso, api, enviar } = montar();
-    for (const m of ['oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', 'PI', '1']) await enviar(m);
+    for (const m of ['oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1']) await enviar(m);
     await ocioso();
     await Promise.all([enviar('1'), enviar('1')]);
     await ocioso();
@@ -114,7 +114,7 @@ describe('servidor', () => {
   });
 
   describe('dados do pedido na lateral do Chatwoot', () => {
-    const PEDIDO = ['oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', 'PI', '1'];
+    const PEDIDO = ['oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1'];
 
     it('venda registrada grava número, total, pagamento, endereço e quantidade', async () => {
       const { ocioso, chatwoot, enviar } = montar();

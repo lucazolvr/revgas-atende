@@ -275,6 +275,8 @@ Seguindo a classificação de Wohlin et al. (2012):
 5. **Limitar o número de correções** e transferir para humano depois disso, para que nenhum defeito futuro gere ciclos como o do perfil 5 na rodada 2. ✅ *Implementado após o estudo:* no 3º pedido de "corrigir" do mesmo pedido, a conversa vai para um atendente com a etiqueta `muitas-correcoes`.
 
 > Os itens marcados como implementados entraram **depois** das medições: os resultados das seções 3 e 4 são da versão anterior a eles. Nenhum dos dois altera esses resultados. O item 2 só muda o caso "cartão" sem tipo (mensagem 49 da avaliação; no experimento, o único perfil com cartão diz "cartão de crédito") e o item 5 só age a partir da 3ª correção (o máximo observado na rodada final foi 0).
+>
+> **Melhoria posterior que muda a contagem do menu:** depois das medições, o bot passou a deduzir o estado pela cidade (Teresina → PI, Timon → MA, as cidades da área de entrega) e a perguntar cidade e estado numa mensagem só. Com isso, o caminho pelo menu caiu de 11 para **10 mensagens** num pedido em Teresina, e o com IA também economiza a pergunta do estado quando o cliente diz só a cidade. Os números deste estudo são da versão anterior. Para comparar a versão atual, rode de novo `npm run eval:experimento`.
 
 ## 7. Como reproduzir
 
