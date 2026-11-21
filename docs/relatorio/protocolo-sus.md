@@ -2,22 +2,33 @@
 
 ## Preparação
 
-1. Combine com João Vitor um número de demonstração com o bot em execução. Faça um piloto com a equipe. O objetivo é concluir a jornada no WhatsApp, usando o adaptador de venda de teste se a equipe não tiver autorizado um pedido real no ERP. Registre a configuração aplicada no relatório.
-2. Convide de 5 a 8 pessoas para uma sessão individual e explique que a participação é voluntária. Teste com a mesma versão e o mesmo cenário. Números fora de `NUMEROS_IA` usam o menu no ambiente descrito pelo projeto. Registre o modo de cada sessão antes de interpretar os resultados.
-3. Crie um formulário com a escala SUS da referência abaixo e as três perguntas abertas. Desative a captura automática de e-mail. Identifique cada sessão com P01, P02 e assim por diante. Guarde o material bruto em local de acesso restrito à equipe.
+1. **Ambiente.** O bot roda no computador da equipe que estiver com o chip da revenda conectado ao WAHA (QR em `http://127.0.0.1:3002/dashboard`). As sessões só podem acontecer enquanto esse computador estiver ligado. Antes das sessões, faça um piloto com alguém da equipe e anote no relatório a data, o computador e o commit em execução.
+2. **Modo de atendimento.** Os números dos participantes **não** entram em `NUMEROS_IA`: na cota grátis do Gemini, as mensagens podem ser usadas pelo Google. Todos os participantes são atendidos pelo **menu**, e o relatório deve dizer que o SUS avalia esse fluxo.
+3. **Vendas de teste.** Com `VENDA_REAL=true`, cada pedido confirmado cria uma venda na API de teste da RevGás (estabelecimento de demonstração 2580). Anote o número do pedido de cada sessão e cancele a venda depois, pela aba "Pedido RevGás" no Chatwoot ou com `npm run cancelar-venda -- <id>`.
+4. **Participantes.** Convide de 5 a 8 pessoas para uma sessão individual e explique que a participação é voluntária. Use a mesma versão do bot e o mesmo cenário em todas as sessões. Identifique cada sessão com P01, P02 e assim por diante. Guarde o material bruto em local de acesso restrito à equipe.
 
 ## Instrução para cada pessoa
 
 “Imagine que você precisa pedir um botijão P13 para entrega e quer pagar por Pix. Comece a conversa com o número do teste e siga até receber a confirmação. Use o nome e o endereço fictícios do cenário que vou te passar. Se tiver dificuldade, faça o que faria normalmente.”
 
+Cenário fictício sugerido: nome “Maria Souza”, Rua Nova, 10, Centro, Teresina.
+
 Observe sem antecipar respostas. Registre se houve confirmação, abandono ou transferência, além de tempo, pedidos de ajuda e pontos de dificuldade. Se houver intervenção, anote a etapa e o tipo de ajuda. Aplique o SUS imediatamente depois da tentativa e antes de comentar o desempenho, inclusive quando a pessoa não concluir.
+
+## Registro de cada sessão
+
+| Sessão | Data e hora | Concluiu? | Mensagens até concluir | Tempo | Onde travou | Precisou de ajuda? | Nº do pedido (cancelado?) |
+| --- | --- | --- | ---: | --- | --- | --- | --- |
+| P01 | | | | | | | |
+
+Depois das sessões, `npm run eval:metricas` resume o uso real a partir dos registros do bot (`dados/metricas*.jsonl`), sem texto das mensagens nem dados pessoais. Use esse resumo para conferir as mensagens e os tempos anotados.
 
 ## Formulário
 
-- Título: Avaliação do atendimento RevGás pelo WhatsApp.
-- Introdução: “Avalie o atendimento automatizado que você acabou de usar pelo WhatsApp. Responda com base na sua experiência nessa tarefa.”
-- Código da sessão: P01 a P08, atribuído pela moderadora.
-- SUS: copie as 10 afirmações da Tabela 1 da [versão brasileira publicada em Aquichan](https://doi.org/10.5294/aqui.2022.22.2.8), na mesma ordem. Apresente uma escolha obrigatória por item, de 1 (Discordo totalmente) a 5 (Concordo totalmente), com 3 como ponto neutro.
+O formulário já está pronto no Google Forms: “Avaliação do atendimento RevGás pelo WhatsApp”.
+
+- Código da sessão: P01 a P08, atribuído pela moderadora. A coleta de e-mail está desativada.
+- SUS: as 10 afirmações da Tabela 1 da [versão brasileira publicada em Aquichan](https://doi.org/10.5294/aqui.2022.22.2.8), na mesma ordem, com uma adaptação: “sistema” foi substituído por “atendimento”. Uma escolha obrigatória por item, de 1 (Discordo totalmente) a 5 (Concordo totalmente), com 3 como ponto neutro. Os itens ímpares são positivos e os pares, negativos.
 - Perguntas abertas, após o SUS:
   1. Qual parte do pedido foi mais fácil? Por quê?
   2. Em que momento você teve dificuldade ou ficou sem saber o que fazer? O que aconteceu?
