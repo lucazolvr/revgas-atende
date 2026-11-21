@@ -113,10 +113,11 @@ services:
     image: devlikeapro/waha:gows-2026.10.1
     environment:
       WHATSAPP_DEFAULT_ENGINE: GOWS
-      WAHA_API_KEY: ${WAHA_API_KEY}
-      WAHA_API_KEY_PLAIN: ${WAHA_API_KEY} # a integração com o Chatwoot exige a chave em texto puro
+      # Sem chave ou senha, o WAHA subiria sem proteção: o compose recusa subir.
+      WAHA_API_KEY: ${WAHA_API_KEY:?defina WAHA_API_KEY no .env}
+      WAHA_API_KEY_PLAIN: ${WAHA_API_KEY:?defina WAHA_API_KEY no .env} # a integração com o Chatwoot exige a chave em texto puro
       WAHA_DASHBOARD_USERNAME: ${WAHA_DASHBOARD_USERNAME:-revgas}
-      WAHA_DASHBOARD_PASSWORD: ${WAHA_DASHBOARD_PASSWORD}
+      WAHA_DASHBOARD_PASSWORD: ${WAHA_DASHBOARD_PASSWORD:?defina WAHA_DASHBOARD_PASSWORD no .env}
       WAHA_APPS_ENABLED: "True"
       WAHA_APPS_ON: chatwoot
       REDIS_URL: redis://redis:6379/7 # a integração com o Chatwoot usa filas no Redis
