@@ -1,7 +1,7 @@
 # RevGás Atende — Documento de Design
 
 Projeto de Extensão VI · Transformação Digital · 2026.2
-Data: 2026-11-18 · Status: **rascunho para aprovação**
+Data: 2026-11-18 · Status: **aprovado** · Atualizado em 2026-11-21: conector WhatsApp trocado de Evolution API para **WAHA** ([decisão](../../decisoes/2026-11-21-troca-evolution-waha.md))
 
 ---
 
@@ -25,7 +25,7 @@ Diferencial em relação ao projeto de referência da turma (DEVsavin/ChatBot---
 - Gerar dados para o relatório: log estruturado de cada atendimento e um conjunto de testes de avaliação da IA.
 
 **Não-objetivos (fora desta versão)**
-- API oficial do WhatsApp (Cloud API/Meta). Usamos um chip comum via Evolution API.
+- API oficial do WhatsApp (Cloud API/Meta). Usamos um chip comum via conector não oficial: **WAHA** (até 21/11/2026, Evolution API).
 - Cadastro e busca de clientes no ERP (a chave atual não tem acesso, ver §6).
 - Cobrança/pagamento online, devolução, nota fiscal e rastreio do entregador.
 - Hospedagem em nuvem: a demo roda num notebook com Docker.
@@ -41,10 +41,12 @@ Diferencial em relação ao projeto de referência da turma (DEVsavin/ChatBot---
 | | Abordagem | Prós | Contras |
 |---|---|---|---|
 | A | Python/FastAPI + Chatwoot (mesma base da referência) | Stack conhecida | Fica parecido demais com o projeto de referência |
-| **B** | **Node/TypeScript + Evolution API + Chatwoot + IA (Gemini)** | Código próprio; WhatsApp↔Chatwoot pronto pela Evolution; testável | Chatwoot é pesado (~3 GB RAM), exige Docker Desktop |
+| **B** | **Node/TypeScript + conector WhatsApp (Evolution, depois WAHA) + Chatwoot + IA (Gemini)** | Código próprio; WhatsApp↔Chatwoot pronto pelo conector; testável | Chatwoot é pesado (~3 GB RAM), exige Docker Desktop |
 | C | n8n + Chatwoot (low-code) | Rápido de montar | Difícil de testar e de validar no relatório |
 
-**Escolhida: B** (decisão da equipe). Entre os conectores de WhatsApp, foi escolhida a **Evolution API** em vez do WAHA por ter integração nativa e gratuita com o Chatwoot e por diferenciar a arquitetura da referência.
+**Escolhida: B** (decisão da equipe). Entre os conectores de WhatsApp, foi escolhida inicialmente a **Evolution API** em vez do WAHA, por ter integração nativa e gratuita com o Chatwoot e por diferenciar a arquitetura da referência.
+
+> **Mudança em 21/11/2026: Evolution → WAHA.** Nos testes com chip real, cada versão da Evolution falhou de um jeito: a 2.3.7 não conectava aparelhos, a 2.3.6 não entregava ao Chatwoot as mensagens de remetentes `@lid` e a 2.4 passou a exigir licença registrada. O conector virou o **WAHA Core** (grátis, sem licença, integração com o Chatwoot pronta, motor GOWS). Como o bot só fala com o Chatwoot, ele não mudou. Detalhes e evidências: [docs/decisoes/2026-11-21-troca-evolution-waha.md](../../decisoes/2026-11-21-troca-evolution-waha.md).
 IA: **Gemini na cota grátis** (decisão da equipe).
 
 ## 4. Arquitetura
@@ -52,8 +54,8 @@ IA: **Gemini na cota grátis** (decisão da equipe).
 ```mermaid
 flowchart LR
     C([Cliente]) <--> WA[WhatsApp]
-    WA <--> EVO[Evolution API<br/>chip via QR code]
-    EVO <--> CW[Chatwoot<br/>caixa de entrada]
+    WA <--> WAHA[WAHA, motor GOWS<br/>chip via QR code]
+    WAHA <-- app ChatWoot --> CW[Chatwoot<br/>caixa de entrada]
     CW -- webhook Agent Bot --> BOT[Bot RevGás Atende<br/>Node/TS]
     BOT -- responde / nota / etiqueta / transfere --> CW
     BOT --> IA[Gemini<br/>entende texto]
@@ -63,13 +65,13 @@ flowchart LR
     AT([Atendente]) <--> CW
 ```
 
-Tudo sobe com um `docker compose up`: Postgres (com pgvector, exigido pelo Chatwoot), Redis, Chatwoot (web + sidekiq), Evolution API e o bot. Postgres e Redis são compartilhados entre Chatwoot e Evolution.
+Tudo sobe com um `docker compose up`: Postgres (com pgvector, exigido pelo Chatwoot), Redis, Chatwoot (web + sidekiq), WAHA e o bot. O Postgres é só do Chatwoot. O Redis é compartilhado, em bancos separados, por Chatwoot, WAHA (filas da integração) e bot (sessões).
 
 **Caminho de uma mensagem**
-1. O cliente manda mensagem → a Evolution entrega à caixa "WhatsApp RevGás" do Chatwoot.
+1. O cliente manda mensagem → o WAHA entrega à caixa "WhatsApp RevGás" do Chatwoot (canal API, pelo app ChatWoot do WAHA).
 2. A caixa tem o **Agent Bot** "RevGás Atende" ligado: o Chatwoot chama o webhook do bot (`message_created`).
-3. O bot ignora o que não é mensagem recebida do cliente (mensagens de saída, notas, conversas já com humano).
-4. O bot carrega o estado da conversa (Redis), interpreta, decide e responde pela API do Chatwoot → Evolution → WhatsApp.
+3. O bot ignora o que não é mensagem recebida do cliente: mensagens de saída, notas, conversas já com humano e **conversas de grupo do WhatsApp** (identificador `@g.us`, PR #19).
+4. O bot carrega o estado da conversa (Redis), interpreta, decide e responde pela API do Chatwoot → WAHA → WhatsApp.
 5. Na transferência, o bot muda a conversa de `pending` para `open`. Daí em diante o bot fica calado, e o atendente vê tudo no painel.
 
 ### Módulos do bot
@@ -124,7 +126,7 @@ Regras:
 
 ## 7. Segurança e privacidade
 
-- Segredos (`REVGAS_API_KEY`, `GEMINI_API_KEY`, tokens do Chatwoot e da Evolution) só no `.env`, que fica no `.gitignore`. O repositório tem só o `.env.example`.
+- Segredos (`REVGAS_API_KEY`, `GEMINI_API_KEY`, tokens do Chatwoot, chave e senha do painel do WAHA) só no `.env`, que fica no `.gitignore`. O repositório tem só o `.env.example`.
 - **Gemini na cota grátis pode usar os dados para treino.** Por isso a IA só atende números da equipe (`NUMEROS_IA`). Os demais clientes usam o fluxo por menus. Para produção, o relatório recomenda plano pago.
 - O webhook do bot só é acessível pela rede interna do Docker, com token secreto no caminho (`/webhook/<BOT_WEBHOOK_TOKEN>`). As portas expostas no host ficam em `127.0.0.1`.
 - O log de métricas não grava texto de mensagens, nome, telefone nem endereço: só eventos, estados, tempos e IDs internos.
@@ -154,8 +156,8 @@ Conforme o material "Métodos e Validação Científica em Engenharia de Softwar
 
 ## 10. Stack e estrutura
 
-- **Node.js 22 + TypeScript**, servidor HTTP **Fastify**, validação **zod**, IA **@google/genai** (Gemini 2.5 Flash com saída estruturada; `gemini-embedding-001` para o RAG), **ioredis**, testes **vitest**.
-- Infra: `docker-compose.yml` com `postgres` (pgvector), `redis`, `chatwoot` + `chatwoot-sidekiq`, `evolution-api` (v2) e `bot`. Um script `scripts/setup` cria o Agent Bot no Chatwoot e liga a Evolution à caixa de entrada.
+- **Node.js 22 + TypeScript**, servidor HTTP **Fastify**, validação **zod**, IA **@google/genai** (Gemini com saída estruturada, modelo em `GEMINI_MODELO`, hoje `gemini-3.1-flash-lite`; `gemini-embedding-001` para o RAG), **ioredis**, testes **vitest**.
+- Infra: `docker-compose.yml` com `postgres` (pgvector), `redis`, `chatwoot` + `chatwoot-sidekiq`, `waha` (WAHA Core, motor GOWS) e `bot`. O `npm run setup` (`scripts/setup.ts` + `src/canal/whatsapp.ts`) cria o Agent Bot, a caixa "WhatsApp RevGás", a integração do WAHA com o Chatwoot e a sessão do WhatsApp.
 
 ```text
 revgas-atende/
