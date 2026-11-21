@@ -17,6 +17,14 @@ describe('extrairMensagem', () => {
     expect(extrairMensagem(null)).toBeNull();
   });
 
+  it('ignora mensagem de grupo do WhatsApp (o bot só atende no privado)', () => {
+    const grupo = { status: 'pending', meta: { sender: { identifier: '120363413797142590@g.us', phone_number: null } } };
+    expect(extrairMensagem(webhook('oi', {}, grupo))).toBeNull();
+    expect(extrairMensagem(webhook('oi', { sender: { identifier: '120363413797142590@g.us' } }))).toBeNull();
+    // contato no privado continua sendo atendido, inclusive com identificador @lid
+    expect(extrairMensagem(webhook('oi', {}, { meta: { sender: { identifier: '25336767115454@lid', phone_number: '+5586999990000' } } }))).not.toBeNull();
+  });
+
   it('rejeita ID de conversa inválido antes de montar chamadas autenticadas', () => {
     expect(extrairMensagem(webhook('oi', {}, { id: '7' }))).toBeNull();
     expect(extrairMensagem(webhook('oi', {}, { id: -1 }))).toBeNull();
