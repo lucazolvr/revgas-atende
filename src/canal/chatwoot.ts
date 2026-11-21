@@ -12,11 +12,14 @@ export function extrairMensagem(payload: unknown): MensagemRecebida | null {
     private?: boolean;
     content?: string | null;
     attachments?: unknown[];
-    sender?: { phone_number?: string | null };
-    conversation?: { id?: number; status?: string; meta?: { sender?: { phone_number?: string | null } } };
+    sender?: { phone_number?: string | null; identifier?: string | null };
+    conversation?: { id?: number; status?: string; meta?: { sender?: { phone_number?: string | null; identifier?: string | null } } };
   } | null;
   if (!p || p.event !== 'message_created' || p.message_type !== 'incoming' || p.private) return null;
   const conversa = p.conversation;
+  // Grupo do WhatsApp (o WAHA também repassa ao Chatwoot): o bot nunca responde, só clientes no privado.
+  const identificador = String(conversa?.meta?.sender?.identifier ?? p.sender?.identifier ?? '');
+  if (identificador.endsWith('@g.us')) return null;
   const conversaId = conversa?.id;
   // O corpo do webhook é externo: TypeScript não valida tipos em tempo de execução.
   // Nunca deixe um valor arbitrário virar parte da URL autenticada do Chatwoot.
