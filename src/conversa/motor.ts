@@ -285,6 +285,8 @@ function aplicarTexto(s: Sessao, texto: string, cat: Produto[]): boolean | strin
     }
     case 'ENDERECO': {
       const campo = CAMPOS_ENDERECO.find((c) => !p.endereco?.[c])!;
+      // Só a 1ª linha responde ao campo: "Rua X\nSim, para entregar" virava a rua inteira (ensaio de 22/11).
+      const t = texto.split('\n').map((l) => l.trim()).find(Boolean) ?? '';
       if (campo === 'cidade' && !p.endereco?.uf) {
         const { cidade, uf } = separarCidadeUf(t);
         if (cidade.length < 2 || cidade.length > 120) return false;

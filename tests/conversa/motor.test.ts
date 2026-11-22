@@ -78,6 +78,11 @@ describe('motor da conversa (menus, sem IA)', () => {
     expect(textoDe(acoes)).toContain('cancelado');
   });
 
+  it('resposta do endereço em várias linhas: só a primeira vale para o campo', async () => {
+    const { sessao } = await conversa(deps(), ['oi', 'Maria', '1', '2', 'Rua Nova\nSim, para entregar', '\n10\n', 'Centro']);
+    expect(sessao.pedido.endereco).toMatchObject({ logradouro: 'Rua Nova', numero: '10', bairro: 'Centro' });
+  });
+
   it('cancela no meio do pedido, pelos menus', async () => {
     for (const pedido of ['cancelar', 'Quero desistir']) {
       const { sessao, acoes } = await conversa(deps(), ['oi', 'Maria', '1', pedido]);
