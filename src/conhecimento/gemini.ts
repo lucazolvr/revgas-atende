@@ -3,7 +3,8 @@ import { BaseConhecimento, type GeradorEmbeddings, type GeradorResposta } from '
 import { carregarFaq, type TrechoConhecimento } from './faq.js';
 import type { Produto } from '../vendas/catalogo.js';
 
-class EmbeddingsGemini implements GeradorEmbeddings {
+/** Embeddings da FAQ e das perguntas (também usado pelo npm run eval:rag). */
+export class EmbeddingsGemini implements GeradorEmbeddings {
   constructor(private readonly ai: GoogleGenAI, private readonly timeoutMs: number) {}
 
   async gerar(textos: string[]): Promise<number[][]> {
@@ -82,7 +83,8 @@ export class ConhecimentoGemini {
   }
 }
 
-function trechoCatalogo(catalogo: Produto[]): TrechoConhecimento {
+/** Preços do catálogo como um trecho a mais da base (também usado pelo npm run eval:rag). */
+export function trechoCatalogo(catalogo: Produto[]): TrechoConhecimento {
   const produtos = catalogo.map((p) => `${p.nome} (${p.codigo}): R$ ${(p.precoCentavos / 100).toFixed(2).replace('.', ',')}`).join('\n');
   return { fonte: 'config/catalogo.json', texto: `Preços atuais, fonte autorizada config/catalogo.json:\n${produtos}` };
 }

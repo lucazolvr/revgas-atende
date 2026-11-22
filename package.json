@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit",
     "marca": "tsx scripts/marca.ts",
     "eval:ia": "tsx eval/avaliar-ia.ts",
+    "eval:rag": "tsx eval/avaliar-rag.ts",
     "eval:experimento": "tsx eval/experimento.ts",
     "eval:metricas": "tsx eval/resumir-metricas.ts",
     "cancelar-venda": "tsx scripts/cancelar-venda.ts"
