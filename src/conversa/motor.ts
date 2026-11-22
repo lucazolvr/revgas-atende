@@ -2,7 +2,7 @@ import type { Interpretacao, Interpretador } from '../ia/interpretacao.js';
 import { FORMAS_PAGAMENTO, type Produto } from '../vendas/catalogo.js';
 import { CAMPOS_ENDERECO, UFS, totalCentavos, type Pedido } from '../vendas/pedido.js';
 import type { ResultadoRegistro } from '../vendas/registrar.js';
-import { ehEmergencia, normalizar, pedeHumano } from './emergencia.js';
+import { ehEmergencia, normalizar, pedeCancelar, pedeHumano } from './emergencia.js';
 import * as M from './mensagens.js';
 
 export type Estado =
@@ -89,6 +89,13 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
     return transferir('vazamento');
   }
   if (ia?.intencao === 'falar_com_humano' || pedeHumano(texto)) return transferir('humano');
+
+  // "cancelar" em qualquer etapa do pedido (antes só valia no resumo, e o bot repetia a pergunta).
+  if (s.estado !== 'INICIO' && (pedeCancelar(texto) || ia?.intencao === 'cancelar')) {
+    s = novaSessao(s.pedido.telefone);
+    responder(M.CANCELADO);
+    return fim();
+  }
 
   if (s.estado === 'RESUMO') {
     const opcao = escolha(texto, ia);
