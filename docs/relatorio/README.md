@@ -4,7 +4,7 @@ Projeto de Extensão VI · Transformação Digital · 2026.2
 
 **Versão para revisão.** Os resultados quantitativos da avaliação da IA ([issue #2](https://github.com/lucazolvr/revgas-atende/issues/2)) já estão incorporados, e a instalação do zero pelo README e os cinco cenários do ensaio com o WhatsApp real foram validados em 22/11/2026. Faltam o teste com usuários (SUS), o vídeo do plano B e a conclusão baseada neles.
 
-**Formato.** Este rascunho já segue a estrutura, as citações (NBR 10520, autor-data) e as referências (NBR 6023) da ABNT. A formatação de página (A4, margens, fonte, espaçamento, paginação) e os elementos pré-textuais que dependem do modelo da faculdade (capa, folha de rosto, sumário, listas) entram na versão final; veja [Para a versão final](#para-a-versão-final-abnt).
+**Formato.** Este rascunho já segue a estrutura, as citações (NBR 10520, autor-data) e as referências (NBR 6023) da ABNT. A formatação de página (A4, margens, fonte, espaçamento, paginação) e os elementos pré-textuais (capa, sumário) entram na versão em Word, que segue o modelo de relatório usado pela turma; veja [Para a versão final](#para-a-versão-final-abnt).
 
 ## Resumo
 
@@ -12,7 +12,7 @@ Pedidos de gás recebidos pelo WhatsApp costumam ser transcritos à mão para o 
 
 **Palavras-chave:** chatbot; atendimento ao cliente; WhatsApp; modelos de linguagem; geração aumentada por recuperação.
 
-## Lista de siglas
+## Lista de abreviaturas e siglas
 
 | Sigla | Significado |
 | --- | --- |
@@ -61,7 +61,7 @@ No design de 18/11, a ponte escolhida foi a Evolution API, por ter integração 
 | 2.3.6 | Conectava, mas as mensagens de remetentes no novo formato de identificação do WhatsApp (`@lid`) não chegavam ao Chatwoot. |
 | 2.4.0-rc2 | Passou a exigir licença registrada em servidor externo. Sem ativação, toda chamada respondia `503 LICENSE_REQUIRED`. |
 
-Fonte: elaborado pelos autores (2026).
+Fonte: Elaborado pelos autores (2026).
 
 A equipe comparou quatro alternativas: registrar a licença da Evolution 2.4, adotar o WAHA Core, migrar para a WhatsApp Cloud API oficial da Meta ou construir uma ponte própria. A escolha foi o WAHA Core, por ser gratuito, sem licença, com integração pronta com o Chatwoot e adequado a um número por instalação. A Cloud API foi descartada nesta versão porque exige conta comercial na Meta e endereço público, enquanto o projeto roda localmente.
 
@@ -99,7 +99,7 @@ Recrutar de 5 a 8 pessoas para fazer a jornada de pedido pelo WhatsApp com o bot
 | Latência da IA | Mediana de 0,9 a 5,4 s por chamada, conforme o horário. Na rodada final, 24% das chamadas passaram do limite de 8 s | Acima de 8 s, o bot recorre ao menu e o atendimento continua |
 | Testes automatizados | 72 testes em 12 arquivos, todos passando | `npm test`, sem rede (IA e ERP falsos) |
 
-Fonte: elaborado pelos autores (2026).
+Fonte: Elaborado pelos autores (2026).
 
 Os números são da versão do bot medida em 19/11. Depois disso, o bot passou a deduzir o estado pela cidade e a perguntar cidade e estado juntos, o que reduz o caminho pelo menu de 11 para 10 mensagens em um pedido em Teresina.
 
@@ -129,7 +129,7 @@ Os testes encontraram defeitos que os testes unitários não tinham encontrado:
 | Emergência | Orientações de segurança imediatas; a conversa foi transferida à equipe com prioridade urgente, etiquetas `vazamento` e `urgente` e nota-resumo. |
 | Resposta do atendente | A mensagem enviada pelo Chatwoot chegou ao WhatsApp do cliente no mesmo minuto. |
 
-Fonte: elaborado pelos autores (2026).
+Fonte: Elaborado pelos autores (2026).
 
 O ensaio também confirmou a correção do PR #19: mensagens de um grupo em que o chip participa chegaram ao Chatwoot, e o bot não respondeu. As três vendas de teste do dia foram canceladas na API de teste. Duas observações foram registradas para o roteiro e para o teste com usuários: no pedido pelo menu, a rua foi respondida em duas linhas e o bot guardou o texto inteiro como rua; o resumo exibiu o erro, mas o pedido foi confirmado mesmo assim, o que mostra que a proteção do resumo depende de a pessoa lê-lo. E, no Chatwoot, as conversas atendidas pelo bot ficam com status “pendente” e não aparecem no filtro padrão “Abertas”, o que precisa ser ajustado por quem opera o painel na demonstração.
 
@@ -183,14 +183,14 @@ WOHLIN, C. *et al.* **Experimentation in software engineering**. Berlin: Springe
 
 ## Para a versão final (ABNT)
 
-Checklist para montar o documento entregue, conforme a issue [#4](https://github.com/lucazolvr/revgas-atende/issues/4). Se a faculdade (iCEV) ou a professora tiver modelo próprio, ele vale sobre esta lista.
+Checklist para montar o documento entregue, conforme a issue [#4](https://github.com/lucazolvr/revgas-atende/issues/4). A faculdade não tem modelo próprio; a turma usa como referência o relatório final de outro grupo da disciplina, que define a capa e a ordem dos elementos.
 
-- [ ] **Ferramenta:** Word/Google Docs com o modelo da faculdade ou LaTeX com abnTeX2 (decisão da equipe).
-- [ ] **Pré-textuais:** capa e folha de rosto (instituição, curso, nomes completos da equipe, título, natureza do trabalho, professora, Teresina, 2026); resumo e palavras-chave (acima); lista de figuras, lista de tabelas, lista de siglas (acima) e sumário (NBR 6027).
+- [x] **Ferramenta:** Word, gerado a partir deste rascunho (decisão da equipe).
+- [ ] **Pré-textuais, no modelo da turma:** capa (instituição, curso, Projeto de Extensão VI, professora, nomes completos da equipe, título, Teresina, 2026), resumo e palavras-chave, lista de abreviaturas e siglas e sumário (NBR 6027). Falta o sobrenome da professora.
 - [ ] **Página:** A4; margens de 3 cm em cima e à esquerda e de 2 cm embaixo e à direita; Arial ou Times New Roman 12 no texto e 10 em citações longas, notas, legendas e fontes; espaçamento 1,5 no texto e simples em citações longas, referências e legendas.
-- [ ] **Paginação:** contada a partir da folha de rosto e mostrada a partir da introdução, no canto superior direito.
-- [ ] **Seções:** numeração progressiva (NBR 6024), como neste rascunho.
-- [ ] **Figuras e tabelas:** título acima (“Figura 1 – Acurácia por intenção”) e fonte abaixo (“Fonte: elaborado pelos autores (2026).”). As 7 figuras do [estudo de avaliação](avaliacao-ia/figuras/) estão em 200 dpi e podem entrar direto.
+- [ ] **Paginação:** contada a partir da página seguinte à capa (não há folha de rosto no modelo da turma) e mostrada a partir da introdução, no canto superior direito.
+- [ ] **Seções:** numeração progressiva (NBR 6024), com as seções primárias e secundárias em maiúsculas no sumário, e listas como alíneas a), b), c).
+- [ ] **Figuras e tabelas:** título acima (“Figura 1 – Acurácia por intenção”) e fonte abaixo (“Fonte: Elaborado pelos autores (2026).”). As 7 figuras do [estudo de avaliação](avaliacao-ia/figuras/) estão em 200 dpi e podem entrar direto.
 - [ ] **Referências:** em ordem alfabética, alinhadas à esquerda, espaçamento simples e uma linha em branco entre elas (NBR 6023). Só entram obras citadas no texto.
 - [ ] **Pós-textuais:** apêndices com o [protocolo de teste](protocolo-sus.md) e o questionário SUS, e com o [roteiro da demo](../roteiro-demo.md), se a equipe quiser.
 - [ ] **Dados fictícios declarados:** horário, bairros e regras da FAQ são de demonstração; as métricas são reais ([dados de demonstração](../dados-de-demonstracao.md)).
