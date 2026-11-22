@@ -36,6 +36,8 @@ const conhecimento = config.GEMINI_API_KEY
   })
   : null;
 if (!gemini) console.log('Sem GEMINI_API_KEY: o bot atende só pelos menus.');
+const iaParaTodos = config.NUMEROS_IA.includes('*');
+if (gemini && iaParaTodos) console.warn('⚠  IA PARA TODOS OS NÚMEROS (NUMEROS_IA=*): na cota grátis, o Google pode usar as mensagens.');
 
 // Uma conexão só com o Redis, dividida entre as sessões e o registro de pedidos do painel.
 const redis = config.REDIS_URL ? new Redis(config.REDIS_URL) : null;
@@ -53,8 +55,9 @@ const { app, ocioso } = criarServidor({
   chatwoot,
   sessoes: redis ? new SessoesRedis(redis) : new SessoesMemoria(),
   catalogo,
-  // Cota grátis do Gemini pode usar os dados para treino: IA só para os números da equipe.
-  interpretadorPara: (telefone) => (gemini && config.NUMEROS_IA.includes(chaveTelefone(telefone)) ? gemini : null),
+  // Cota grátis do Gemini pode usar os dados para treino: a lista limita a IA (ou "*" para todos).
+  interpretadorPara: (telefone) =>
+    gemini && (iaParaTodos || config.NUMEROS_IA.includes(chaveTelefone(telefone))) ? gemini : null,
   responderDuvida: (texto) => conhecimento?.responder(texto) ?? Promise.resolve(null),
   registrar: (p) => registrarVenda(api, corpoDaVenda(p, catalogo, ids)),
   pedidos,
