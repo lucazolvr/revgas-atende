@@ -17,7 +17,7 @@ Nos testes com **chip real** (20 e 21/11/2026), cada versão da Evolution falhou
 | Versão | O que aconteceu | Referência |
 |---|---|---|
 | **2.3.7** | O WhatsApp recusava o QR code: *"não é possível conectar novos dispositivos no momento"*. O mesmo número conectava normalmente no WhatsApp Web do navegador | [evolution-api#2696](https://github.com/evolution-foundation/evolution-api/issues/2696) |
-| **2.3.6** | Conectava, mas **as mensagens dos clientes não chegavam ao Chatwoot**: `error in handling message` com remetentes `@lid` (novo formato de identificação do WhatsApp) | [#2281](https://github.com/EvolutionAPI/evolution-api/issues/2281), [#1872](https://github.com/evolution-foundation/evolution-api/issues/1872) |
+| **2.3.6** | Conectava, mas **as mensagens dos clientes não chegavam ao Chatwoot**: `error in handling message` com remetentes `@lid` (novo formato de identificação do WhatsApp) | [#2281](https://github.com/evolution-foundation/evolution-api/issues/2281), [#1872](https://github.com/evolution-foundation/evolution-api/issues/1872) |
 | **2.4.0-rc2** | Passou a exigir **licença registrada** no servidor da Evolution Foundation: sem ativação, toda chamada responde `503 LICENSE_REQUIRED` | [releases](https://github.com/evolution-foundation/evolution-api/releases) |
 
 Não havia versão da Evolution que **conectasse, entregasse mensagens e não exigisse licença** ao mesmo tempo.
@@ -41,7 +41,7 @@ Usar o **[WAHA](https://waha.devlike.pro/) Core**, imagem `devlikeapro/waha:gows
 
 ## Resultado (21/11/2026)
 
-Teste de ponta a ponta com WhatsApp real (número pessoal, só para o teste):
+Teste de ponta a ponta com WhatsApp real. Ele foi feito com o **número pessoal de um integrante**, de propósito e só por alguns minutos, **antes de conectar o chip da revenda**: naquele momento o chip estava travado pelo WhatsApp ("não é possível conectar novos dispositivos"), e o teste servia para saber se o problema era do WAHA ou do chip. O próprio teste mostrou por que **não se deve usar número pessoal** (veja *Consequências*: o bot chegou a responder num grupo do integrante). O número pessoal foi desconectado logo depois.
 - Mensagem do cliente → conversa no Chatwoot → resposta do bot no WhatsApp em **0,2 a 1,4 s**. No teste lado a lado do João, foram ~0,05 s do Chatwoot até o WhatsApp, contra **21 a 69 s** de travamento na Evolution.
 - Com IA, o pedido inteiro saiu de **uma mensagem**, e o bot perguntou só o que faltava. A venda foi criada na API de teste da RevGás, e a transferência por "cheiro de gás" funcionou.
 - Remetentes `@lid` foram atendidos normalmente.

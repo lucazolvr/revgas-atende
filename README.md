@@ -44,12 +44,12 @@ A ponte WhatsApp ↔ Chatwoot é o **[WAHA](https://waha.devlike.pro/)** (Core, 
 | `src/conversa/` | Motor da conversa (máquina de estados), textos, emergência, sessões |
 | `src/ia/` | Interpretação de texto livre (Gemini) e validação da resposta |
 | `src/vendas/` | Catálogo, pedido, porta da API RevGás (falsa e real) |
-| `config/` | Catálogo de produtos e orientações de segurança |
+| `config/` | Catálogo de produtos, orientações de segurança e FAQ (`config/faq/`, base do RAG) |
 | `scripts/setup.ts` | Liga WAHA ↔ Chatwoot ↔ bot |
 | `scripts/chatwoot-config.ts` | Etiquetas, respostas prontas, atributos, horário e aba "Pedido RevGás" (definições em `src/canal/painel.ts`) |
 | `scripts/chatwoot-ajustes.rb` | Marca RevGás, menu "Pedidos de hoje" e cache do painel (dentro do Chatwoot) |
 | `src/painel/` | Aba "Pedido RevGás" na conversa e lista "Pedidos de hoje" no menu: venda no ERP e cancelamento de venda de teste |
-| `docs/` | Design, plano e (em breve) relatório e roteiro de demo |
+| `docs/` | Design e plano (`superpowers/`), registro de decisões (`decisoes/`), estudo de avaliação da IA (`relatorio/avaliacao-ia/`) e dados de demonstração |
 
 Detalhes e decisões: [documento de design](docs/superpowers/specs/2026-11-18-revgas-atende-design.md).
 
