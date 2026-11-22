@@ -32,7 +32,8 @@ const esquema = z
     NUMEROS_IA: z
       .string()
       .default('')
-      .transform((s) => s.split(',').map(chaveTelefone).filter(Boolean)),
+      // "*" = IA para todos os números (cenário da demo); a lista vazia desliga a IA.
+      .transform((s) => (s.trim() === '*' ? ['*'] : s.split(',').map(chaveTelefone).filter(Boolean))),
     // Métricas não têm conteúdo de conversa; ainda assim, retenção curta reduz exposição.
     METRICAS_RETENCAO_DIAS: inteiroPositivo.default(90),
     VENDA_REAL: z
