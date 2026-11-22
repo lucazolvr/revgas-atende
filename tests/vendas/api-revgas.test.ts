@@ -32,6 +32,38 @@ describe('ApiRevGasHttp', () => {
     expect(Date.now() - t0).toBeGreaterThanOrEqual(55);
   });
 
+  it('venda de cliente passa na frente das consultas do painel, sem quebrar o espaçamento', async () => {
+    const ordem: string[] = [];
+    const momentos: number[] = [];
+    const f = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      ordem.push(`${init?.method} ${String(url).replace('https://x/v1', '')}`);
+      momentos.push(Date.now());
+      return new Response(JSON.stringify({ data: { id: 1 } }), { status: 200 });
+    });
+    const api = new ApiRevGasHttp('https://x/v1', 'K', { fetch: f, intervaloMs: 40 });
+    // O painel abre a lista (três consultas) e logo depois um cliente confirma o pedido.
+    const consultas = [api.detalharVenda(1), api.detalharVenda(2), api.detalharVenda(3)];
+    const venda = api.criarVenda(corpo);
+    await Promise.all([...consultas, venda]);
+    expect(ordem).toEqual(['GET /sales/1', 'POST /sales', 'GET /sales/2', 'GET /sales/3']);
+    for (let i = 1; i < momentos.length; i++) expect(momentos[i]! - momentos[i - 1]!).toBeGreaterThanOrEqual(35);
+  });
+
+  it('uma chamada com erro não trava a fila', async () => {
+    let primeira = true;
+    const f = vi.fn(async () => {
+      if (primeira) {
+        primeira = false;
+        throw new TypeError('fetch failed');
+      }
+      return new Response(JSON.stringify({ data: { id: 7 } }), { status: 201 });
+    });
+    const api = new ApiRevGasHttp('https://x/v1', 'K', { fetch: f, intervaloMs: 0 });
+    const [falhou, deu] = await Promise.allSettled([api.detalharVenda(1), api.criarVenda(corpo)]);
+    expect(falhou.status).toBe('rejected');
+    expect(deu).toMatchObject({ status: 'fulfilled', value: { status: 201 } });
+  });
+
   it('falha de rede vira TempoEsgotado', async () => {
     const f = vi.fn(async () => {
       throw new TypeError('fetch failed');
@@ -66,5 +98,39 @@ describe('registrarVenda', () => {
     const api = new ApiRevGasFalsa();
     api.proximaResposta = { status: 500, dados: null };
     expect(await registrarVenda(api, corpo)).toEqual({ tipo: 'erro', status: 500 });
+  });
+});
+
+describe('ApiRevGasFalsa: conferir e cancelar', () => {
+  it('detalha no formato da API real e cancela', async () => {
+    const api = new ApiRevGasFalsa();
+    await api.criarVenda(corpo);
+    expect((await api.detalharVenda(1)).dados).toMatchObject({ id: 1, establishment_id: corpo.establishment_id, status: 'OPEN' });
+    expect((await api.cancelarVenda(1)).status).toBe(204);
+    expect((await api.detalharVenda(1)).dados).toMatchObject({ status: 'CANCEL' });
+    expect((await api.detalharVenda(2)).status).toBe(404);
+    await expect(api.detalharVenda(-1)).rejects.toThrow('inválido');
+  });
+});
+
+describe('ApiRevGasHttp: conferir e cancelar venda de teste', () => {
+  it('detalha com GET e cancela com PUT /sales/:id/cancel', async () => {
+    const f = fetchFalso(200, { data: {} });
+    const api = new ApiRevGasHttp('https://x/v1', 'K', { fetch: f, intervaloMs: 0 });
+    await api.detalharVenda(42);
+    await api.cancelarVenda(42);
+    expect(f.mock.calls.map(([u, i]) => [u, i?.method])).toEqual([
+      ['https://x/v1/sales/42', 'GET'],
+      ['https://x/v1/sales/42/cancel', 'PUT'],
+    ]);
+    expect(JSON.parse(String(f.mock.calls[1]![1]?.body))).toEqual({ motive_cancel_sale_id: null });
+  });
+
+  it('recusa id que não é inteiro positivo antes de chamar a API', () => {
+    const f = fetchFalso();
+    const api = new ApiRevGasHttp('https://x/v1', 'K', { fetch: f });
+    expect(() => api.cancelarVenda(-1)).toThrow();
+    expect(() => api.detalharVenda(1.5)).toThrow();
+    expect(f).not.toHaveBeenCalled();
   });
 });

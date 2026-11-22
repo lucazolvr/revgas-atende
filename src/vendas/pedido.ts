@@ -28,8 +28,9 @@ export type CorpoVenda = {
   neighborhood: string;
   city: string;
   state_federation: string;
-  complement: string;
-  landmark: string;
+  // A API recusa texto vazio (precisa de 1 a 255 caracteres): sem valor, o campo não vai.
+  complement?: string;
+  landmark?: string;
   observation: string;
   products: { product_id: number; quantity: number; value: number }[];
   payments: { payment_type: FormaPagamento; value: number }[];
@@ -78,8 +79,8 @@ export function corpoDaVenda(
     neighborhood: e.bairro!,
     city: e.cidade!,
     state_federation: e.uf!,
-    complement: e.complemento ?? '',
-    landmark: e.referencia ?? '',
+    ...(e.complemento?.trim() && { complement: e.complemento.trim().slice(0, 255) }),
+    ...(e.referencia?.trim() && { landmark: e.referencia.trim().slice(0, 255) }),
     observation: obs.join(' '),
     // A API recebe reais como número JSON; centavos inteiros evitam erro de arredondamento até aqui.
     products: [{ product_id: produto.productId, quantity: p.quantidade, value: produto.precoCentavos / 100 }],

@@ -1,12 +1,15 @@
 /**
  * Liga as peças depois do `docker compose up -d` (pode rodar de novo sem duplicar nada):
  *   1. cria o Agent Bot "RevGás Atende" no Chatwoot, apontando para o webhook do bot;
- *   2. cria a instância "revgas" na Evolution e liga a integração com o Chatwoot
- *      (a Evolution cria a caixa "WhatsApp RevGás" sozinha);
- *   3. liga o Agent Bot à caixa.
- * Uso: npm run setup   (lê o .env; Chatwoot em 127.0.0.1:3000 e Evolution em 127.0.0.1:8080)
+ *   2. garante a caixa "WhatsApp RevGás" (canal API). Se ela já existe (instalação que veio da
+ *      Evolution), reaproveita: as conversas antigas ficam;
+ *   3. cria ou atualiza a integração do WAHA com essa caixa (app "chatwoot") e aponta a caixa para ela;
+ *   4. cria ou religa a sessão "default" do WhatsApp no WAHA (motor GOWS).
+ * A lógica fica em src/canal/whatsapp.ts (com testes).
+ * Uso: npm run setup   (lê o .env; Chatwoot em 127.0.0.1:3000 e WAHA em 127.0.0.1:3002)
  */
 import { loadEnvFile } from 'node:process';
+import { SESSAO, ligarWhatsApp } from '../src/canal/whatsapp.js';
 
 try {
   loadEnvFile('.env');
@@ -16,10 +19,7 @@ try {
 }
 
 const CHATWOOT = 'http://127.0.0.1:3000';
-const EVOLUTION = 'http://127.0.0.1:8080';
-const INSTANCIA = 'revgas';
-const NOME_CAIXA = 'WhatsApp RevGás';
-const NOME_BOT = 'RevGás Atende';
+const WAHA = 'http://127.0.0.1:3002';
 
 function exigir(nome: string): string {
   const v = process.env[nome]?.trim();
@@ -32,12 +32,17 @@ function exigir(nome: string): string {
 
 const conta = exigir('CHATWOOT_ACCOUNT_ID');
 const tokenAdmin = exigir('CHATWOOT_ADMIN_TOKEN');
-const chaveEvolution = exigir('EVOLUTION_API_KEY');
+const chaveWaha = exigir('WAHA_API_KEY');
 const tokenWebhook = exigir('BOT_WEBHOOK_TOKEN');
 
-async function chamar<T>(url: string, init: RequestInit & { headers: Record<string, string> }): Promise<T> {
-  const r = await fetch(url, { ...init, headers: { 'Content-Type': 'application/json', ...init.headers } });
+async function chamar<T>(url: string, init: RequestInit & { headers: Record<string, string> }, semErro404 = false): Promise<T> {
+  const r = await fetch(url, {
+    ...init,
+    headers: { 'Content-Type': 'application/json', ...init.headers },
+    signal: AbortSignal.timeout(30_000),
+  });
   const texto = await r.text();
+  if (semErro404 && r.status === 404) return null as T;
   if (!r.ok) throw new Error(`${init.method ?? 'GET'} ${url.replace(/\?.*/, '')} → ${r.status}: ${texto.slice(0, 300)}`);
   return (texto ? JSON.parse(texto) : null) as T;
 }
@@ -48,72 +53,36 @@ const cw = <T>(caminho: string, metodo = 'GET', corpo?: unknown) =>
     headers: { api_access_token: tokenAdmin },
     body: corpo ? JSON.stringify(corpo) : undefined,
   });
-const evo = <T>(caminho: string, metodo = 'GET', corpo?: unknown) =>
-  chamar<T>(`${EVOLUTION}${caminho}`, {
-    method: metodo,
-    headers: { apikey: chaveEvolution },
-    body: corpo ? JSON.stringify(corpo) : undefined,
-  });
+const waha = <T>(caminho: string, metodo = 'GET', corpo?: unknown, semErro404 = false) =>
+  chamar<T>(
+    `${WAHA}${caminho}`,
+    { method: metodo, headers: { 'X-Api-Key': chaveWaha }, body: corpo ? JSON.stringify(corpo) : undefined },
+    semErro404,
+  );
 
-type AgentBot = { id: number; name: string; access_token?: string };
-type Caixa = { id: number; name: string };
-
-// 1. Agent Bot (o Chatwoot chama o bot pela rede interna do Docker)
-const urlWebhook = `http://bot:3000/webhook/${tokenWebhook}`;
-const bots = await cw<AgentBot[]>('/agent_bots');
-let bot = bots.find((b) => b.name === NOME_BOT);
-if (bot) {
-  bot = await cw<AgentBot>(`/agent_bots/${bot.id}`, 'PATCH', { outgoing_url: urlWebhook });
-  console.log(`✓ Agent Bot já existia (id ${bot.id}); webhook atualizado.`);
-} else {
-  bot = await cw<AgentBot>('/agent_bots', 'POST', {
-    name: NOME_BOT,
-    description: 'Atendente virtual de pedidos de gás',
-    outgoing_url: urlWebhook,
-  });
-  console.log(`✓ Agent Bot criado (id ${bot.id}).`);
-}
-
-// 2. Instância da Evolution + integração com o Chatwoot
-const instancias = await evo<{ name?: string; instance?: { instanceName?: string } }[]>('/instance/fetchInstances');
-const existe = instancias.some((i) => (i.name ?? i.instance?.instanceName) === INSTANCIA);
-if (!existe) {
-  await evo('/instance/create', 'POST', { instanceName: INSTANCIA, integration: 'WHATSAPP-BAILEYS', qrcode: true });
-  console.log(`✓ Instância "${INSTANCIA}" criada na Evolution.`);
-} else {
-  console.log(`✓ Instância "${INSTANCIA}" já existia.`);
-}
-await evo(`/chatwoot/set/${INSTANCIA}`, 'POST', {
-  enabled: true,
-  accountId: conta,
-  token: tokenAdmin,
-  url: 'http://chatwoot:3000',
-  signMsg: false,
-  reopenConversation: true,
-  conversationPending: true, // conversa nova nasce "pendente": fica com o bot até alguém assumir
-  nameInbox: NOME_CAIXA,
-  mergeBrazilContacts: true,
-  importContacts: false,
-  importMessages: false,
-  autoCreate: true,
-});
-console.log('✓ Evolution ligada ao Chatwoot.');
-
-// 3. Agent Bot na caixa do WhatsApp
-const { payload: caixas } = await cw<{ payload: Caixa[] }>('/inboxes');
-const caixa = caixas.find((c) => c.name === NOME_CAIXA);
-if (!caixa) {
-  console.error(`✗ A caixa "${NOME_CAIXA}" ainda não apareceu no Chatwoot. Rode de novo em alguns segundos.`);
+// Confere antes que o WAHA está de pé e que a chave do .env é a dele.
+try {
+  const r = await fetch(`${WAHA}/api/sessions`, { headers: { 'X-Api-Key': chaveWaha }, signal: AbortSignal.timeout(5_000) });
+  if (r.status === 401) {
+    console.error('✗ O WAHA recusou a WAHA_API_KEY do .env. Se mudou a chave, rode "docker compose up -d waha" de novo.');
+    process.exit(1);
+  }
+  if (!r.ok) throw new Error(String(r.status));
+} catch (e) {
+  if (e instanceof Error && /^\d+$/.test(e.message)) console.error(`✗ O endereço ${WAHA} respondeu ${e.message}: não parece ser o WAHA.`);
+  else console.error(`✗ O WAHA não respondeu em ${WAHA}. Rode "docker compose up -d" e tente de novo.`);
   process.exit(1);
 }
-await cw(`/inboxes/${caixa.id}/set_agent_bot`, 'POST', { agent_bot: bot.id });
-console.log(`✓ Agent Bot ligado à caixa "${NOME_CAIXA}" (id ${caixa.id}).`);
+
+const { log, tokenBot } = await ligarWhatsApp(cw, waha, { conta: Number(conta), tokenAdmin, tokenWebhook });
+for (const linha of log) console.log(linha);
 
 console.log('\nFalta pouco:');
-if (bot.access_token) {
-  console.log(`1. Coloque no .env:  CHATWOOT_BOT_TOKEN=${bot.access_token}`);
+if (tokenBot) {
+  console.log(`1. Coloque no .env:  CHATWOOT_BOT_TOKEN=${tokenBot}`);
 } else {
   console.log('1. Copie o token do bot (Chatwoot → Configurações → Bots → RevGás Atende) para CHATWOOT_BOT_TOKEN no .env.');
 }
 console.log('2. Reinicie o bot:   docker compose up -d --build bot');
-console.log(`3. Leia o QR code:   ${EVOLUTION}/manager  (instância "${INSTANCIA}", use a EVOLUTION_API_KEY)`);
+console.log(`3. Leia o QR code:   ${WAHA}/dashboard  (usuário e senha do .env; na 1ª vez, cole a WAHA_API_KEY`);
+console.log(`                     no "Worker"; depois, na sessão "${SESSAO}", clique no ícone de login)`);

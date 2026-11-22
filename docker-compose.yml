@@ -1,10 +1,10 @@
-# Sobe tudo: Chatwoot (painel), Evolution (WhatsApp), Postgres, Redis e o bot.
+# Sobe tudo: Chatwoot (painel), WAHA (WhatsApp), Postgres, Redis e o bot.
 # Portas publicadas só em 127.0.0.1: nada fica aberto para a rede.
 # Versões fixadas em 2026-11; confira as releases antes de atualizar.
 
 x-chatwoot: &chatwoot
   image: chatwoot/chatwoot:v4.16.2
-  environment:
+  environment: &chatwoot-env
     SECRET_KEY_BASE: ${SECRET_KEY_BASE}
     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     RAILS_ENV: production
@@ -16,12 +16,13 @@ x-chatwoot: &chatwoot
     POSTGRES_DATABASE: chatwoot
     REDIS_URL: redis://redis:6379/0
     ENABLE_ACCOUNT_SIGNUP: "false"
-    # O bot e a Evolution moram na rede interna do Docker; sem isto o Chatwoot recusa os webhooks
+    # O bot e o WAHA moram na rede interna do Docker; sem isto o Chatwoot recusa os webhooks
     # ("has no public ip addresses"). Seguro aqui: instalação de uma conta só, sem cadastro aberto.
     SAFE_FETCH_ALLOW_PRIVATE_NETWORK: "true"
     ACTIVE_STORAGE_SERVICE: local
   volumes:
     - chatwoot_storage:/app/storage
+    - ./marca:/app/public/marca:ro # logo, ícone e tema RevGás (scripts/aplicar-marca.rb)
   depends_on:
     postgres: { condition: service_healthy }
     redis: { condition: service_started }
@@ -35,7 +36,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres:/var/lib/postgresql/data
-      - ./infra/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -62,42 +62,89 @@ services:
     depends_on:
       chatwoot-migrar: { condition: service_completed_successfully }
 
+  # Configura o painel a cada `docker compose up` (sem rodar nada à mão): etiquetas, respostas
+  # prontas, atributos, horário e aba "Pedido RevGás" (scripts/chatwoot-config.ts, pela API).
+  # Antes da primeira instalação (sem CHATWOOT_ADMIN_TOKEN ou sem npm run setup) só avisa e sai.
+  chatwoot-config:
+    build: .
+    image: revgas-atende-bot
+    command: ["npx", "tsx", "scripts/chatwoot-config.ts"]
+    # Só o que o script usa (não o .env inteiro): menor privilégio para um container de configuração.
+    environment:
+      CHATWOOT_CONFIG_URL: http://chatwoot:3000
+      CHATWOOT_CONFIG_AUTOMATICO: "1"
+      CHATWOOT_ACCOUNT_ID: ${CHATWOOT_ACCOUNT_ID:-}
+      CHATWOOT_ADMIN_TOKEN: ${CHATWOOT_ADMIN_TOKEN:-}
+      PAINEL_TOKEN: ${PAINEL_TOKEN:-}
+      PAINEL_URL: ${PAINEL_URL:-}
+    depends_on:
+      chatwoot: { condition: service_started }
+    restart: "no"
+
+  # Marca RevGás, menu "Pedidos de hoje" e cache do painel (scripts/chatwoot-ajustes.rb). Grava
+  # direto no banco do Chatwoot (não precisa de token). Roda depois do chatwoot-config para renovar
+  # o cache só depois de as etiquetas existirem; o chatwoot-config sai com 0 mesmo quando dá erro
+  # (ex.: token errado, explicado no log), então essa espera não derruba a subida.
+  chatwoot-ajustes:
+    <<: *chatwoot
+    command: bundle exec rails runner /revgas/chatwoot-ajustes.rb
+    environment:
+      <<: *chatwoot-env
+      PAINEL_TOKEN: ${PAINEL_TOKEN:-}
+      PAINEL_URL: ${PAINEL_URL:-}
+    volumes:
+      - ./scripts:/revgas:ro
+    depends_on:
+      chatwoot-migrar: { condition: service_completed_successfully }
+      chatwoot-config: { condition: service_completed_successfully }
+      redis: { condition: service_started }
+    restart: "no"
+
   chatwoot-sidekiq:
     <<: *chatwoot
     command: bundle exec sidekiq -C config/sidekiq.yml
     depends_on:
       chatwoot-migrar: { condition: service_completed_successfully }
 
-  evolution:
-    image: evoapicloud/evolution-api:v2.3.7
+  # Ponte WhatsApp ↔ Chatwoot: WAHA Core (grátis, sem licença), motor GOWS (sem navegador, lida
+  # com remetentes @lid). Trocou a Evolution API, que travava ou não entregava mensagens (issue #15).
+  # A integração com o Chatwoot (app "chatwoot") é criada pelo npm run setup.
+  waha:
+    image: devlikeapro/waha:gows-2026.10.1
     environment:
-      SERVER_URL: http://evolution:8080
-      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
-      DATABASE_ENABLED: "true"
-      DATABASE_PROVIDER: postgresql
-      DATABASE_CONNECTION_URI: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/evolution?schema=public
-      CACHE_REDIS_ENABLED: "true"
-      CACHE_REDIS_URI: redis://redis:6379/6
-      CACHE_LOCAL_ENABLED: "false"
-      CHATWOOT_ENABLED: "true"
-      CHATWOOT_MESSAGE_READ: "true"
-      LOG_LEVEL: ERROR,WARN
+      WHATSAPP_DEFAULT_ENGINE: GOWS
+      # Sem chave ou senha, o WAHA subiria sem proteção: o compose recusa subir.
+      WAHA_API_KEY: ${WAHA_API_KEY:?defina WAHA_API_KEY no .env}
+      WAHA_API_KEY_PLAIN: ${WAHA_API_KEY:?defina WAHA_API_KEY no .env} # a integração com o Chatwoot exige a chave em texto puro
+      WAHA_DASHBOARD_USERNAME: ${WAHA_DASHBOARD_USERNAME:-revgas}
+      WAHA_DASHBOARD_PASSWORD: ${WAHA_DASHBOARD_PASSWORD:?defina WAHA_DASHBOARD_PASSWORD no .env}
+      WAHA_APPS_ENABLED: "True"
+      WAHA_APPS_ON: chatwoot
+      REDIS_URL: redis://redis:6379/7 # a integração com o Chatwoot usa filas no Redis
+      WAHA_PUBLIC_URL: http://waha:3000
+      WAHA_PRINT_QR: "False"
     volumes:
-      - evolution_instances:/evolution/instances
+      # Sessão do WhatsApp (o chip conectado). Dá acesso às conversas do número: nunca vai para o git.
+      - waha_sessoes:/app/.sessions
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:3002:3000" # painel do WAHA (QR code): http://127.0.0.1:3002/dashboard
     depends_on:
-      postgres: { condition: service_healthy }
       redis: { condition: service_started }
     restart: unless-stopped
 
   bot:
     build: .
+    image: revgas-atende-bot
     env_file: .env
     environment:
       CHATWOOT_URL: http://chatwoot:3000
       REDIS_URL: redis://redis:6379/2
       PORTA: "3000"
+    ports:
+      # Painel "Pedido RevGás" (aba na conversa e lista "Pedidos de hoje" do menu do Chatwoot).
+      # Só no 127.0.0.1: os dados do pedido
+      # são pessoais e não podem ficar abertos na rede. A API do painel ainda exige PAINEL_TOKEN.
+      - "127.0.0.1:3001:3000"
     volumes:
       - ./dados:/app/dados
     depends_on: [redis, chatwoot]
@@ -107,4 +154,4 @@ volumes:
   postgres:
   redis:
   chatwoot_storage:
-  evolution_instances:
+  waha_sessoes:

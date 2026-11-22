@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title>Pedidos de hoje · RevGás</title>
+    <link rel="stylesheet" href="/painel/painel.css">
+  </head>
+  <body>
+    <main class="larga">
+      <header>
+        <div>
+          <h1>Pedidos de hoje</h1>
+          <p id="resumo" class="sutil"></p>
+        </div>
+        <button id="atualizar" type="button" class="secundario">Atualizar</button>
+      </header>
+
+      <p id="aviso" role="status">Carregando…</p>
+      <ol id="lista" class="lista"></ol>
+
+      <template id="modelo">
+        <li class="cartao">
+          <div class="topo">
+            <strong class="titulo"></strong>
+            <span class="selo">Consultando…</span>
+          </div>
+          <dl>
+            <dt>Cliente</dt><dd data-campo="nome"></dd>
+            <dt>Pedido</dt><dd data-campo="itens"></dd>
+            <dt>Total</dt><dd data-campo="total"></dd>
+            <dt>Pagamento</dt><dd data-campo="pagamento"></dd>
+            <dt>Endereço</dt><dd data-campo="endereco"></dd>
+          </dl>
+          <p class="erro" hidden></p>
+          <div class="acoes">
+            <button type="button" class="link abrir">Abrir conversa</button>
+            <button type="button" class="perigo cancelar" hidden>Cancelar venda de teste</button>
+          </div>
+          <p class="resultado sutil" role="status"></p>
+        </li>
+      </template>
+    </main>
+    <script src="/painel/pedidos.js"></script>
+  </body>
+</html>

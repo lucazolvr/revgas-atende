@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title>Pedido RevGás</title>
+    <link rel="stylesheet" href="/painel/painel.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>Pedido RevGás</h1>
+          <p id="conversa" class="sutil"></p>
+        </div>
+        <button id="atualizar" type="button" class="secundario" title="Buscar de novo">Atualizar</button>
+      </header>
+
+      <p id="aviso" role="status">Carregando…</p>
+
+      <section id="pedido" hidden>
+        <h2>Pedido</h2>
+        <dl id="dados"></dl>
+      </section>
+
+      <section id="venda" hidden>
+        <h2>Venda no ERP</h2>
+        <p class="linha"><span id="selo" class="selo"></span><span id="modo" class="sutil"></span></p>
+        <p id="erro-venda" class="erro" hidden></p>
+        <button id="cancelar" type="button" class="perigo" hidden>Cancelar venda de teste</button>
+        <p id="resultado" role="status" class="sutil"></p>
+      </section>
+    </main>
+    <script src="/painel/painel.js"></script>
+  </body>
+</html>

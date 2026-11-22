@@ -1,0 +1,129 @@
+/* Gerado por scripts/marca.ts a partir do CSS do Chatwoot. Não edite: rode npm run marca. */
+:root{--blue-1: 255 252 250; --blue-2: 255 247 242; --blue-3: 255 237 226; --blue-4: 255 224 207; --blue-5: 254 208 184; --blue-6: 252 188 155; --blue-7: 250 163 120; --blue-8: 247 134 82; --blue-9: 252 105 43; --blue-10: 238 92 30; --blue-11: 200 72 18; --blue-12: 92 36 12;}
+.dark{--blue-1: 24 14 10; --blue-2: 33 18 12; --blue-3: 58 26 14; --blue-4: 79 31 12; --blue-5: 96 40 18; --blue-6: 115 52 27; --blue-7: 143 67 37; --blue-8: 186 86 47; --blue-9: 252 105 43; --blue-10: 240 96 34; --blue-11: 255 156 112; --blue-12: 255 224 207;}
+.file .icon-wrap[data-v-7ea48b19]{color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.file .icon-wrap[data-v-7ea48b19]{color:rgb(252 105 43 / var(--tw-text-opacity, 1))}}
+.file .download[data-v-7ea48b19]{color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.file .download[data-v-7ea48b19]{color:rgb(252 105 43 / var(--tw-text-opacity, 1))}}
+.option[data-v-74ee74cc]{border-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.option[data-v-74ee74cc]{border-color:rgb(252 105 43 / var(--tw-border-opacity, 1))}}
+.email-input-group input[data-v-c0f153df]:focus{outline-color:#fc692b}
+.customer-satisfaction .feedback-form input[data-v-b42a988a]:focus{outline-color:#fc692b}
+.unread-wrap .clear-button[data-v-4f260fa6]{color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.unread-wrap .clear-button[data-v-4f260fa6]{color:rgb(252 105 43 / var(--tw-text-opacity, 1))}}
+ninja-keys{--ninja-accent-color: rgba(252, 105, 43, 1)}
+.banner.primary[data-v-658da868]{background-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.banner.primary[data-v-658da868]{background-color:rgb(252 105 43 / var(--tw-bg-opacity, 1))}}
+:root{--border-blue-strong: 96 40 18;--solid-blue: 255 224 207;--solid-blue-2: 255 252 250;--border-blue: 252, 105, 43, .5}
+.dark{--border-blue-strong: 254 208 184;--solid-blue-2: 24 14 10;--border-blue: 252, 105, 43, .5}
+.border-n-brand{border-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.border-n-brand{border-color:rgb(252 105 43 / var(--tw-border-opacity, 1))}}
+.border-n-brand\/50{border-color:#fc692b80}
+.border-t-n-brand{border-top-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.border-t-n-brand{border-top-color:rgb(252 105 43 / var(--tw-border-opacity, 1))}}
+.bg-\[\#2781F6\]{background-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.bg-\[\#2781F6\]{background-color:rgb(252 105 43 / var(--tw-bg-opacity, 1))}}
+.bg-n-brand{background-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.bg-n-brand{background-color:rgb(252 105 43 / var(--tw-bg-opacity, 1))}}
+.bg-n-brand\/10{background-color:#fc692b1a}
+.bg-n-brand\/20{background-color:#fc692b33}
+.bg-n-brand\/5{background-color:#fc692b0d}
+.from-n-brand\/15{--tw-gradient-from: rgb(252 105 43 / .15) var(--tw-gradient-from-position);--tw-gradient-to: rgb(252 105 43 / 0) var(--tw-gradient-to-position)}
+.text-\[\#7EB6FF\]{color:#ff9c70}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.text-\[\#7EB6FF\]{color:rgb(255 156 112 / var(--tw-text-opacity, 1))}}
+.text-n-brand{color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.text-n-brand{color:rgb(252 105 43 / var(--tw-text-opacity, 1))}}
+.\!shadow-\[var\(--widget-color\,\#2781f6\)\]{--tw-shadow-color: var(--widget-color,#fc692b) !important}
+.\!outline-n-brand{outline-color:#fc692b!important}
+.outline-n-brand{outline-color:#fc692b}
+.ring-n-brand{--tw-ring-color: rgb(252 105 43 / var(--tw-ring-opacity, 1))}
+p a{color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){p a{color:rgb(252 105 43 / var(--tw-text-opacity, 1))}}
+p a:is(.dark *){color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){p a:is(.dark *){color:rgb(252 105 43 / var(--tw-text-opacity, 1))}}
+input[type]:not([type=file]):not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]):not([type=submit]):not([type=reset]):not([type=color]):not([type=image]):not([type=hidden]):not(.reset-base):not(.no-margin):focus{outline-color:#fc692b}
+input[type]:not([type=file]):not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]):not([type=submit]):not([type=reset]):not([type=color]):not([type=image]):not([type=hidden]):not(.reset-base):not(.no-margin):focus:is(.dark *){outline-color:#fc692b}
+select:focus{outline-color:#fc692b}
+select:focus:is(.dark *){outline-color:#fc692b}
+textarea:focus{outline-color:#fc692b}
+textarea:focus:is(.dark *){outline-color:#fc692b}
+.before\:\!border-t-n-brand:before{border-top-color:#fc692b!important}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.before\:\!border-t-n-brand:before{border-top-color:rgb(252 105 43 / var(--tw-border-opacity, 1))!important}}
+.before\:bg-n-brand:before{background-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.before\:bg-n-brand:before{background-color:rgb(252 105 43 / var(--tw-bg-opacity, 1))}}
+.after\:bg-n-brand:after{background-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.after\:bg-n-brand:after{background-color:rgb(252 105 43 / var(--tw-bg-opacity, 1))}}
+.checked\:border-n-brand:checked{border-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.checked\:border-n-brand:checked{border-color:rgb(252 105 43 / var(--tw-border-opacity, 1))}}
+.checked\:bg-n-brand:checked{background-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.checked\:bg-n-brand:checked{background-color:rgb(252 105 43 / var(--tw-bg-opacity, 1))}}
+.indeterminate\:border-n-brand:indeterminate{border-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.indeterminate\:border-n-brand:indeterminate{border-color:rgb(252 105 43 / var(--tw-border-opacity, 1))}}
+.indeterminate\:bg-n-brand:indeterminate{background-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.indeterminate\:bg-n-brand:indeterminate{background-color:rgb(252 105 43 / var(--tw-bg-opacity, 1))}}
+.focus-within\:outline-n-brand:focus-within{outline-color:#fc692b}
+.focus-within\:ring-n-brand:focus-within{--tw-ring-color: rgb(252 105 43 / var(--tw-ring-opacity, 1))}
+.hover\:border-n-brand:hover{border-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.hover\:border-n-brand:hover{border-color:rgb(252 105 43 / var(--tw-border-opacity, 1))}}
+.hover\:bg-n-brand\/10:hover{background-color:#fc692b1a}
+.hover\:bg-n-brand\/80:hover{background-color:#fc692bcc}
+.hover\:text-n-brand:hover{color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.hover\:text-n-brand:hover{color:rgb(252 105 43 / var(--tw-text-opacity, 1))}}
+.focus\:border-n-brand:focus{border-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.focus\:border-n-brand:focus{border-color:rgb(252 105 43 / var(--tw-border-opacity, 1))}}
+.focus\:outline-n-brand:focus{outline-color:#fc692b}
+.focus\:ring-n-brand:focus{--tw-ring-color: rgb(252 105 43 / var(--tw-ring-opacity, 1))}
+.focus-visible\:bg-n-brand\/20:focus-visible{background-color:#fc692b33}
+.focus-visible\:outline-n-brand:focus-visible{outline-color:#fc692b}
+.focus-visible\:ring-n-brand:focus-visible{--tw-ring-color: rgb(252 105 43 / var(--tw-ring-opacity, 1))}
+.hover\:enabled\:bg-n-brand\/20:enabled:hover{background-color:#fc692b33}
+.group:focus-within .group-focus-within\:text-n-brand{color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.group:focus-within .group-focus-within\:text-n-brand{color:rgb(252 105 43 / var(--tw-text-opacity, 1))}}
+.group:hover .group-hover\:bg-n-brand{background-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.group:hover .group-hover\:bg-n-brand{background-color:rgb(252 105 43 / var(--tw-bg-opacity, 1))}}
+.group:hover .group-hover\:text-n-brand{color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.group:hover .group-hover\:text-n-brand{color:rgb(252 105 43 / var(--tw-text-opacity, 1))}}
+.has-\[\:focus\]\:outline-n-brand:has(:focus){outline-color:#fc692b}
+.prose-strong\:text-n-brand :is(:where(strong):not(:where([class~=not-prose],[class~=not-prose] *))){color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.prose-strong\:text-n-brand :is(:where(strong):not(:where([class~=not-prose],[class~=not-prose] *))){color:rgb(252 105 43 / var(--tw-text-opacity, 1))}}
+.dark\:border-n-brand:is(.dark *){border-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.dark\:border-n-brand:is(.dark *){border-color:rgb(252 105 43 / var(--tw-border-opacity, 1))}}
+.dark\:bg-n-brand\/10:is(.dark *){background-color:#fc692b1a}
+.dark\:\!outline-n-brand:is(.dark *){outline-color:#fc692b!important}
+.dark\:ring-n-brand:is(.dark *){--tw-ring-color: rgb(252 105 43 / var(--tw-ring-opacity, 1))}
+.dark\:checked\:border-n-brand:checked:is(.dark *){border-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.dark\:checked\:border-n-brand:checked:is(.dark *){border-color:rgb(252 105 43 / var(--tw-border-opacity, 1))}}
+.dark\:checked\:bg-n-brand:checked:is(.dark *){background-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.dark\:checked\:bg-n-brand:checked:is(.dark *){background-color:rgb(252 105 43 / var(--tw-bg-opacity, 1))}}
+.dark\:focus-within\:outline-n-brand:focus-within:is(.dark *){outline-color:#fc692b}
+.dark\:hover\:text-n-brand:hover:is(.dark *){color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.dark\:hover\:text-n-brand:hover:is(.dark *){color:rgb(252 105 43 / var(--tw-text-opacity, 1))}}
+.dark\:focus\:outline-n-brand:focus:is(.dark *){outline-color:#fc692b}
+.dark\:has-\[\:focus\]\:outline-n-brand:has(:focus):is(.dark *){outline-color:#fc692b}
+.ProseMirror-prompt .ProseMirror-prompt-buttons button[type=submit]{background-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.ProseMirror-prompt .ProseMirror-prompt-buttons button[type=submit]{background-color:rgb(252 105 43 / var(--tw-bg-opacity, 1))}}
+.ProseMirror-prompt .ProseMirror-prompt-buttons button[type=submit]:hover{background-color:#fc692be6}
+.widget-wrapper[data-v-7dfaf3f3]{--text-blue: 200 72 18;--solid-blue: 255 224 207;--border-blue: 252, 105, 43, .5}
+.dark .widget-wrapper[data-v-7dfaf3f3]{--solid-blue: 79 31 12;--text-blue: 255 156 112;--border-blue: 252, 105, 43, .5}
+.menu[data-v-60cefcf4]:hover{background-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.menu[data-v-60cefcf4]:hover{background-color:rgb(252 105 43 / var(--tw-bg-opacity, 1))}}
+.search-input[data-v-69e77a2c]:focus{border-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.search-input[data-v-69e77a2c]:focus{border-color:rgb(252 105 43 / var(--tw-border-opacity, 1))}}
+.notification--unread-indicator[data-v-577256f2]{background-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.notification--unread-indicator[data-v-577256f2]{background-color:rgb(252 105 43 / var(--tw-bg-opacity, 1))}}
+:root{--text-blue: 200 72 18;--solid-blue: 255 224 207;--border-blue: 252, 105, 43, .5}
+.dark{--solid-blue: 79 31 12;--text-blue: 255 156 112;--border-blue: 252, 105, 43, .5}
+.text-link{color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.text-link{color:rgb(252 105 43 / var(--tw-text-opacity, 1))}}
+.chat-bubble>a{color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.chat-bubble>a{color:rgb(252 105 43 / var(--tw-text-opacity, 1))}}
+.chat-bubble.agent .link{color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.chat-bubble.agent .link{color:rgb(252 105 43 / var(--tw-text-opacity, 1))}}
+input:not(.reset-base):focus,textarea:not(.reset-base):focus{outline-color:#fc692b;--tw-ring-color: rgb(252 105 43 / var(--tw-ring-opacity, 1))}
+select:not(.reset-base):focus{outline-color:#fc692b;--tw-ring-color: rgb(252 105 43 / var(--tw-ring-opacity, 1))}
+.button{border-color:#fc692b;background-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.button{border-color:rgb(252 105 43 / var(--tw-border-opacity, 1));background-color:rgb(252 105 43 / var(--tw-bg-opacity, 1))}}
+.button:focus,.button:hover{border-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.button:focus,.button:hover{border-color:rgb(252 105 43 / var(--tw-border-opacity, 1))}}
+.button:active,.button.active{border-color:#fc692b}
+@supports (color: rgb(0 0 0 / 0)) and (top: var(--f)){.button:active,.button.active{border-color:rgb(252 105 43 / var(--tw-border-opacity, 1))}}

@@ -16,6 +16,20 @@ describe('extrairMensagem', () => {
     expect(extrairMensagem(webhook('', { attachments: [{ file_type: 'audio' }] }))).toMatchObject({ texto: '' });
     expect(extrairMensagem(null)).toBeNull();
   });
+
+  it('ignora mensagem de grupo do WhatsApp (o bot só atende no privado)', () => {
+    const grupo = { status: 'pending', meta: { sender: { identifier: '120363413797142590@g.us', phone_number: null } } };
+    expect(extrairMensagem(webhook('oi', {}, grupo))).toBeNull();
+    expect(extrairMensagem(webhook('oi', { sender: { identifier: '120363413797142590@g.us' } }))).toBeNull();
+    // contato no privado continua sendo atendido, inclusive com identificador @lid
+    expect(extrairMensagem(webhook('oi', {}, { meta: { sender: { identifier: '25336767115454@lid', phone_number: '+5586999990000' } } }))).not.toBeNull();
+  });
+
+  it('rejeita ID de conversa inválido antes de montar chamadas autenticadas', () => {
+    expect(extrairMensagem(webhook('oi', {}, { id: '7' }))).toBeNull();
+    expect(extrairMensagem(webhook('oi', {}, { id: -1 }))).toBeNull();
+    expect(extrairMensagem(webhook('oi', {}, { id: 1.5 }))).toBeNull();
+  });
 });
 
 describe('ClienteChatwoot', () => {
@@ -34,6 +48,34 @@ describe('ClienteChatwoot', () => {
     const f = vi.fn(async (_u: string | URL | Request, _i?: RequestInit) => new Response('{}', { status: 200 }));
     await new ClienteChatwoot('http://cw', 1, 'T', f).nota(7, 'resumo');
     expect(JSON.parse(String(f.mock.calls[0]![1]?.body))).toEqual({ content: 'resumo', message_type: 'outgoing', private: true });
+  });
+
+  it('atributos gravam os dados do pedido na conversa', async () => {
+    const f = vi.fn(async (_u: string | URL | Request, _i?: RequestInit) => new Response('{}', { status: 200 }));
+    await new ClienteChatwoot('http://cw', 1, 'T', f).atributos(7, { numero_venda: 30924027, total: 'R$ 220,00' });
+    expect(f.mock.calls[0]![0]).toBe('http://cw/api/v1/accounts/1/conversations/7/custom_attributes');
+    expect(JSON.parse(String(f.mock.calls[0]![1]?.body))).toEqual({
+      custom_attributes: { numero_venda: 30924027, total: 'R$ 220,00' },
+    });
+  });
+
+  it('atributosDe lê os dados do pedido gravados na conversa', async () => {
+    const f = vi.fn(async (_u: string | URL | Request, _i?: RequestInit) =>
+      Response.json({ id: 7, custom_attributes: { numero_venda: 1 } }),
+    );
+    const c = new ClienteChatwoot('http://cw', 1, 'T', f);
+    expect(await c.atributosDe(7)).toEqual({ numero_venda: 1 });
+    expect(f.mock.calls[0]![0]).toBe('http://cw/api/v1/accounts/1/conversations/7');
+    expect(new Headers(f.mock.calls[0]![1]?.headers).get('api_access_token')).toBe('T');
+  });
+
+  it('atributosDe: conversa inexistente é null e id inválido nem chama a API', async () => {
+    const f = vi.fn(async () => new Response('', { status: 404 }));
+    const c = new ClienteChatwoot('http://cw', 1, 'T', f);
+    expect(await c.atributosDe(7)).toBeNull();
+    expect(await c.atributosDe(-1)).toBeNull();
+    expect(await c.atributosDe(1.5)).toBeNull();
+    expect(f).toHaveBeenCalledOnce();
   });
 
   it('erro HTTP vira exceção', async () => {

@@ -1,5 +1,7 @@
 # RevGás Atende — Base Técnica: Plano de Implementação
 
+> **Nota (21/11/2026):** este é o plano original, de 18/11. Desde então, o conector WhatsApp **Evolution API** foi trocado pelo **WAHA** ([decisão](../../decisoes/2026-11-21-troca-evolution-waha.md)). As menções à Evolution abaixo descrevem o plano como foi feito, não a arquitetura atual.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Bot de pedidos de gás no WhatsApp (via Evolution → Chatwoot) que conduz o pedido, cria a venda na API RevGás e transfere para humano, rodando com `docker compose up`.

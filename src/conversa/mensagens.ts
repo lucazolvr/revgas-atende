@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { FORMAS_PAGAMENTO, type Produto } from '../vendas/catalogo.js';
 import { formatarReais, produtoDo, totalCentavos, type Pedido } from '../vendas/pedido.js';
+import type { ChaveAtributo } from '../canal/painel.js';
+import { HORARIO_REVENDA } from './horario.js';
 
 // Todos os textos que o cliente vê ficam aqui, para revisar o tom num lugar só.
 
@@ -16,6 +18,8 @@ export const PERGUNTA_ENDERECO: Record<string, string> = {
   cidade: 'Qual a cidade?',
   uf: 'Qual o estado? (a sigla, ex.: PI)',
 };
+export const PERGUNTA_CARTAO = 'No cartão de débito ou de crédito?';
+export const PERGUNTA_CIDADE_UF = 'Qual a cidade e o estado? (ex.: Teresina PI)';
 export const PERGUNTA_TROCO = 'Vai precisar de troco? Responda o valor (ex.: 200) ou "não".';
 export const MENU_CORRIGIR = 'O que você quer corrigir?\n1 - Nome\n2 - Produto e quantidade\n3 - Endereço\n4 - Pagamento';
 export const CANCELADO = 'Tudo bem, pedido cancelado. Quando quiser, é só mandar uma mensagem. 🙂';
@@ -82,3 +86,29 @@ export function resumoParaAtendente(motivo: string, p: Pedido, cat: Produto[]): 
     `Pagamento: ${p.pagamento ? rotuloPagamento(p) : '—'}`,
   ].join('\n');
 }
+
+/** Dados do pedido para a lateral da conversa no Chatwoot. Só vai o que já foi coletado. */
+export function atributosDoPedido(p: Pedido, cat: Produto[], vendaId?: number): Partial<Record<ChaveAtributo, string | number>> {
+  const a: Partial<Record<ChaveAtributo, string | number>> = {};
+  if (vendaId) a.numero_venda = vendaId;
+  if (produtoDo(p, cat) && p.quantidade) a.total = formatarReais(totalCentavos(p, cat));
+  if (p.pagamento) a.forma_pagamento = rotuloPagamento(p);
+  if (p.endereco) a.endereco = linhaEndereco(p);
+  if (p.quantidade) a.quantidade = p.quantidade;
+  return a;
+}
+
+/**
+ * Respostas prontas do painel: o atendente digita "/" + código (ex.: /saiu).
+ * `npm run chatwoot:config` grava estes textos no Chatwoot.
+ */
+export const RESPOSTAS_PRONTAS: Record<string, string> = {
+  saiu: 'Seu pedido saiu para entrega! 🛵',
+  endereco: 'Pode me passar o endereço completo, com rua, número, bairro e ponto de referência?',
+  seguranca: SEGURANCA,
+  // Gerado de HORARIO_REVENDA, a mesma fonte do horário da caixa no Chatwoot.
+  horario:
+    `Nosso horário de atendimento e entrega é de segunda a sábado, das ${HORARIO_REVENDA.semana.abre}h às ${HORARIO_REVENDA.semana.fecha}h. ` +
+    `Aos domingos e feriados, das ${HORARIO_REVENDA.domingo.abre}h às ${HORARIO_REVENDA.domingo.fecha}h. 🕗`,
+  obrigado: 'Obrigado pela preferência! 😊 Se precisar de mais alguma coisa, é só chamar aqui.',
+};

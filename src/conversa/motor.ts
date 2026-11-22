@@ -9,9 +9,12 @@ export type Estado =
   | 'INICIO' | 'NOME' | 'PRODUTO' | 'QUANTIDADE' | 'ENDERECO' | 'PAGAMENTO' | 'TROCO' | 'RESUMO' | 'CORRIGIR' | 'REGISTRADO';
 
 /** `trocoParaCentavos === 0` significa "não precisa de troco". */
-export type Sessao = { estado: Estado; pedido: Pedido; falhas: number; vendaId?: number };
+export type Sessao = { estado: Estado; pedido: Pedido; falhas: number; vendaId?: number; correcoes?: number };
 
-export type MotivoTransferencia = 'humano' | 'vazamento' | 'nao_entendi' | 'verificar_venda' | 'erro_venda';
+/** Pedidos de "corrigir" no resumo até transferir para humano (evita ciclos de correção). */
+export const LIMITE_CORRECOES = 3;
+
+export type MotivoTransferencia = 'humano' | 'vazamento' | 'nao_entendi' | 'verificar_venda' | 'erro_venda' | 'correcoes';
 export type Acao =
   | { tipo: 'responder'; texto: string }
   | { tipo: 'transferir'; motivo: MotivoTransferencia; resumo: string };
@@ -30,6 +33,7 @@ const DESCRICAO_MOTIVO: Record<MotivoTransferencia, string> = {
   nao_entendi: 'o bot não entendeu o cliente',
   verificar_venda: 'a API não respondeu ao criar a venda — conferir no ERP se a venda existe antes de refazer',
   erro_venda: 'a API recusou a venda',
+  correcoes: `o cliente pediu para corrigir o pedido ${LIMITE_CORRECOES} vezes`,
 };
 
 export function novaSessao(telefone: string, base: Partial<Pedido> = {}): Sessao {
@@ -70,7 +74,15 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
   }
 
   // Números de menu não gastam chamada de IA.
-  const ia = deps.interpretador && !/^\s*\d+\s*$/.test(texto) ? await deps.interpretador.interpretar(texto, s.estado) : null;
+  // A IA precisa saber qual parte do endereço foi perguntada: sem isso, "Dirceu" (o bairro) virava a rua.
+  const etapa = s.estado === 'ENDERECO' ? `ENDERECO (pergunta atual: ${CAMPOS_ENDERECO.find((c) => !s.pedido.endereco?.[c])})` : s.estado;
+  let ia = deps.interpretador && !/^\s*\d+\s*$/.test(texto) ? await deps.interpretador.interpretar(texto, etapa) : null;
+
+  // "cartão" sem dizer o tipo: a IA chutava crédito (achado da avaliação da issue #2). O bot pergunta.
+  const cartaoSemTipo = /\bcartao\b/.test(normalizar(texto)) && !/debito|credito/.test(normalizar(texto));
+  if (ia && cartaoSemTipo && ia.entidades.pagamento?.startsWith('CARTAO')) {
+    ia = { ...ia, entidades: { ...ia.entidades, pagamento: undefined } };
+  }
 
   if (ia?.intencao === 'emergencia_gas') {
     responder(M.SEGURANCA);
@@ -95,6 +107,8 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
       return transferir(r.tipo === 'incerta' ? 'verificar_venda' : 'erro_venda');
     }
     if (opcao === 2) {
+      s.correcoes = (s.correcoes ?? 0) + 1;
+      if (s.correcoes >= LIMITE_CORRECOES) return transferir('correcoes');
       s.estado = 'CORRIGIR';
       s.falhas = 0;
       responder(M.MENU_CORRIGIR);
@@ -125,6 +139,11 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
     return fim();
   }
 
+  if (s.estado === 'PAGAMENTO' && cartaoSemTipo && !ia?.entidades.pagamento) {
+    responder(M.PERGUNTA_CARTAO); // esclarecimento, não conta como "não entendi"
+    return fim();
+  }
+
   const inicio = s.estado === 'INICIO';
   let avancou = ia ? aplicarEntidades(s.pedido, ia.entidades) : false;
   if (!avancou && !inicio) {
@@ -148,9 +167,34 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
   }
 
   s.falhas = 0;
+  completarUf(s.pedido);
   s.estado = proximoEstado(s.pedido, cat);
   responder(pergunta(s, cat));
   return fim();
+}
+
+/** Cidades da área de entrega (config/faq/area-entrega.md): o estado sai da cidade, sem perguntar. */
+const UF_DA_CIDADE: Record<string, string> = { teresina: 'PI', timon: 'MA' };
+/** Estado escrito por extenso na resposta "cidade e estado" (só os da área de entrega). */
+const UF_POR_NOME: Record<string, string> = { piaui: 'PI', maranhao: 'MA' };
+
+function completarUf(p: Pedido) {
+  const cidade = p.endereco?.cidade;
+  const uf = cidade && !p.endereco?.uf ? UF_DA_CIDADE[normalizar(cidade)] : undefined;
+  if (uf) p.endereco = { ...p.endereco, uf };
+}
+
+/** "Teresina PI", "Teresina - PI", "Parnaíba/Piauí" → cidade e UF; só "Teresina" → só a cidade. */
+export function separarCidadeUf(texto: string): { cidade: string; uf?: string } {
+  const partes = texto.trim().split(/[\s,/–-]+/).filter(Boolean);
+  const ultima = partes.at(-1) ?? '';
+  const uf = UFS.includes(ultima.toUpperCase()) ? ultima.toUpperCase() : UF_POR_NOME[normalizar(ultima)];
+  if (partes.length > 1 && uf) {
+    // tira a UF do fim e a pontuação que sobrar ("Teresina - PI")
+    const cidade = texto.trim().slice(0, texto.trim().lastIndexOf(ultima)).replace(/[\s,/–-]+$/, '');
+    return { cidade, uf };
+  }
+  return { cidade: texto.trim() };
 }
 
 /** Primeiro campo que falta, na ordem em que o pedido é perguntado. */
@@ -172,7 +216,11 @@ function pergunta(s: Sessao, cat: Produto[]): string {
     case 'NOME': return M.PERGUNTA_NOME;
     case 'PRODUTO': return M.menuProdutos(cat);
     case 'QUANTIDADE': return M.PERGUNTA_QUANTIDADE;
-    case 'ENDERECO': return M.PERGUNTA_ENDERECO[CAMPOS_ENDERECO.find((c) => !s.pedido.endereco?.[c])!]!;
+    case 'ENDERECO': {
+      const campo = CAMPOS_ENDERECO.find((c) => !s.pedido.endereco?.[c])!;
+      // Faltando os dois, uma pergunta só (a UF quase sempre sai da cidade, ver completarUf)
+      return campo === 'cidade' && !s.pedido.endereco?.uf ? M.PERGUNTA_CIDADE_UF : M.PERGUNTA_ENDERECO[campo]!;
+    }
     case 'PAGAMENTO': return M.menuPagamento();
     case 'TROCO': return M.PERGUNTA_TROCO;
     case 'RESUMO': return M.resumo(s.pedido, cat);
@@ -205,10 +253,13 @@ function aplicarTexto(s: Sessao, texto: string, cat: Produto[]): boolean | strin
   const t = texto.trim();
   const n = normalizar(t);
   switch (s.estado) {
-    case 'NOME':
-      if (t.length < 2 || t.length > 80 || !/\p{L}/u.test(t)) return false;
-      p.nome = t;
+    case 'NOME': {
+      // "meu nome é Ana" sem IA não pode virar o nome "meu nome é Ana"
+      const nome = t.replace(/^(meu nome (é|e)|me chamo|aqui (é|e)( (o|a))?|sou (o|a)|(é|e) (o|a))\s+/i, '').trim();
+      if (nome.length < 2 || nome.length > 80 || !/\p{L}/u.test(nome)) return false;
+      p.nome = nome;
       return true;
+    }
     case 'PRODUTO': {
       const i = numero(t);
       const produto =
@@ -227,6 +278,12 @@ function aplicarTexto(s: Sessao, texto: string, cat: Produto[]): boolean | strin
     }
     case 'ENDERECO': {
       const campo = CAMPOS_ENDERECO.find((c) => !p.endereco?.[c])!;
+      if (campo === 'cidade' && !p.endereco?.uf) {
+        const { cidade, uf } = separarCidadeUf(t);
+        if (cidade.length < 2 || cidade.length > 120) return false;
+        p.endereco = { ...p.endereco, cidade, ...(uf && { uf }) };
+        return true;
+      }
       let valor = t;
       if (campo === 'uf') {
         valor = t.toUpperCase();
@@ -275,7 +332,7 @@ function numero(texto: string): number | null {
 
 /** 1 confirmar · 2 corrigir · 3 cancelar · null não entendi. */
 function escolha(texto: string, ia: Interpretacao | null): 1 | 2 | 3 | null {
-  const n = normalizar(texto);
+  const n = normalizar(texto).replace(/^(quero|pode|vou|pra|para|da pra|tem como) /, ''); // "quero corrigir", "pode confirmar"
   if (/^(1|sim|s|confirmo|confirmar|confirma|ok|pode ser|isso)\b/.test(n) || ia?.intencao === 'confirmar') return 1;
   if (/^(2|corrigir|corrige|alterar|mudar)\b/.test(n) || ia?.intencao === 'corrigir') return 2;
   if (/^(3|cancelar|cancela|desistir)\b/.test(n) || ia?.intencao === 'cancelar') return 3;

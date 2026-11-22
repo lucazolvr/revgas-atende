@@ -11,7 +11,13 @@
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "setup": "tsx scripts/setup.ts",
-    "typecheck": "tsc --noEmit"
+    "chatwoot:config": "tsx scripts/chatwoot-config.ts",
+    "typecheck": "tsc --noEmit",
+    "marca": "tsx scripts/marca.ts",
+    "eval:ia": "tsx eval/avaliar-ia.ts",
+    "eval:experimento": "tsx eval/experimento.ts",
+    "eval:metricas": "tsx eval/resumir-metricas.ts",
+    "cancelar-venda": "tsx scripts/cancelar-venda.ts"
   },
   "keywords": [],
   "author": "",

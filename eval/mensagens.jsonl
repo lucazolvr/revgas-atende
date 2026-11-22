@@ -1,0 +1,60 @@
+{"id":1,"estado":"INICIO","texto":"boa tarde, manda 2 botijão pra Rua Nova 10, Centro, Teresina PI, pago no pix","esperado":{"intencao":"fazer_pedido","entidades":{"produto":"P13","quantidade":2,"pagamento":"PIX","endereco":{"logradouro":"Rua Nova","numero":"10","bairro":"Centro","cidade":"Teresina","uf":"PI"}}}}
+{"id":2,"estado":"INICIO","texto":"quero 1 gás","esperado":{"intencao":"fazer_pedido","entidades":{"produto":"P13","quantidade":1}}}
+{"id":3,"estado":"INICIO","texto":"manda um bujão aqui pra casa","esperado":{"intencao":"fazer_pedido","entidades":{"produto":"P13","quantidade":1}}}
+{"id":4,"estado":"INICIO","texto":"preciso de gas urgente rua sao pedro 345 bairro piçarra","esperado":{"intencao":"fazer_pedido","entidades":{"produto":"P13","endereco":{"logradouro":"Rua São Pedro","numero":"345","bairro":"Piçarra"}}}}
+{"id":5,"estado":"INICIO","texto":"oi, é a Francisca, queria 2 botijao, vou pagar no debito","esperado":{"intencao":"fazer_pedido","entidades":{"nome":"Francisca","produto":"P13","quantidade":2,"pagamento":"CARTAO_DE_DEBITO"}}}
+{"id":6,"estado":"INICIO","texto":"me ve 3 gás pra av. frei serafim 2000 apto 302, centro","esperado":{"intencao":"fazer_pedido","entidades":{"produto":"P13","quantidade":3,"endereco":{"logradouro":"Avenida Frei Serafim","numero":"2000","bairro":"Centro","complemento":"apto 302"}}}}
+{"id":7,"estado":"INICIO","texto":"bom dia! gostaria de pedir um botijão de 13kg","esperado":{"intencao":"fazer_pedido","entidades":{"produto":"P13","quantidade":1}}}
+{"id":8,"estado":"INICIO","texto":"acabou meu gás 😩 manda outro pfv","esperado":{"intencao":"fazer_pedido","entidades":{"produto":"P13","quantidade":1}}}
+{"id":9,"estado":"INICIO","texto":"2 gas pra rua coelho de resende 1520 ilhotas teresina, pago em dinheiro e preciso de troco pra 300","esperado":{"intencao":"fazer_pedido","entidades":{"produto":"P13","quantidade":2,"pagamento":"MONEY","trocoParaCentavos":30000,"endereco":{"logradouro":"Rua Coelho de Resende","numero":"1520","bairro":"Ilhotas","cidade":"Teresina"}}}}
+{"id":10,"estado":"INICIO","texto":"quero gás no cartão de crédito","esperado":{"intencao":"fazer_pedido","entidades":{"produto":"P13","pagamento":"CARTAO_DE_CREDITO"}}}
+{"id":11,"estado":"INICIO","texto":"manda um gás no pics","esperado":{"intencao":"fazer_pedido","entidades":{"produto":"P13","quantidade":1,"pagamento":"PIX"}}}
+{"id":12,"estado":"INICIO","texto":"quero pedir gás pra Timon MA, rua 15 casa 22, bairro parque alvorada","esperado":{"intencao":"fazer_pedido","entidades":{"produto":"P13","endereco":{"logradouro":"Rua 15","numero":"22","bairro":"Parque Alvorada","cidade":"Timon","uf":"MA"}}}}
+{"id":13,"estado":"INICIO","texto":"oi","esperado":{"intencao":"saudacao","entidades":{}}}
+{"id":14,"estado":"INICIO","texto":"boa noite","esperado":{"intencao":"saudacao","entidades":{}}}
+{"id":15,"estado":"INICIO","texto":"olá, tudo bem?","esperado":{"intencao":"saudacao","entidades":{}}}
+{"id":16,"estado":"INICIO","texto":"quanto tá o gás hoje?","esperado":{"intencao":"duvida","entidades":{}}}
+{"id":17,"estado":"INICIO","texto":"vcs entregam domingo?","esperado":{"intencao":"duvida","entidades":{}}}
+{"id":18,"estado":"INICIO","texto":"aceita cartão?","esperado":{"intencao":"duvida","entidades":{}}}
+{"id":19,"estado":"INICIO","texto":"qual o horário de vocês?","esperado":{"intencao":"duvida","entidades":{}}}
+{"id":20,"estado":"INICIO","texto":"entrega no bairro dirceu?","esperado":{"intencao":"duvida","entidades":{}}}
+{"id":21,"estado":"INICIO","texto":"demora quanto tempo pra chegar?","esperado":{"intencao":"duvida","entidades":{}}}
+{"id":22,"estado":"INICIO","texto":"quero falar com uma pessoa","esperado":{"intencao":"falar_com_humano","entidades":{}}}
+{"id":23,"estado":"INICIO","texto":"me passa pra um atendente por favor","esperado":{"intencao":"falar_com_humano","entidades":{}}}
+{"id":24,"estado":"PAGAMENTO","texto":"não quero falar com robô","esperado":{"intencao":"falar_com_humano","entidades":{}}}
+{"id":25,"estado":"INICIO","texto":"tá com um cheiro de gás forte aqui na cozinha","esperado":{"intencao":"emergencia_gas","entidades":{}}}
+{"id":26,"estado":"INICIO","texto":"o botijão tá chiando, o que eu faço?","esperado":{"intencao":"emergencia_gas","entidades":{}}}
+{"id":27,"estado":"ENDERECO","texto":"moço acho que o gás tá vazando","esperado":{"intencao":"emergencia_gas","entidades":{}}}
+{"id":28,"estado":"INICIO","texto":"a mangueira pegou fogo","esperado":{"intencao":"emergencia_gas","entidades":{}}}
+{"id":29,"estado":"INICIO","texto":"kkkkk","esperado":{"intencao":"outro","entidades":{}}}
+{"id":30,"estado":"INICIO","texto":"quem ganhou o jogo ontem?","esperado":{"intencao":"outro","entidades":{}}}
+{"id":31,"estado":"NOME","texto":"Maria José da Silva","esperado":{"intencao":"informar_dados","entidades":{"nome":"Maria José da Silva"}}}
+{"id":32,"estado":"NOME","texto":"é o João","esperado":{"intencao":"informar_dados","entidades":{"nome":"João"}}}
+{"id":33,"estado":"NOME","texto":"meu nome é Ana Clara","esperado":{"intencao":"informar_dados","entidades":{"nome":"Ana Clara"}}}
+{"id":34,"estado":"NOME","texto":"pode anotar no nome da dona Raimunda","esperado":{"intencao":"informar_dados","entidades":{"nome":"Raimunda"}}}
+{"id":35,"estado":"QUANTIDADE","texto":"manda 3","esperado":{"intencao":"informar_dados","entidades":{"quantidade":3}}}
+{"id":36,"estado":"QUANTIDADE","texto":"só um","esperado":{"intencao":"informar_dados","entidades":{"quantidade":1}}}
+{"id":37,"estado":"QUANTIDADE","texto":"dois por favor","esperado":{"intencao":"informar_dados","entidades":{"quantidade":2}}}
+{"id":38,"estado":"PRODUTO","texto":"o de 13 quilos","esperado":{"intencao":"informar_dados","entidades":{"produto":"P13"}}}
+{"id":39,"estado":"PRODUTO","texto":"botijão normal","esperado":{"intencao":"informar_dados","entidades":{"produto":"P13"}}}
+{"id":40,"estado":"ENDERECO","texto":"Rua Coelho de Resende 1520, Ilhotas","esperado":{"intencao":"informar_dados","entidades":{"endereco":{"logradouro":"Rua Coelho de Resende","numero":"1520","bairro":"Ilhotas"}}}}
+{"id":41,"estado":"ENDERECO","texto":"avenida kennedy 3000, bairro são cristóvão, teresina","esperado":{"intencao":"informar_dados","entidades":{"endereco":{"logradouro":"Avenida Kennedy","numero":"3000","bairro":"São Cristóvão","cidade":"Teresina"}}}}
+{"id":42,"estado":"ENDERECO","texto":"quadra 12 casa 5 conjunto dirceu 2, perto da igreja são benedito","esperado":{"intencao":"informar_dados","entidades":{"endereco":{"logradouro":"Quadra 12","numero":"5","bairro":"Conjunto Dirceu 2","referencia":"perto da igreja São Benedito"}}}}
+{"id":43,"estado":"ENDERECO","texto":"Teresina","esperado":{"intencao":"informar_dados","entidades":{"endereco":{"cidade":"Teresina"}}}}
+{"id":44,"estado":"ENDERECO","texto":"rua desembargador freitas 1100 ap 201 bloco b","esperado":{"intencao":"informar_dados","entidades":{"endereco":{"logradouro":"Rua Desembargador Freitas","numero":"1100","complemento":"ap 201 bloco b"}}}}
+{"id":45,"estado":"ENDERECO","texto":"r. olavo bilac, 500 - centro/norte, thé-pi","esperado":{"intencao":"informar_dados","entidades":{"endereco":{"logradouro":"Rua Olavo Bilac","numero":"500","bairro":"Centro Norte","cidade":"Teresina","uf":"PI"}}}}
+{"id":46,"estado":"PAGAMENTO","texto":"no pix","esperado":{"intencao":"informar_dados","entidades":{"pagamento":"PIX"}}}
+{"id":47,"estado":"PAGAMENTO","texto":"débito","esperado":{"intencao":"informar_dados","entidades":{"pagamento":"CARTAO_DE_DEBITO"}}}
+{"id":48,"estado":"PAGAMENTO","texto":"vou pagar em dinheiro, troco pra 200","esperado":{"intencao":"informar_dados","entidades":{"pagamento":"MONEY","trocoParaCentavos":20000}}}
+{"id":49,"estado":"PAGAMENTO","texto":"cartão","esperado":{"intencao":"informar_dados","entidades":{}}}
+{"id":50,"estado":"PAGAMENTO","texto":"crédito na maquininha","esperado":{"intencao":"informar_dados","entidades":{"pagamento":"CARTAO_DE_CREDITO"}}}
+{"id":51,"estado":"TROCO","texto":"troco pra 150","esperado":{"intencao":"informar_dados","entidades":{"trocoParaCentavos":15000}}}
+{"id":52,"estado":"PAGAMENTO","texto":"dinhero","esperado":{"intencao":"informar_dados","entidades":{"pagamento":"MONEY"}}}
+{"id":53,"estado":"RESUMO","texto":"isso mesmo, pode mandar","esperado":{"intencao":"confirmar","entidades":{}}}
+{"id":54,"estado":"RESUMO","texto":"confirmo","esperado":{"intencao":"confirmar","entidades":{}}}
+{"id":55,"estado":"RESUMO","texto":"tá certo sim","esperado":{"intencao":"confirmar","entidades":{}}}
+{"id":56,"estado":"RESUMO","texto":"o número da casa tá errado","esperado":{"intencao":"corrigir","entidades":{}}}
+{"id":57,"estado":"RESUMO","texto":"quero mudar a forma de pagamento","esperado":{"intencao":"corrigir","entidades":{}}}
+{"id":58,"estado":"RESUMO","texto":"desisti, cancela","esperado":{"intencao":"cancelar","entidades":{}}}
+{"id":59,"estado":"QUANTIDADE","texto":"deixa pra lá, não quero mais","esperado":{"intencao":"cancelar","entidades":{}}}
+{"id":60,"estado":"RESUMO","texto":"na verdade são 3 botijões","esperado":{"intencao":"corrigir","entidades":{"quantidade":3}}}

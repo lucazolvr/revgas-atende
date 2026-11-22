@@ -9,9 +9,14 @@ export function chaveTelefone(telefone: string): string {
   return d.length === 13 && d.startsWith('55') && d[4] === '9' ? d.slice(0, 4) + d.slice(5) : d;
 }
 
+/** Tamanho mínimo do PAINEL_TOKEN; menor que isso, o painel de pedidos fica desligado. */
+export const TOKEN_PAINEL_MINIMO = 32;
+export const tokenPainelValido = (t: string | undefined): t is string => !!t && t.trim().length >= TOKEN_PAINEL_MINIMO;
+
 const vazioParaUndefined = (v: unknown) => (typeof v === 'string' && v.trim() === '' ? undefined : v);
 const opcional = z.preprocess(vazioParaUndefined, z.string().trim().optional());
 const inteiroOpcional = z.preprocess(vazioParaUndefined, z.coerce.number().int().positive().optional());
+const inteiroPositivo = z.coerce.number().int().positive();
 
 const esquema = z
   .object({
@@ -19,7 +24,7 @@ const esquema = z
     CHATWOOT_URL: z.string().url(),
     CHATWOOT_ACCOUNT_ID: z.coerce.number().int().positive(),
     CHATWOOT_BOT_TOKEN: z.string().min(1),
-    BOT_WEBHOOK_TOKEN: z.string().min(16, 'BOT_WEBHOOK_TOKEN precisa de 16+ caracteres'),
+    BOT_WEBHOOK_TOKEN: z.string().min(32, 'BOT_WEBHOOK_TOKEN precisa de 32+ caracteres'),
     REDIS_URL: opcional,
     GEMINI_API_KEY: opcional,
     // O Google aposenta modelos com frequência: troque aqui sem mexer no código.
@@ -28,6 +33,8 @@ const esquema = z
       .string()
       .default('')
       .transform((s) => s.split(',').map(chaveTelefone).filter(Boolean)),
+    // Métricas não têm conteúdo de conversa; ainda assim, retenção curta reduz exposição.
+    METRICAS_RETENCAO_DIAS: inteiroPositivo.default(90),
     VENDA_REAL: z
       .string()
       .default('false')
@@ -36,6 +43,15 @@ const esquema = z
     REVGAS_API_KEY: opcional,
     REVGAS_CLIENTE_DEMO: inteiroOpcional,
     REVGAS_ESTABELECIMENTO: inteiroOpcional,
+    // Painel "Pedido RevGás" (aba na conversa e "Pedidos de hoje" no menu): sem token, não existe.
+    // Curto demais vira "painel desligado" com aviso (ver carregarConfig): é recurso opcional e
+    // não pode impedir o bot de atender o WhatsApp.
+    PAINEL_TOKEN: z.preprocess(vazioParaUndefined, z.string().trim().transform((t) => (tokenPainelValido(t) ? t : undefined)).optional()),
+    PAINEL_ORIGENS: z
+      .string()
+      .default('http://localhost:3000,http://127.0.0.1:3000')
+      .transform((s) => s.split(',').map((o) => o.trim()).filter(Boolean))
+      .pipe(z.array(z.string().regex(/^https?:\/\/[^\s/;,'"]+$/, 'PAINEL_ORIGENS: só origens como http://localhost:3000')).min(1)),
   })
   .superRefine((c, ctx) => {
     if (!c.VENDA_REAL) return;
@@ -44,7 +60,10 @@ const esquema = z
     }
   });
 
-export type Config = z.infer<typeof esquema>;
+export type Config = z.infer<typeof esquema> & {
+  /** Problemas que não impedem o bot de subir (o index.ts mostra no log). */
+  avisos: string[];
+};
 
 export function carregarConfig(env: Record<string, string | undefined> = process.env): Config {
   const r = esquema.safeParse(env);
@@ -53,5 +72,9 @@ export function carregarConfig(env: Record<string, string | undefined> = process
     const erros = r.error.issues.map((i) => `- ${i.path.join('.')}: ${i.message}`).join('\n');
     throw new Error(`Configuração inválida no .env:\n${erros}`);
   }
-  return r.data;
+  const avisos: string[] = [];
+  if (env.PAINEL_TOKEN?.trim() && !r.data.PAINEL_TOKEN) {
+    avisos.push(`PAINEL_TOKEN tem menos de ${TOKEN_PAINEL_MINIMO} caracteres: o painel de pedidos ficou desligado.`);
+  }
+  return { ...r.data, avisos };
 }

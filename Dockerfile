@@ -5,5 +5,6 @@ RUN npm ci --omit=dev
 COPY tsconfig.json ./
 COPY config ./config
 COPY src ./src
+COPY scripts ./scripts
 USER node
 CMD ["npx", "tsx", "src/index.ts"]
