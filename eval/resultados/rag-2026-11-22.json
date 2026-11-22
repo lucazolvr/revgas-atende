@@ -1,0 +1,1406 @@
+{
+  "data": "2026-11-22",
+  "vetorial": [
+    {
+      "id": 1,
+      "pergunta": "vcs entregam em timon?",
+      "esperado": [
+        "config/faq/area-entrega.md"
+      ],
+      "fontes": [
+        "config/faq/area-entrega.md",
+        "config/faq/horario.md",
+        "config/faq/pagamento.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/area-entrega.md",
+          "similaridade": 0.8039336626204411,
+          "bm25": 1.2925640816186326
+        },
+        {
+          "fonte": "config/faq/horario.md",
+          "similaridade": 0.6789505841262665,
+          "bm25": 0
+        },
+        {
+          "fonte": "config/faq/pagamento.md",
+          "similaridade": 0.6632250779066694,
+          "bm25": 0
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 2,
+      "pergunta": "chega no mocambinho?",
+      "esperado": [
+        "config/faq/area-entrega.md"
+      ],
+      "fontes": [
+        "config/faq/area-entrega.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/area-entrega.md",
+          "similaridade": 0.6662803653044623,
+          "bm25": 1.2925640816186326
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 3,
+      "pergunta": "quanto tempo demora pra chegar o gas",
+      "esperado": [
+        "config/faq/area-entrega.md"
+      ],
+      "fontes": [
+        "config/faq/preco.md",
+        "config/faq/troca-botijao.md",
+        "config/catalogo.json"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/preco.md",
+          "similaridade": 0.7053933250053982,
+          "bm25": 0.6871089499093036
+        },
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.6793942100243816,
+          "bm25": 0.5426132694733521
+        },
+        {
+          "fonte": "config/catalogo.json",
+          "similaridade": 0.673651928118551,
+          "bm25": 0.7738799122631721
+        }
+      ],
+      "acertou": false,
+      "acerto3": false
+    },
+    {
+      "id": 4,
+      "pergunta": "moro no parque piaui, vcs vem aqui?",
+      "esperado": [
+        "config/faq/area-entrega.md"
+      ],
+      "fontes": [
+        "config/faq/area-entrega.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/area-entrega.md",
+          "similaridade": 0.7019446276671053,
+          "bm25": 3.206087398358993
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 5,
+      "pergunta": "tem gás no domingo?",
+      "esperado": [
+        "config/faq/horario.md"
+      ],
+      "fontes": [
+        "config/faq/preco.md",
+        "config/catalogo.json",
+        "config/faq/troca-botijao.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/preco.md",
+          "similaridade": 0.710648504393137,
+          "bm25": 0.6871089499093036
+        },
+        {
+          "fonte": "config/catalogo.json",
+          "similaridade": 0.7021537955395414,
+          "bm25": 0.7738799122631721
+        },
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.6847478871994923,
+          "bm25": 0.5426132694733521
+        }
+      ],
+      "acertou": false,
+      "acerto3": false
+    },
+    {
+      "id": 6,
+      "pergunta": "ate que horas vcs abrem hj",
+      "esperado": [
+        "config/faq/horario.md"
+      ],
+      "fontes": [
+        "config/faq/horario.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/horario.md",
+          "similaridade": 0.7427276996799979,
+          "bm25": 0
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 7,
+      "pergunta": "feriado funciona?",
+      "esperado": [
+        "config/faq/horario.md"
+      ],
+      "fontes": [
+        "config/faq/horario.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/horario.md",
+          "similaridade": 0.685600046456664,
+          "bm25": 2.1762909894436264
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 8,
+      "pergunta": "posso pedir umas 19h50 ainda?",
+      "esperado": [
+        "config/faq/horario.md"
+      ],
+      "fontes": [
+        "config/faq/area-entrega.md",
+        "config/faq/horario.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/area-entrega.md",
+          "similaridade": 0.697771308774383,
+          "bm25": 0
+        },
+        {
+          "fonte": "config/faq/horario.md",
+          "similaridade": 0.6886488179291298,
+          "bm25": 0
+        }
+      ],
+      "acertou": false,
+      "acerto3": true
+    },
+    {
+      "id": 9,
+      "pergunta": "aceita pix?",
+      "esperado": [
+        "config/faq/pagamento.md"
+      ],
+      "fontes": [
+        "config/faq/pagamento.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/pagamento.md",
+          "similaridade": 0.7089499273840073,
+          "bm25": 1.7112750895853615
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 10,
+      "pergunta": "o entregador leva troco pra 100?",
+      "esperado": [
+        "config/faq/pagamento.md"
+      ],
+      "fontes": [
+        "config/faq/pagamento.md",
+        "config/faq/troca-botijao.md",
+        "config/faq/area-entrega.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/pagamento.md",
+          "similaridade": 0.7543862477501753,
+          "bm25": 4.714867713177778
+        },
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.6984931249659722,
+          "bm25": 2.193883888628565
+        },
+        {
+          "fonte": "config/faq/area-entrega.md",
+          "similaridade": 0.6600576979851499,
+          "bm25": 0
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 11,
+      "pergunta": "da pra parcelar no cartao",
+      "esperado": [
+        "config/faq/pagamento.md"
+      ],
+      "fontes": [
+        "config/faq/pagamento.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/pagamento.md",
+          "similaridade": 0.6849627868830173,
+          "bm25": 2.660913679423374
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 12,
+      "pergunta": "cobra taxa pra entregar?",
+      "esperado": [
+        "config/faq/pagamento.md"
+      ],
+      "fontes": [
+        "config/faq/pagamento.md",
+        "config/faq/area-entrega.md",
+        "config/faq/troca-botijao.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/pagamento.md",
+          "similaridade": 0.7494933221080566,
+          "bm25": 2.3367326733617824
+        },
+        {
+          "fonte": "config/faq/area-entrega.md",
+          "similaridade": 0.6818163956378366,
+          "bm25": 0
+        },
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.6584001355096895,
+          "bm25": 0
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 13,
+      "pergunta": "qto ta o p13",
+      "esperado": [
+        "config/catalogo.json",
+        "config/faq/preco.md"
+      ],
+      "fontes": [
+        "config/catalogo.json"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/catalogo.json",
+          "similaridade": 0.6903983744004052,
+          "bm25": 2.794559320607288
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 14,
+      "pergunta": "qual o valor do botijao hoje",
+      "esperado": [
+        "config/catalogo.json",
+        "config/faq/preco.md"
+      ],
+      "fontes": [
+        "config/catalogo.json",
+        "config/faq/preco.md",
+        "config/faq/troca-botijao.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/catalogo.json",
+          "similaridade": 0.7514599529007244,
+          "bm25": 1.1119044301814645
+        },
+        {
+          "fonte": "config/faq/preco.md",
+          "similaridade": 0.7207527346795042,
+          "bm25": 0
+        },
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.6874511071799915,
+          "bm25": 2.461101360500641
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 15,
+      "pergunta": "ta caro o gas ai?",
+      "esperado": [
+        "config/catalogo.json",
+        "config/faq/preco.md"
+      ],
+      "fontes": [
+        "config/faq/preco.md",
+        "config/catalogo.json",
+        "config/faq/troca-botijao.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/preco.md",
+          "similaridade": 0.759652043693366,
+          "bm25": 0.6871089499093036
+        },
+        {
+          "fonte": "config/catalogo.json",
+          "similaridade": 0.7249012901116899,
+          "bm25": 0.7738799122631721
+        },
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.6513756118497457,
+          "bm25": 0.5426132694733521
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 16,
+      "pergunta": "o que eu faço se sentir cheiro de gas em casa",
+      "esperado": [
+        "config/faq/seguranca.md"
+      ],
+      "fontes": [
+        "config/faq/seguranca.md",
+        "config/faq/preco.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/seguranca.md",
+          "similaridade": 0.7928643481718699,
+          "bm25": 2.2455756416691566
+        },
+        {
+          "fonte": "config/faq/preco.md",
+          "similaridade": 0.656431009919075,
+          "bm25": 0.6871089499093036
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 17,
+      "pergunta": "a mangueira ta chiando, posso arrumar sozinho?",
+      "esperado": [
+        "config/faq/seguranca.md"
+      ],
+      "fontes": [
+        "config/faq/seguranca.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/seguranca.md",
+          "similaridade": 0.6521029489369726,
+          "bm25": 1.6711745388530286
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 18,
+      "pergunta": "preciso devolver o vazio?",
+      "esperado": [
+        "config/faq/troca-botijao.md"
+      ],
+      "fontes": [
+        "config/faq/troca-botijao.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.652802941819175,
+          "bm25": 2.549916428891241
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 19,
+      "pergunta": "nao tenho casco, consigo comprar mesmo assim?",
+      "esperado": [
+        "config/faq/troca-botijao.md"
+      ],
+      "fontes": [
+        "config/faq/troca-botijao.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.6968614362936798,
+          "bm25": 4.128606782969374
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 20,
+      "pergunta": "meu botijao ta todo enferrujado, vcs trocam?",
+      "esperado": [
+        "config/faq/troca-botijao.md"
+      ],
+      "fontes": [
+        "config/faq/troca-botijao.md",
+        "config/faq/seguranca.md",
+        "config/catalogo.json"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.7528648842308803,
+          "bm25": 2.9428497702644916
+        },
+        {
+          "fonte": "config/faq/seguranca.md",
+          "similaridade": 0.6919257087623178,
+          "bm25": 1.1353743330828256
+        },
+        {
+          "fonte": "config/catalogo.json",
+          "similaridade": 0.6683570774366672,
+          "bm25": 1.1119044301814645
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 21,
+      "pergunta": "vocês vendem água mineral?",
+      "esperado": [],
+      "fontes": [],
+      "trechos": [],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 22,
+      "pergunta": "qual o time de vocês?",
+      "esperado": [],
+      "fontes": [],
+      "trechos": [],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 23,
+      "pergunta": "vcs vendem fogao?",
+      "esperado": [],
+      "fontes": [
+        "config/catalogo.json",
+        "config/faq/preco.md",
+        "config/faq/troca-botijao.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/catalogo.json",
+          "similaridade": 0.6931038891304727,
+          "bm25": 0
+        },
+        {
+          "fonte": "config/faq/preco.md",
+          "similaridade": 0.6809485352540726,
+          "bm25": 0
+        },
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.6762433009237632,
+          "bm25": 0
+        }
+      ],
+      "acertou": false,
+      "acerto3": false
+    },
+    {
+      "id": 24,
+      "pergunta": "tem vaga de emprego ai",
+      "esperado": [],
+      "fontes": [],
+      "trechos": [],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 25,
+      "pergunta": "qual o cnpj da empresa",
+      "esperado": [],
+      "fontes": [],
+      "trechos": [],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 26,
+      "pergunta": "vcs consertam fogão?",
+      "esperado": [],
+      "fontes": [
+        "config/faq/seguranca.md",
+        "config/catalogo.json"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/seguranca.md",
+          "similaridade": 0.675168690503976,
+          "bm25": 0
+        },
+        {
+          "fonte": "config/catalogo.json",
+          "similaridade": 0.6572392835454813,
+          "bm25": 0
+        }
+      ],
+      "acertou": false,
+      "acerto3": false
+    },
+    {
+      "id": 27,
+      "pergunta": "vai chover amanha em teresina?",
+      "esperado": [],
+      "fontes": [
+        "config/faq/area-entrega.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/area-entrega.md",
+          "similaridade": 0.6536506658255713,
+          "bm25": 1.2925640816186326
+        }
+      ],
+      "acertou": false,
+      "acerto3": false
+    }
+  ],
+  "hibrido": [
+    {
+      "id": 1,
+      "pergunta": "vcs entregam em timon?",
+      "esperado": [
+        "config/faq/area-entrega.md"
+      ],
+      "fontes": [
+        "config/faq/area-entrega.md",
+        "config/faq/horario.md",
+        "config/faq/pagamento.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/area-entrega.md",
+          "similaridade": 0.8039336626204411,
+          "bm25": 1.2925640816186326
+        },
+        {
+          "fonte": "config/faq/horario.md",
+          "similaridade": 0.6789505841262665,
+          "bm25": 0
+        },
+        {
+          "fonte": "config/faq/pagamento.md",
+          "similaridade": 0.6632250779066694,
+          "bm25": 0
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 2,
+      "pergunta": "chega no mocambinho?",
+      "esperado": [
+        "config/faq/area-entrega.md"
+      ],
+      "fontes": [
+        "config/faq/area-entrega.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/area-entrega.md",
+          "similaridade": 0.6662803653044623,
+          "bm25": 1.2925640816186326
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 3,
+      "pergunta": "quanto tempo demora pra chegar o gas",
+      "esperado": [
+        "config/faq/area-entrega.md"
+      ],
+      "fontes": [
+        "config/faq/preco.md",
+        "config/catalogo.json",
+        "config/faq/troca-botijao.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/preco.md",
+          "similaridade": 0.7053933250053982,
+          "bm25": 0.6871089499093036
+        },
+        {
+          "fonte": "config/catalogo.json",
+          "similaridade": 0.673651928118551,
+          "bm25": 0.7738799122631721
+        },
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.6793942100243816,
+          "bm25": 0.5426132694733521
+        }
+      ],
+      "acertou": false,
+      "acerto3": false
+    },
+    {
+      "id": 4,
+      "pergunta": "moro no parque piaui, vcs vem aqui?",
+      "esperado": [
+        "config/faq/area-entrega.md"
+      ],
+      "fontes": [
+        "config/faq/area-entrega.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/area-entrega.md",
+          "similaridade": 0.7019446276671053,
+          "bm25": 3.206087398358993
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 5,
+      "pergunta": "tem gás no domingo?",
+      "esperado": [
+        "config/faq/horario.md"
+      ],
+      "fontes": [
+        "config/faq/preco.md",
+        "config/catalogo.json",
+        "config/faq/horario.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/preco.md",
+          "similaridade": 0.710648504393137,
+          "bm25": 0.6871089499093036
+        },
+        {
+          "fonte": "config/catalogo.json",
+          "similaridade": 0.7021537955395414,
+          "bm25": 0.7738799122631721
+        },
+        {
+          "fonte": "config/faq/horario.md",
+          "similaridade": 0.6823052852992334,
+          "bm25": 2.1762909894436264
+        }
+      ],
+      "acertou": false,
+      "acerto3": true
+    },
+    {
+      "id": 6,
+      "pergunta": "ate que horas vcs abrem hj",
+      "esperado": [
+        "config/faq/horario.md"
+      ],
+      "fontes": [
+        "config/faq/horario.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/horario.md",
+          "similaridade": 0.7427276996799979,
+          "bm25": 0
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 7,
+      "pergunta": "feriado funciona?",
+      "esperado": [
+        "config/faq/horario.md"
+      ],
+      "fontes": [
+        "config/faq/horario.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/horario.md",
+          "similaridade": 0.685600046456664,
+          "bm25": 2.1762909894436264
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 8,
+      "pergunta": "posso pedir umas 19h50 ainda?",
+      "esperado": [
+        "config/faq/horario.md"
+      ],
+      "fontes": [
+        "config/faq/area-entrega.md",
+        "config/faq/horario.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/area-entrega.md",
+          "similaridade": 0.697771308774383,
+          "bm25": 0
+        },
+        {
+          "fonte": "config/faq/horario.md",
+          "similaridade": 0.6886488179291298,
+          "bm25": 0
+        }
+      ],
+      "acertou": false,
+      "acerto3": true
+    },
+    {
+      "id": 9,
+      "pergunta": "aceita pix?",
+      "esperado": [
+        "config/faq/pagamento.md"
+      ],
+      "fontes": [
+        "config/faq/pagamento.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/pagamento.md",
+          "similaridade": 0.7089499273840073,
+          "bm25": 1.7112750895853615
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 10,
+      "pergunta": "o entregador leva troco pra 100?",
+      "esperado": [
+        "config/faq/pagamento.md"
+      ],
+      "fontes": [
+        "config/faq/pagamento.md",
+        "config/faq/troca-botijao.md",
+        "config/faq/area-entrega.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/pagamento.md",
+          "similaridade": 0.7543862477501753,
+          "bm25": 4.714867713177778
+        },
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.6984931249659722,
+          "bm25": 2.193883888628565
+        },
+        {
+          "fonte": "config/faq/area-entrega.md",
+          "similaridade": 0.6600576979851499,
+          "bm25": 0
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 11,
+      "pergunta": "da pra parcelar no cartao",
+      "esperado": [
+        "config/faq/pagamento.md"
+      ],
+      "fontes": [
+        "config/faq/pagamento.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/pagamento.md",
+          "similaridade": 0.6849627868830173,
+          "bm25": 2.660913679423374
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 12,
+      "pergunta": "cobra taxa pra entregar?",
+      "esperado": [
+        "config/faq/pagamento.md"
+      ],
+      "fontes": [
+        "config/faq/pagamento.md",
+        "config/faq/area-entrega.md",
+        "config/faq/troca-botijao.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/pagamento.md",
+          "similaridade": 0.7494933221080566,
+          "bm25": 2.3367326733617824
+        },
+        {
+          "fonte": "config/faq/area-entrega.md",
+          "similaridade": 0.6818163956378366,
+          "bm25": 0
+        },
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.6584001355096895,
+          "bm25": 0
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 13,
+      "pergunta": "qto ta o p13",
+      "esperado": [
+        "config/catalogo.json",
+        "config/faq/preco.md"
+      ],
+      "fontes": [
+        "config/catalogo.json"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/catalogo.json",
+          "similaridade": 0.6903983744004052,
+          "bm25": 2.794559320607288
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 14,
+      "pergunta": "qual o valor do botijao hoje",
+      "esperado": [
+        "config/catalogo.json",
+        "config/faq/preco.md"
+      ],
+      "fontes": [
+        "config/faq/troca-botijao.md",
+        "config/catalogo.json",
+        "config/faq/preco.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.6874511071799915,
+          "bm25": 2.461101360500641
+        },
+        {
+          "fonte": "config/catalogo.json",
+          "similaridade": 0.7514599529007244,
+          "bm25": 1.1119044301814645
+        },
+        {
+          "fonte": "config/faq/preco.md",
+          "similaridade": 0.7207527346795042,
+          "bm25": 0
+        }
+      ],
+      "acertou": false,
+      "acerto3": true
+    },
+    {
+      "id": 15,
+      "pergunta": "ta caro o gas ai?",
+      "esperado": [
+        "config/catalogo.json",
+        "config/faq/preco.md"
+      ],
+      "fontes": [
+        "config/faq/preco.md",
+        "config/catalogo.json",
+        "config/faq/troca-botijao.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/preco.md",
+          "similaridade": 0.759652043693366,
+          "bm25": 0.6871089499093036
+        },
+        {
+          "fonte": "config/catalogo.json",
+          "similaridade": 0.7249012901116899,
+          "bm25": 0.7738799122631721
+        },
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.6513756118497457,
+          "bm25": 0.5426132694733521
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 16,
+      "pergunta": "o que eu faço se sentir cheiro de gas em casa",
+      "esperado": [
+        "config/faq/seguranca.md"
+      ],
+      "fontes": [
+        "config/faq/seguranca.md",
+        "config/faq/preco.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/seguranca.md",
+          "similaridade": 0.7928643481718699,
+          "bm25": 2.2455756416691566
+        },
+        {
+          "fonte": "config/faq/preco.md",
+          "similaridade": 0.656431009919075,
+          "bm25": 0.6871089499093036
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 17,
+      "pergunta": "a mangueira ta chiando, posso arrumar sozinho?",
+      "esperado": [
+        "config/faq/seguranca.md"
+      ],
+      "fontes": [
+        "config/faq/seguranca.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/seguranca.md",
+          "similaridade": 0.6521029489369726,
+          "bm25": 1.6711745388530286
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 18,
+      "pergunta": "preciso devolver o vazio?",
+      "esperado": [
+        "config/faq/troca-botijao.md"
+      ],
+      "fontes": [
+        "config/faq/troca-botijao.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.652802941819175,
+          "bm25": 2.549916428891241
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 19,
+      "pergunta": "nao tenho casco, consigo comprar mesmo assim?",
+      "esperado": [
+        "config/faq/troca-botijao.md"
+      ],
+      "fontes": [
+        "config/faq/troca-botijao.md",
+        "config/faq/horario.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.6968614362936798,
+          "bm25": 4.128606782969374
+        },
+        {
+          "fonte": "config/faq/horario.md",
+          "similaridade": 0.6035775396288428,
+          "bm25": 1.5445007726732096
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 20,
+      "pergunta": "meu botijao ta todo enferrujado, vcs trocam?",
+      "esperado": [
+        "config/faq/troca-botijao.md"
+      ],
+      "fontes": [
+        "config/faq/troca-botijao.md",
+        "config/faq/seguranca.md",
+        "config/catalogo.json"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.7528648842308803,
+          "bm25": 2.9428497702644916
+        },
+        {
+          "fonte": "config/faq/seguranca.md",
+          "similaridade": 0.6919257087623178,
+          "bm25": 1.1353743330828256
+        },
+        {
+          "fonte": "config/catalogo.json",
+          "similaridade": 0.6683570774366672,
+          "bm25": 1.1119044301814645
+        }
+      ],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 21,
+      "pergunta": "vocês vendem água mineral?",
+      "esperado": [],
+      "fontes": [],
+      "trechos": [],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 22,
+      "pergunta": "qual o time de vocês?",
+      "esperado": [],
+      "fontes": [],
+      "trechos": [],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 23,
+      "pergunta": "vcs vendem fogao?",
+      "esperado": [],
+      "fontes": [
+        "config/catalogo.json",
+        "config/faq/preco.md",
+        "config/faq/troca-botijao.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/catalogo.json",
+          "similaridade": 0.6931038891304727,
+          "bm25": 0
+        },
+        {
+          "fonte": "config/faq/preco.md",
+          "similaridade": 0.6809485352540726,
+          "bm25": 0
+        },
+        {
+          "fonte": "config/faq/troca-botijao.md",
+          "similaridade": 0.6762433009237632,
+          "bm25": 0
+        }
+      ],
+      "acertou": false,
+      "acerto3": false
+    },
+    {
+      "id": 24,
+      "pergunta": "tem vaga de emprego ai",
+      "esperado": [],
+      "fontes": [],
+      "trechos": [],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 25,
+      "pergunta": "qual o cnpj da empresa",
+      "esperado": [],
+      "fontes": [],
+      "trechos": [],
+      "acertou": true,
+      "acerto3": true
+    },
+    {
+      "id": 26,
+      "pergunta": "vcs consertam fogão?",
+      "esperado": [],
+      "fontes": [
+        "config/faq/seguranca.md",
+        "config/catalogo.json"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/seguranca.md",
+          "similaridade": 0.675168690503976,
+          "bm25": 0
+        },
+        {
+          "fonte": "config/catalogo.json",
+          "similaridade": 0.6572392835454813,
+          "bm25": 0
+        }
+      ],
+      "acertou": false,
+      "acerto3": false
+    },
+    {
+      "id": 27,
+      "pergunta": "vai chover amanha em teresina?",
+      "esperado": [],
+      "fontes": [
+        "config/faq/area-entrega.md"
+      ],
+      "trechos": [
+        {
+          "fonte": "config/faq/area-entrega.md",
+          "similaridade": 0.6536506658255713,
+          "bm25": 1.2925640816186326
+        }
+      ],
+      "acertou": false,
+      "acerto3": false
+    }
+  ],
+  "sensibilidade": [
+    {
+      "nome": "vetorial, cosseno ≥ 0,60",
+      "resumo": {
+        "naFaq": 20,
+        "acerto1": 17,
+        "acerto3": 18,
+        "semResposta": 0,
+        "fora": 7,
+        "recusaCorreta": 1,
+        "indevidas": 6,
+        "acertos": 18,
+        "total": 27
+      }
+    },
+    {
+      "nome": "vetorial, cosseno ≥ 0,65",
+      "resumo": {
+        "naFaq": 20,
+        "acerto1": 17,
+        "acerto3": 18,
+        "semResposta": 0,
+        "fora": 7,
+        "recusaCorreta": 4,
+        "indevidas": 3,
+        "acertos": 21,
+        "total": 27
+      }
+    },
+    {
+      "nome": "vetorial, cosseno ≥ 0,70",
+      "resumo": {
+        "naFaq": 20,
+        "acerto1": 10,
+        "acerto3": 10,
+        "semResposta": 8,
+        "fora": 7,
+        "recusaCorreta": 7,
+        "indevidas": 0,
+        "acertos": 17,
+        "total": 27
+      }
+    },
+    {
+      "nome": "híbrido, cosseno ≥ 0,60 ou BM25 ≥ 1,0",
+      "resumo": {
+        "naFaq": 20,
+        "acerto1": 15,
+        "acerto3": 20,
+        "semResposta": 0,
+        "fora": 7,
+        "recusaCorreta": 1,
+        "indevidas": 6,
+        "acertos": 16,
+        "total": 27
+      }
+    },
+    {
+      "nome": "híbrido, cosseno ≥ 0,60 ou BM25 ≥ 1,5",
+      "resumo": {
+        "naFaq": 20,
+        "acerto1": 15,
+        "acerto3": 20,
+        "semResposta": 0,
+        "fora": 7,
+        "recusaCorreta": 1,
+        "indevidas": 6,
+        "acertos": 16,
+        "total": 27
+      }
+    },
+    {
+      "nome": "híbrido, cosseno ≥ 0,60 ou BM25 ≥ 2,0",
+      "resumo": {
+        "naFaq": 20,
+        "acerto1": 15,
+        "acerto3": 20,
+        "semResposta": 0,
+        "fora": 7,
+        "recusaCorreta": 1,
+        "indevidas": 6,
+        "acertos": 16,
+        "total": 27
+      }
+    },
+    {
+      "nome": "híbrido, cosseno ≥ 0,65 ou BM25 ≥ 1,0",
+      "resumo": {
+        "naFaq": 20,
+        "acerto1": 15,
+        "acerto3": 20,
+        "semResposta": 0,
+        "fora": 7,
+        "recusaCorreta": 4,
+        "indevidas": 3,
+        "acertos": 19,
+        "total": 27
+      }
+    },
+    {
+      "nome": "híbrido, cosseno ≥ 0,65 ou BM25 ≥ 1,5",
+      "resumo": {
+        "naFaq": 20,
+        "acerto1": 16,
+        "acerto3": 19,
+        "semResposta": 0,
+        "fora": 7,
+        "recusaCorreta": 4,
+        "indevidas": 3,
+        "acertos": 20,
+        "total": 27
+      }
+    },
+    {
+      "nome": "híbrido, cosseno ≥ 0,65 ou BM25 ≥ 2,0",
+      "resumo": {
+        "naFaq": 20,
+        "acerto1": 16,
+        "acerto3": 19,
+        "semResposta": 0,
+        "fora": 7,
+        "recusaCorreta": 4,
+        "indevidas": 3,
+        "acertos": 20,
+        "total": 27
+      }
+    },
+    {
+      "nome": "híbrido, cosseno ≥ 0,70 ou BM25 ≥ 1,0",
+      "resumo": {
+        "naFaq": 20,
+        "acerto1": 15,
+        "acerto3": 19,
+        "semResposta": 1,
+        "fora": 7,
+        "recusaCorreta": 6,
+        "indevidas": 1,
+        "acertos": 21,
+        "total": 27
+      }
+    },
+    {
+      "nome": "híbrido, cosseno ≥ 0,70 ou BM25 ≥ 1,5",
+      "resumo": {
+        "naFaq": 20,
+        "acerto1": 15,
+        "acerto3": 17,
+        "semResposta": 2,
+        "fora": 7,
+        "recusaCorreta": 7,
+        "indevidas": 0,
+        "acertos": 22,
+        "total": 27
+      }
+    },
+    {
+      "nome": "híbrido, cosseno ≥ 0,70 ou BM25 ≥ 2,0",
+      "resumo": {
+        "naFaq": 20,
+        "acerto1": 14,
+        "acerto3": 16,
+        "semResposta": 3,
+        "fora": 7,
+        "recusaCorreta": 7,
+        "indevidas": 0,
+        "acertos": 21,
+        "total": 27
+      }
+    }
+  ],
+  "chamadasGemini": 1,
+  "resumo": {
+    "vetorial": {
+      "naFaq": 20,
+      "acerto1": 17,
+      "acerto3": 18,
+      "semResposta": 0,
+      "fora": 7,
+      "recusaCorreta": 4,
+      "indevidas": 3,
+      "acertos": 21,
+      "total": 27
+    },
+    "hibrido": {
+      "naFaq": 20,
+      "acerto1": 16,
+      "acerto3": 19,
+      "semResposta": 0,
+      "fora": 7,
+      "recusaCorreta": 4,
+      "indevidas": 3,
+      "acertos": 20,
+      "total": 27
+    }
+  },
+  "comparacao": {
+    "soVetorial": 1,
+    "soHibrido": 0,
+    "n": 1,
+    "p": 1
+  }
+}
