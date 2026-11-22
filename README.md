@@ -24,28 +24,32 @@ Projeto de Extensão VI · Transformação Digital · 2026.2
 ```mermaid
 flowchart LR
     C([Cliente]) <--> WA[WhatsApp]
-    WA <--> EVO[Evolution API]
-    EVO <--> CW[Chatwoot]
+    WA <--> WAHA[WAHA<br/>motor GOWS]
+    WAHA <-- app ChatWoot --> CW[Chatwoot<br/>caixa WhatsApp RevGás]
     CW -- webhook Agent Bot --> BOT[Bot RevGás Atende]
     BOT -- responde / nota / etiqueta / transfere --> CW
-    BOT --> IA[Gemini]
-    BOT --> ERP{{API RevGás}}
+    BOT --> IA[Gemini<br/>interpretação e FAQ]
+    BOT --> ERP{{API RevGás<br/>ambiente de teste}}
     BOT --> R[(Redis)]
     AT([Atendente]) <--> CW
+    CW -. aba Pedido RevGás .-> BOT
 ```
+
+A ponte WhatsApp ↔ Chatwoot é o **[WAHA](https://waha.devlike.pro/)** (Core, grátis e sem licença), que substituiu a Evolution API em 21/11/2026. Os motivos e as evidências estão em [docs/decisoes/2026-11-21-troca-evolution-waha.md](docs/decisoes/2026-11-21-troca-evolution-waha.md). O bot só fala com o Chatwoot, então a troca não mexeu nele. Ele atende só conversas no **privado** e ignora grupos do WhatsApp.
 
 | Pasta | O que tem |
 |---|---|
-| `src/canal/` | Webhook e cliente da API do Chatwoot |
+| `src/canal/` | Webhook e cliente da API do Chatwoot; ligação WAHA ↔ Chatwoot do setup (`whatsapp.ts`) |
+| `src/conhecimento/` | FAQ com RAG (dúvidas dos clientes) |
 | `src/conversa/` | Motor da conversa (máquina de estados), textos, emergência, sessões |
 | `src/ia/` | Interpretação de texto livre (Gemini) e validação da resposta |
 | `src/vendas/` | Catálogo, pedido, porta da API RevGás (falsa e real) |
-| `config/` | Catálogo de produtos e orientações de segurança |
+| `config/` | Catálogo de produtos, orientações de segurança e FAQ (`config/faq/`, base do RAG) |
 | `scripts/setup.ts` | Liga WAHA ↔ Chatwoot ↔ bot |
 | `scripts/chatwoot-config.ts` | Etiquetas, respostas prontas, atributos, horário e aba "Pedido RevGás" (definições em `src/canal/painel.ts`) |
 | `scripts/chatwoot-ajustes.rb` | Marca RevGás, menu "Pedidos de hoje" e cache do painel (dentro do Chatwoot) |
 | `src/painel/` | Aba "Pedido RevGás" na conversa e lista "Pedidos de hoje" no menu: venda no ERP e cancelamento de venda de teste |
-| `docs/` | Design, plano e (em breve) relatório e roteiro de demo |
+| `docs/` | Design e plano (`superpowers/`), registro de decisões (`decisoes/`), estudo de avaliação da IA (`relatorio/avaliacao-ia/`) e dados de demonstração |
 
 Detalhes e decisões: [documento de design](docs/superpowers/specs/2026-11-18-revgas-atende-design.md).
 
