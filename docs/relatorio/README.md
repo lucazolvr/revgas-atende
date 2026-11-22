@@ -2,7 +2,30 @@
 
 Projeto de Extensão VI · Transformação Digital · 2026.2
 
-**Versão para revisão.** Os resultados quantitativos da avaliação da IA ([issue #2](https://github.com/lucazolvr/revgas-atende/issues/2)) já estão incorporados. Faltam o teste com usuários (SUS), o ensaio de ponta a ponta da demo e a conclusão baseada neles.
+**Versão para revisão.** Os resultados quantitativos da avaliação da IA ([issue #2](https://github.com/lucazolvr/revgas-atende/issues/2)) já estão incorporados, e a instalação do zero pelo README foi validada em 22/11/2026. Faltam os cenários do ensaio com o WhatsApp real, o teste com usuários (SUS) e a conclusão baseada neles.
+
+**Formato.** Este rascunho já segue a estrutura, as citações (NBR 10520, autor-data) e as referências (NBR 6023) da ABNT. A formatação de página (A4, margens, fonte, espaçamento, paginação) e os elementos pré-textuais que dependem do modelo da faculdade (capa, folha de rosto, sumário, listas) entram na versão final; veja [Para a versão final](#para-a-versão-final-abnt).
+
+## Resumo
+
+Pedidos de gás recebidos pelo WhatsApp costumam ser transcritos à mão para o sistema de gestão da revenda, o que exige conferir dados em dois sistemas e gera retrabalho. Este trabalho apresenta o RevGás Atende, um atendente virtual que coleta e valida o pedido na própria conversa, registra a venda no ERP RevGás somente após a confirmação do cliente e transfere a conversa para um atendente humano no Chatwoot quando necessário. A inteligência artificial (Gemini) interpreta mensagens em texto livre, enquanto preço, produto e criação da venda são decididos pelo código; sem IA, o mesmo fluxo funciona por menus numerados. A avaliação quantitativa usou 60 mensagens rotuladas e um experimento pareado com 20 perfis de cliente. A IA identificou a intenção em 100% das mensagens, extraiu os dados com F1 de 97,2% e reduziu em 45% a mediana de mensagens do cliente em relação ao menu (teste de Wilcoxon, p < 0,001), sem registrar pedidos errados. Os testes também revelaram defeitos, como respostas indevidas em grupos do WhatsApp, e motivaram a troca do conector do WhatsApp. [Completar com o resultado do ensaio de ponta a ponta e a nota SUS.]
+
+**Palavras-chave:** chatbot; atendimento ao cliente; WhatsApp; modelos de linguagem; geração aumentada por recuperação.
+
+## Lista de siglas
+
+| Sigla | Significado |
+| --- | --- |
+| API | Interface de programação de aplicações (*Application Programming Interface*) |
+| ERP | Sistema integrado de gestão empresarial (*Enterprise Resource Planning*) |
+| F1 | Média harmônica entre precisão e revocação |
+| FAQ | Perguntas frequentes (*Frequently Asked Questions*) |
+| IA | Inteligência artificial |
+| LLM | Modelo de linguagem de grande escala (*Large Language Model*) |
+| QR | Código de resposta rápida (*Quick Response*) |
+| RAG | Geração aumentada por recuperação (*Retrieval-Augmented Generation*) |
+| SUS | Escala de usabilidade de sistemas (*System Usability Scale*) |
+| WAHA | *WhatsApp HTTP API*, conector não oficial do WhatsApp |
 
 ## 1. Introdução e problema
 
@@ -28,13 +51,17 @@ Referências internas: [README](../../README.md), [documento de design](../super
 
 ### 3.1 Troca do conector do WhatsApp: da Evolution API para o WAHA
 
-No design de 18/11, a ponte escolhida foi a Evolution API, por ter integração gratuita com o Chatwoot. Nos testes com chip real, em 20 e 21/11/2026, cada versão falhou de um jeito diferente:
+No design de 18/11, a ponte escolhida foi a Evolution API, por ter integração gratuita com o Chatwoot. Nos testes com chip real, em 20 e 21/11/2026, cada versão falhou de um jeito diferente (Quadro 1).
+
+**Quadro 1 – Problemas observados em cada versão da Evolution API**
 
 | Versão da Evolution | Problema observado |
 | --- | --- |
 | 2.3.7 | O WhatsApp recusava o QR code ("não é possível conectar novos dispositivos no momento"), embora o mesmo número conectasse no WhatsApp Web. |
 | 2.3.6 | Conectava, mas as mensagens de remetentes no novo formato de identificação do WhatsApp (`@lid`) não chegavam ao Chatwoot. |
 | 2.4.0-rc2 | Passou a exigir licença registrada em servidor externo. Sem ativação, toda chamada respondia `503 LICENSE_REQUIRED`. |
+
+Fonte: elaborado pelos autores (2026).
 
 A equipe comparou quatro alternativas: registrar a licença da Evolution 2.4, adotar o WAHA Core, migrar para a WhatsApp Cloud API oficial da Meta ou construir uma ponte própria. A escolha foi o WAHA Core, por ser gratuito, sem licença, com integração pronta com o Chatwoot e adequado a um número por instalação. A Cloud API foi descartada nesta versão porque exige conta comercial na Meta e endereço público, enquanto o projeto roda localmente.
 
@@ -56,11 +83,13 @@ Ensaio do roteiro da demo com o WhatsApp real, seguindo o README do zero em um c
 
 ### 4.3 Avaliação de usabilidade
 
-Recrutar de 5 a 8 pessoas para fazer a jornada de pedido pelo WhatsApp com o bot em execução. Os participantes não estão em `NUMEROS_IA`, porque na cota grátis do Gemini as mensagens podem ser usadas pelo Google. Por isso, **o teste avalia o fluxo por menus**. Aplicar a escala SUS (Brooke, 1996) logo após a tentativa e coletar três respostas abertas. Os itens da escala seguem a versão brasileira validada (Aquichan, 2022), com uma adaptação: "sistema" foi substituído por "atendimento", para se referir ao atendimento pelo WhatsApp. A nota SUS resume a usabilidade percebida em pontos. A codificação temática (Braun; Clarke, 2006) descreve os motivos relatados para facilidades e dificuldades. O [protocolo de teste](protocolo-sus.md) detalha a tarefa, o instrumento, a pontuação e a análise.
+Recrutar de 5 a 8 pessoas para fazer a jornada de pedido pelo WhatsApp com o bot em execução. Os participantes não estão em `NUMEROS_IA`, porque na cota grátis do Gemini as mensagens podem ser usadas pelo Google. Por isso, **o teste avalia o fluxo por menus**. Aplicar a escala SUS (Brooke, 1996) logo após a tentativa e coletar três respostas abertas. Os itens da escala seguem a versão brasileira validada (Lourenço; Valentim; Lopes, 2022), com uma adaptação: "sistema" foi substituído por "atendimento", para se referir ao atendimento pelo WhatsApp. A nota SUS resume a usabilidade percebida em pontos. A codificação temática (Braun; Clarke, 2006) descreve os motivos relatados para facilidades e dificuldades. O [protocolo de teste](protocolo-sus.md) detalha a tarefa, o instrumento, a pontuação e a análise.
 
 ## 5. Resultados
 
 ### 5.1 Resultados quantitativos
+
+**Tabela 1 – Resultados da avaliação quantitativa**
 
 | Medição | Resultado | Evidência |
 | --- | --- | --- |
@@ -69,6 +98,8 @@ Recrutar de 5 a 8 pessoas para fazer a jornada de pedido pelo WhatsApp com o bot
 | Comparação com e sem IA | Mediana de mensagens do cliente: 11 pelo menu e 6 com IA (−45%). Wilcoxon p = 0,00014, W− = 0 | 20 pares. A IA foi melhor em 19 e empatou em 1. Com IA, o cliente digitou mais caracteres (mediana 110 × 57) |
 | Latência da IA | Mediana de 0,9 a 5,4 s por chamada, conforme o horário. Na rodada final, 24% das chamadas passaram do limite de 8 s | Acima de 8 s, o bot recorre ao menu e o atendimento continua |
 | Testes automatizados | 72 testes em 12 arquivos, todos passando | `npm test`, sem rede (IA e ERP falsos) |
+
+Fonte: elaborado pelos autores (2026).
 
 Os números são da versão do bot medida em 19/11. Depois disso, o bot passou a deduzir o estado pela cidade e a perguntar cidade e estado juntos, o que reduz o caminho pelo menu de 11 para 10 mensagens em um pedido em Teresina.
 
@@ -83,7 +114,9 @@ Os testes encontraram defeitos que os testes unitários não tinham encontrado:
 
 ### 5.3 Validação de ponta a ponta
 
-**Pendente.** Registrar a data, o computador, a versão (commit) e o resultado de cada cenário do roteiro, com prints.
+**Instalação do zero (22/11/2026).** Em um notebook com Windows 11 e 7,8 GB de RAM, a instalação pelo README foi concluída: os containers subiram, o `npm run setup` criou o bot, a caixa de entrada e a sessão do WhatsApp, o chip da revenda foi conectado e o bot respondeu a um “oi” vindo de outro número. Seis pontos travaram ou confundiram quem seguia o README pela primeira vez: o download das imagens do Docker falhou e depois travou; o `.env` repassado pela equipe ainda era da Evolution; o identificador da conta do Chatwoot saiu diferente do valor do exemplo; o bot reinicia em ciclo até existir o token do setup, sem aviso no README; a sessão do WhatsApp expira antes de a pessoa abrir o QR; e o celular recusou a primeira leitura do QR. Os detalhes e as sugestões de correção estão no [roteiro da demo](../roteiro-demo.md#instalação-do-zero-22112026).
+
+**Cenários do roteiro: pendente.** Registrar o resultado do pedido com IA, do pedido pelo menu, da dúvida, da emergência e da resposta pelo Chatwoot, com prints, e o cancelamento das vendas de teste.
 
 ### 5.4 Avaliação pelo SUS e respostas abertas
 
@@ -96,6 +129,8 @@ Pontos a discutir quando os dados estiverem disponíveis:
 - Falhas e resultados inconclusivos devem ser relatados junto dos casos bem-sucedidos.
 
 ## 6. Limitações
+
+As ameaças à validade do estudo quantitativo seguem a classificação de Wohlin et al. (2012) e estão detalhadas no [estudo de avaliação](avaliacao-ia/README.md#5-ameaças-à-validade). As principais limitações do trabalho são:
 
 - **Conector não oficial:** o WAHA, assim como a Evolution, não é a API oficial do WhatsApp. A disponibilidade do canal depende da sessão, e o número pode ser bloqueado. O caminho para produção é a WhatsApp Cloud API.
 - **Cota gratuita do Gemini:** a latência variou muito entre horários, e as mensagens podem ser usadas pelo Google. Por isso a IA só atende números da equipe, e o teste com usuários avalia o fluxo por menus.
@@ -111,13 +146,36 @@ A proposta conecta um fluxo de pedido no WhatsApp a regras de validação e a at
 
 ## Referências
 
-- BRAUN, V.; CLARKE, V. Using thematic analysis in psychology. *Qualitative Research in Psychology*, v. 3, n. 2, p. 77–101, 2006. [DOI](https://doi.org/10.1191/1478088706qp063oa).
-- BROOKE, J. SUS: A quick and dirty usability scale. In: *Usability Evaluation in Industry*. London: Taylor & Francis, 1996. [Texto](https://hci-studies.org/methods-and-measures/downloads/SUS_Brooke1996.pdf).
-- FØLSTAD, A.; SKJUVE, M. Chatbots for Customer Service: User Experience and Motivation. In: *ACM Conference on Conversational User Interfaces (CUI)*, 2019. [DOI](https://doi.org/10.1145/3342775.3342784).
-- LEWIS, P. et al. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. In: *Advances in Neural Information Processing Systems (NeurIPS)*, v. 33, 2020. [Anais](https://proceedings.neurips.cc/paper/2020/hash/6b493230205f780e1bc26945df7481e5-Abstract.html).
-- SCHICK, T. et al. Toolformer: Language Models Can Teach Themselves to Use Tools. In: *Advances in Neural Information Processing Systems (NeurIPS)*, v. 36, 2023. [Anais](https://proceedings.neurips.cc/paper_files/paper/2023/hash/d842425e4bf79ba039352da0f658a906-Abstract-Conference.html).
-- SOKOLOVA, M.; LAPALME, G. A systematic analysis of performance measures for classification tasks. *Information Processing & Management*, v. 45, n. 4, p. 427–437, 2009. [DOI](https://doi.org/10.1016/j.ipm.2009.03.002).
-- STEPANOV, M. S.; POPOV, V. G. The Analysis of Contact Center Model with Two Service Stages and Chatbot Service Time Taken into Account. In: *9th International Conference on Information, Control, and Communication Technologies (ICCT)*. IEEE, 2025. [DOI](https://doi.org/10.1109/ICCT67028.2025.11427476).
-- Tradução e adaptação transcultural da System Usability Scale para o português do Brasil. *Aquichan*, v. 22, n. 2, 2022. [DOI](https://doi.org/10.5294/aqui.2022.22.2.8).
-- WILCOXON, F. Individual comparisons by ranking methods. *Biometrics Bulletin*, v. 1, n. 6, p. 80–83, 1945. [DOI](https://doi.org/10.2307/3001968).
-- WOHLIN, C. et al. *Experimentation in Software Engineering*. Berlin: Springer, 2012. [DOI](https://doi.org/10.1007/978-3-642-29044-2).
+BRAUN, V.; CLARKE, V. Using thematic analysis in psychology. **Qualitative Research in Psychology**, [*s. l.*], v. 3, n. 2, p. 77-101, 2006. DOI: <https://doi.org/10.1191/1478088706qp063oa>.
+
+BROOKE, J. SUS: a quick and dirty usability scale. *In*: JORDAN, P. W. *et al.* (ed.). **Usability evaluation in industry**. London: Taylor & Francis, 1996. p. 189-194. Disponível em: <https://hci-studies.org/methods-and-measures/downloads/SUS_Brooke1996.pdf>. Acesso em: 22 nov. 2026.
+
+FØLSTAD, A.; SKJUVE, M. Chatbots for customer service: user experience and motivation. *In*: INTERNATIONAL CONFERENCE ON CONVERSATIONAL USER INTERFACES, 1., 2019, Dublin. **Proceedings** [...]. New York: ACM, 2019. p. 1-9. DOI: <https://doi.org/10.1145/3342775.3342784>.
+
+LEWIS, P. *et al.* Retrieval-augmented generation for knowledge-intensive NLP tasks. *In*: CONFERENCE ON NEURAL INFORMATION PROCESSING SYSTEMS, 34., 2020, [*s. l.*]. **Advances in Neural Information Processing Systems**. [*S. l.*]: Curran Associates, 2020. v. 33, p. 9459-9474. Disponível em: <https://proceedings.neurips.cc/paper/2020/hash/6b493230205f780e1bc26945df7481e5-Abstract.html>. Acesso em: 22 nov. 2026.
+
+LOURENÇO, D. F.; VALENTIM, E. C.; LOPES, M. H. B. M. Tradução e adaptação transcultural da System Usability Scale para o português do Brasil. **Aquichan**, Chía, v. 22, n. 2, p. 1-16, 2022. DOI: <https://doi.org/10.5294/aqui.2022.22.2.8>.
+
+SCHICK, T. *et al.* Toolformer: language models can teach themselves to use tools. *In*: CONFERENCE ON NEURAL INFORMATION PROCESSING SYSTEMS, 37., 2023, New Orleans. **Advances in Neural Information Processing Systems**. [*S. l.*]: Curran Associates, 2023. v. 36, p. 68539-68551. Disponível em: <https://proceedings.neurips.cc/paper_files/paper/2023/hash/d842425e4bf79ba039352da0f658a906-Abstract-Conference.html>. Acesso em: 22 nov. 2026.
+
+SOKOLOVA, M.; LAPALME, G. A systematic analysis of performance measures for classification tasks. **Information Processing & Management**, [*s. l.*], v. 45, n. 4, p. 427-437, 2009. DOI: <https://doi.org/10.1016/j.ipm.2009.03.002>.
+
+STEPANOV, M. S.; POPOV, V. G. The analysis of contact center model with two service stages and chatbot service time taken into account. *In*: INTERNATIONAL CONFERENCE ON INFORMATION, CONTROL, AND COMMUNICATION TECHNOLOGIES, 9., 2025, Gomel. **Proceedings** [...]. [*S. l.*]: IEEE, 2025. p. 1-5. DOI: <https://doi.org/10.1109/ICCT67028.2025.11427476>.
+
+WILCOXON, F. Individual comparisons by ranking methods. **Biometrics Bulletin**, [*s. l.*], v. 1, n. 6, p. 80-83, 1945. DOI: <https://doi.org/10.2307/3001968>.
+
+WOHLIN, C. *et al.* **Experimentation in software engineering**. Berlin: Springer, 2012. DOI: <https://doi.org/10.1007/978-3-642-29044-2>.
+
+## Para a versão final (ABNT)
+
+Checklist para montar o documento entregue, conforme a issue [#4](https://github.com/lucazolvr/revgas-atende/issues/4). Se a faculdade (iCEV) ou a professora tiver modelo próprio, ele vale sobre esta lista.
+
+- [ ] **Ferramenta:** Word/Google Docs com o modelo da faculdade ou LaTeX com abnTeX2 (decisão da equipe).
+- [ ] **Pré-textuais:** capa e folha de rosto (instituição, curso, nomes completos da equipe, título, natureza do trabalho, professora, Teresina, 2026); resumo e palavras-chave (acima); lista de figuras, lista de tabelas, lista de siglas (acima) e sumário (NBR 6027).
+- [ ] **Página:** A4; margens de 3 cm em cima e à esquerda e de 2 cm embaixo e à direita; Arial ou Times New Roman 12 no texto e 10 em citações longas, notas, legendas e fontes; espaçamento 1,5 no texto e simples em citações longas, referências e legendas.
+- [ ] **Paginação:** contada a partir da folha de rosto e mostrada a partir da introdução, no canto superior direito.
+- [ ] **Seções:** numeração progressiva (NBR 6024), como neste rascunho.
+- [ ] **Figuras e tabelas:** título acima (“Figura 1 – Acurácia por intenção”) e fonte abaixo (“Fonte: elaborado pelos autores (2026).”). As 7 figuras do [estudo de avaliação](avaliacao-ia/figuras/) estão em 200 dpi e podem entrar direto.
+- [ ] **Referências:** em ordem alfabética, alinhadas à esquerda, espaçamento simples e uma linha em branco entre elas (NBR 6023). Só entram obras citadas no texto.
+- [ ] **Pós-textuais:** apêndices com o [protocolo de teste](protocolo-sus.md) e o questionário SUS, e com o [roteiro da demo](../roteiro-demo.md), se a equipe quiser.
+- [ ] **Dados fictícios declarados:** horário, bairros e regras da FAQ são de demonstração; as métricas são reais ([dados de demonstração](../dados-de-demonstracao.md)).

@@ -28,7 +28,7 @@ Depois das sessões, `npm run eval:metricas` resume o uso real a partir dos regi
 O formulário já está pronto no Google Forms: “Avaliação do atendimento RevGás pelo WhatsApp”.
 
 - Código da sessão: P01 a P08, atribuído pela moderadora. A coleta de e-mail está desativada.
-- SUS: as 10 afirmações da Tabela 1 da [versão brasileira publicada em Aquichan](https://doi.org/10.5294/aqui.2022.22.2.8), na mesma ordem, com uma adaptação: “sistema” foi substituído por “atendimento”. Uma escolha obrigatória por item, de 1 (Discordo totalmente) a 5 (Concordo totalmente), com 3 como ponto neutro. Os itens ímpares são positivos e os pares, negativos.
+- SUS: as 10 afirmações da Tabela 1 da [versão brasileira de Lourenço, Valentim e Lopes (2022)](https://doi.org/10.5294/aqui.2022.22.2.8), na mesma ordem, com uma adaptação: “sistema” foi substituído por “atendimento”. Uma escolha obrigatória por item, de 1 (Discordo totalmente) a 5 (Concordo totalmente), com 3 como ponto neutro. Os itens ímpares são positivos e os pares, negativos.
 - Perguntas abertas, após o SUS:
   1. Qual parte do pedido foi mais fácil? Por quê?
   2. Em que momento você teve dificuldade ou ficou sem saber o que fazer? O que aconteceu?
@@ -52,4 +52,4 @@ Leia todas as respostas, destaque passagens relevantes e atribua códigos curtos
 | --- | --- | ---: | --- | --- |
 | A preencher após a coleta | | | | |
 
-Fontes do método: [Brooke, 1996](https://hci-studies.org/methods-and-measures/downloads/SUS_Brooke1996.pdf), [escala brasileira](https://doi.org/10.5294/aqui.2022.22.2.8) e [Braun e Clarke, 2006](https://doi.org/10.1191/1478088706qp063oa).
+Fontes do método: [Brooke, 1996](https://hci-studies.org/methods-and-measures/downloads/SUS_Brooke1996.pdf), [Lourenço, Valentim e Lopes, 2022](https://doi.org/10.5294/aqui.2022.22.2.8) e [Braun e Clarke, 2006](https://doi.org/10.1191/1478088706qp063oa).

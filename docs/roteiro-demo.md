@@ -42,8 +42,8 @@ Registre em qual versão e ambiente o vídeo foi gravado.
 
 | Item | Registro do ensaio |
 | --- | --- |
-| Data, computador e commit | A preencher |
-| Instalação do zero pelo README: onde travou | A preencher |
+| Data, computador e commit | 22/11/2026, notebook da Luiza (Windows 11, 7,8 GB de RAM, Docker Desktop 29.8 com WSL2, Node 22). Branch `feat/4-sus-demo-relatorio` com a `main` (`ede46a1`) mesclada. |
+| Instalação do zero pelo README: onde travou | Instalação concluída: containers no ar, setup ok, WhatsApp conectado e bot respondendo a um “oi”. Seis pontos travaram ou confundiram; detalhes em [Instalação do zero](#instalação-do-zero-22112026). |
 | Pedido com IA | A preencher |
 | Pedido pelo menu | A preencher |
 | Dúvida (FAQ) | A preencher |
@@ -51,3 +51,20 @@ Registre em qual versão e ambiente o vídeo foi gravado.
 | Vendas de teste canceladas | A preencher |
 | Vídeo gravado e reproduzido sem internet | A preencher |
 | Ajustes e responsáveis | A preencher |
+
+### Instalação do zero (22/11/2026)
+
+Seguindo o README como alguém novo na equipe, em Windows 11 com 7,8 GB de RAM:
+
+1. **Download das imagens.** O primeiro `docker compose up -d` falhou com erro de rede ao falar com o Docker Hub; na segunda tentativa, o download do Chatwoot travou sem mostrar erro. Resolveu baixar uma imagem por vez (`docker pull`) e só depois rodar o `up`. Sugestão para o README: rodar `docker compose pull` antes do `up`.
+2. **`.env` antigo.** O `.env` repassado pela equipe era da época da Evolution: tinha `EVOLUTION_API_KEY` e não tinha `WAHA_API_KEY`, `WAHA_DASHBOARD_PASSWORD` nem `PAINEL_TOKEN`. O `.env` foi montado a partir do `.env.example`, reaproveitando só Gemini, `NUMEROS_IA` e as credenciais da API de teste; os tokens do Chatwoot não servem de uma instalação para outra.
+3. **`CHATWOOT_ACCOUNT_ID`.** O `.env.example` traz `1`, mas na instalação nova a conta criada no Chatwoot ficou com id `2`. Nem o README nem o `npm run setup` avisam. Sugestão: o setup descobrir o id pelo perfil do token ou o README mandar conferir.
+4. **Bot reiniciando antes do setup.** No primeiro `docker compose up -d`, o bot fica em loop com `CHATWOOT_BOT_TOKEN: Too small`. É esperado (o token só existe depois do setup), mas o README não avisa e parece defeito.
+5. **Sessão do WAHA em `FAILED`.** O `npm run setup` já inicia a sessão e gera o QR. Até a pessoa entrar no dashboard e colar a chave no Worker, os QR expiram (~3 min) e a sessão cai em `FAILED`. Resolveu com *Restart* na linha da sessão `default` (tabela Sessions, não a de Workers).
+6. **“Verifique sua conexão” no celular** ao ler o QR. O WAHA não registrou tentativa de pareamento, então o problema estava no celular do chip; resolveu na nova tentativa.
+
+Outros pontos:
+
+- O `npm run setup` manda rodar `docker compose up -d --build bot`; o README, `docker compose up -d --build`. Foi usado o do README, que também roda o `chatwoot-config` com o token novo.
+- Memória: o Docker com WSL2 fica limitado a metade da RAM (~3,7 GB neste notebook). Com tudo no ar, os containers usaram ~1,5 GB, então não foi preciso mudar o limite. Fechar outros programas ajudou, porque sobrava pouco para o Windows.
+- Com `VENDA_REAL=true` (valor do `.env` da equipe), todo pedido confirmado no ensaio cria venda na API de teste e precisa ser cancelado depois.

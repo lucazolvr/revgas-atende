@@ -110,7 +110,7 @@ A implementação (`eval/estatistica.ts`) foi conferida contra o `scipy.stats.wi
 
 | Item | Valor |
 |---|---|
-| Modelo | `gemini-3.1-flash-lite` (Google AI Studio, **cota grátis**) |
+| Modelo | `gemini-3.1-flash-lite` (Google AI Studio, **cota grátis**; Google, 2026) |
 | Configuração | temperatura 0, saída estruturada em JSON (*response schema*), validação de esquema no bot |
 | Limite de tempo | 15 s por chamada na avaliação; o bot em produção usa 8 s e cai no menu acima disso |
 | Cota | intervalo de 4,5 s entre chamadas; erro transitório (429/503) é repetido e contado à parte como "indisponível" |
@@ -311,7 +311,10 @@ Texto pronto para as linhas correspondentes da tabela de resultados do [relatór
 
 ## Referências
 
-- SOKOLOVA, M.; LAPALME, G. A systematic analysis of performance measures for classification tasks. *Information Processing & Management*, v. 45, n. 4, p. 427–437, 2009. [DOI](https://doi.org/10.1016/j.ipm.2009.03.002).
-- WILCOXON, F. Individual comparisons by ranking methods. *Biometrics Bulletin*, v. 1, n. 6, p. 80–83, 1945. [DOI](https://doi.org/10.2307/3001968).
-- WOHLIN, C. et al. *Experimentation in Software Engineering*. Berlin: Springer, 2012. [DOI](https://doi.org/10.1007/978-3-642-29044-2).
-- GOOGLE. *Gemini API: rate limits*. 2026. https://ai.google.dev/gemini-api/docs/rate-limits.
+GOOGLE. **Gemini API**: rate limits. [*S. l.*], 2026. Disponível em: <https://ai.google.dev/gemini-api/docs/rate-limits>. Acesso em: 19 nov. 2026.
+
+SOKOLOVA, M.; LAPALME, G. A systematic analysis of performance measures for classification tasks. **Information Processing & Management**, [*s. l.*], v. 45, n. 4, p. 427-437, 2009. DOI: <https://doi.org/10.1016/j.ipm.2009.03.002>.
+
+WILCOXON, F. Individual comparisons by ranking methods. **Biometrics Bulletin**, [*s. l.*], v. 1, n. 6, p. 80-83, 1945. DOI: <https://doi.org/10.2307/3001968>.
+
+WOHLIN, C. *et al.* **Experimentation in software engineering**. Berlin: Springer, 2012. DOI: <https://doi.org/10.1007/978-3-642-29044-2>.
