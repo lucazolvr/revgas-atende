@@ -2,13 +2,13 @@
 
 Projeto de Extensão VI · Transformação Digital · 2026.2
 
-**Versão para revisão.** Os resultados quantitativos da avaliação da IA ([issue #2](https://github.com/lucazolvr/revgas-atende/issues/2)) já estão incorporados, e a instalação do zero pelo README foi validada em 22/11/2026. Faltam os cenários do ensaio com o WhatsApp real, o teste com usuários (SUS) e a conclusão baseada neles.
+**Versão para revisão.** Os resultados quantitativos da avaliação da IA ([issue #2](https://github.com/lucazolvr/revgas-atende/issues/2)) já estão incorporados, e a instalação do zero pelo README e os cinco cenários do ensaio com o WhatsApp real foram validados em 22/11/2026. Faltam o teste com usuários (SUS), o vídeo do plano B e a conclusão baseada neles.
 
 **Formato.** Este rascunho já segue a estrutura, as citações (NBR 10520, autor-data) e as referências (NBR 6023) da ABNT. A formatação de página (A4, margens, fonte, espaçamento, paginação) e os elementos pré-textuais que dependem do modelo da faculdade (capa, folha de rosto, sumário, listas) entram na versão final; veja [Para a versão final](#para-a-versão-final-abnt).
 
 ## Resumo
 
-Pedidos de gás recebidos pelo WhatsApp costumam ser transcritos à mão para o sistema de gestão da revenda, o que exige conferir dados em dois sistemas e gera retrabalho. Este trabalho apresenta o RevGás Atende, um atendente virtual que coleta e valida o pedido na própria conversa, registra a venda no ERP RevGás somente após a confirmação do cliente e transfere a conversa para um atendente humano no Chatwoot quando necessário. A inteligência artificial (Gemini) interpreta mensagens em texto livre, enquanto preço, produto e criação da venda são decididos pelo código; sem IA, o mesmo fluxo funciona por menus numerados. A avaliação quantitativa usou 60 mensagens rotuladas e um experimento pareado com 20 perfis de cliente. A IA identificou a intenção em 100% das mensagens, extraiu os dados com F1 de 97,2% e reduziu em 45% a mediana de mensagens do cliente em relação ao menu (teste de Wilcoxon, p < 0,001), sem registrar pedidos errados. Os testes também revelaram defeitos, como respostas indevidas em grupos do WhatsApp, e motivaram a troca do conector do WhatsApp. [Completar com o resultado do ensaio de ponta a ponta e a nota SUS.]
+Pedidos de gás recebidos pelo WhatsApp costumam ser transcritos à mão para o sistema de gestão da revenda, o que exige conferir dados em dois sistemas e gera retrabalho. Este trabalho apresenta o RevGás Atende, um atendente virtual que coleta e valida o pedido na própria conversa, registra a venda no ERP RevGás somente após a confirmação do cliente e transfere a conversa para um atendente humano no Chatwoot quando necessário. A inteligência artificial (Gemini) interpreta mensagens em texto livre, enquanto preço, produto e criação da venda são decididos pelo código; sem IA, o mesmo fluxo funciona por menus numerados. A avaliação quantitativa usou 60 mensagens rotuladas e um experimento pareado com 20 perfis de cliente. A IA identificou a intenção em 100% das mensagens, extraiu os dados com F1 de 97,2% e reduziu em 45% a mediana de mensagens do cliente em relação ao menu (teste de Wilcoxon, p < 0,001), sem registrar pedidos errados. Os testes também revelaram defeitos, como respostas indevidas em grupos do WhatsApp, e motivaram a troca do conector do WhatsApp. No ensaio de ponta a ponta com o WhatsApp real, os cinco cenários previstos (pedido com IA, pedido pelo menu, dúvida, emergência e resposta do atendente) tiveram o resultado esperado. [Completar com a nota SUS.]
 
 **Palavras-chave:** chatbot; atendimento ao cliente; WhatsApp; modelos de linguagem; geração aumentada por recuperação.
 
@@ -111,12 +111,27 @@ Os testes encontraram defeitos que os testes unitários não tinham encontrado:
 - **Conector do WhatsApp (20 e 21/11):** as falhas da Evolution levaram à troca pelo WAHA (seção 3.1).
 - **Teste com WhatsApp real (21/11):** o WAHA repassa ao Chatwoot também as mensagens de grupos, e o bot respondia dentro deles. Desde o [PR #19](https://github.com/lucazolvr/revgas-atende/pull/19), o bot ignora grupos e só atende no privado.
 - **Reconexão:** depois de várias conexões seguidas, o WhatsApp passou a recusar novos aparelhos também no WAHA. Zerar a sessão e ler o QR de novo resolveu.
+- **Dois computadores no mesmo chip (22/11):** com duas instalações conectadas ao mesmo número, os dois bots respondiam ao cliente, um deles com uma versão desatualizada. A regra passou a ser um computador por vez no chip, registrada no guia de atualização do ambiente e no roteiro da demo.
 
 ### 5.3 Validação de ponta a ponta
 
 **Instalação do zero (22/11/2026).** Em um notebook com Windows 11 e 7,8 GB de RAM, a instalação pelo README foi concluída: os containers subiram, o `npm run setup` criou o bot, a caixa de entrada e a sessão do WhatsApp, o chip da revenda foi conectado e o bot respondeu a um “oi” vindo de outro número. Seis pontos travaram ou confundiram quem seguia o README pela primeira vez: o download das imagens do Docker falhou e depois travou; o `.env` repassado pela equipe ainda era da Evolution; o identificador da conta do Chatwoot saiu diferente do valor do exemplo; o bot reinicia em ciclo até existir o token do setup, sem aviso no README; a sessão do WhatsApp expira antes de a pessoa abrir o QR; e o celular recusou a primeira leitura do QR. Os detalhes e as sugestões de correção estão no [roteiro da demo](../roteiro-demo.md#instalação-do-zero-22112026).
 
-**Cenários do roteiro: pendente.** Registrar o resultado do pedido com IA, do pedido pelo menu, da dúvida, da emergência e da resposta pelo Chatwoot, com prints, e o cancelamento das vendas de teste.
+**Cenários do roteiro (22/11/2026).** Os cinco cenários foram executados com o WhatsApp real, a partir de dois números de teste (um em `NUMEROS_IA` e outro fora), e todos tiveram o resultado esperado (Quadro 2).
+
+**Quadro 2 – Resultado dos cenários do ensaio de ponta a ponta**
+
+| Cenário | Resultado |
+| --- | --- |
+| Pedido com IA | Concluído. Com uma única mensagem, a IA extraiu produto, quantidade, endereço e pagamento, e o estado (PI) foi deduzido da cidade; o bot perguntou apenas o nome. A venda foi criada após a confirmação, com o total do catálogo (R$ 220,00). |
+| Pedido pelo menu | Concluído em nove etapas de menu, com venda criada (R$ 440,00) e exibida na aba “Pedido RevGás” e em “Pedidos de hoje”. |
+| Dúvida (FAQ) | A pergunta sobre entrega no domingo foi respondida pela base de conhecimento, e o bot retomou o pedido em seguida. |
+| Emergência | Orientações de segurança imediatas; a conversa foi transferida à equipe com prioridade urgente, etiquetas `vazamento` e `urgente` e nota-resumo. |
+| Resposta do atendente | A mensagem enviada pelo Chatwoot chegou ao WhatsApp do cliente no mesmo minuto. |
+
+Fonte: elaborado pelos autores (2026).
+
+O ensaio também confirmou a correção do PR #19: mensagens de um grupo em que o chip participa chegaram ao Chatwoot, e o bot não respondeu. As três vendas de teste do dia foram canceladas na API de teste. Duas observações foram registradas para o roteiro e para o teste com usuários: no pedido pelo menu, a rua foi respondida em duas linhas e o bot guardou o texto inteiro como rua; o resumo exibiu o erro, mas o pedido foi confirmado mesmo assim, o que mostra que a proteção do resumo depende de a pessoa lê-lo. E, no Chatwoot, as conversas atendidas pelo bot ficam com status “pendente” e não aparecem no filtro padrão “Abertas”, o que precisa ser ajustado por quem opera o painel na demonstração.
 
 ### 5.4 Avaliação pelo SUS e respostas abertas
 
@@ -140,9 +155,9 @@ As ameaças à validade do estudo quantitativo seguem a classificação de Wohli
 
 ## 7. Conclusão
 
-A proposta conecta um fluxo de pedido no WhatsApp a regras de validação e a atendimento humano no Chatwoot. A avaliação quantitativa confirmou que a interpretação por IA reduz o número de mensagens sem registrar pedidos errados, e que o sistema continua atendendo pelo menu quando a IA falha ou demora. A troca do conector mostrou a vantagem de manter o canal isolado da lógica do bot.
+A proposta conecta um fluxo de pedido no WhatsApp a regras de validação e a atendimento humano no Chatwoot. A avaliação quantitativa confirmou que a interpretação por IA reduz o número de mensagens sem registrar pedidos errados, e que o sistema continua atendendo pelo menu quando a IA falha ou demora. A troca do conector mostrou a vantagem de manter o canal isolado da lógica do bot. O ensaio com o WhatsApp real, seguindo o README do zero, mostrou o fluxo completo funcionando, do pedido à venda e da emergência à resposta humana, e apontou ajustes de documentação e de operação que facilitam a instalação e a demonstração.
 
-**A completar após a coleta:** o que funcionou no ensaio de ponta a ponta, a nota SUS e as dificuldades relatadas pelos participantes, e as melhorias que esses dados sustentam.
+**A completar após a coleta:** a nota SUS, as dificuldades relatadas pelos participantes e as melhorias que esses dados sustentam.
 
 ## Referências
 

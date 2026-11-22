@@ -6,8 +6,9 @@ Base: [seção 9 do documento de design](superpowers/specs/2026-11-18-revgas-ate
 
 - [ ] Docker ligado e `docker compose up -d` no computador da demo.
 - [ ] WhatsApp do chip da revenda conectado: QR em `http://127.0.0.1:3002/dashboard`, no computador da demo, com a sessão `default` em execução.
+- [ ] No celular do chip, em Aparelhos conectados, **só o computador da demo**. Com dois computadores no mesmo chip, os dois bots respondem (aconteceu em 22/11).
 - [ ] Número de quem vai fazer o pedido com IA incluído em `NUMEROS_IA`. Um segundo número, fora da lista, para o pedido pelo menu.
-- [ ] Chatwoot aberto na caixa "WhatsApp RevGás", com o WhatsApp do celular espelhado ao lado. Defina quem apresenta e quem opera o painel como atendente.
+- [ ] Chatwoot aberto na caixa "WhatsApp RevGás", com o WhatsApp do celular espelhado ao lado. Defina quem apresenta e quem opera o painel como atendente. Deixe a lista de conversas em **“Pendentes” ou “Todas”**: enquanto o bot atende, a conversa fica pendente e não aparece no filtro padrão “Abertas”.
 - [ ] Bot respondendo a um “oi” e atendente conseguindo devolver uma mensagem pelo painel.
 - [ ] Se aparecer “não é possível conectar novos dispositivos”: no dashboard do WAHA, faça Logout, apague a sessão, rode `npm run setup` e leia o QR de novo. Foi o que resolveu em 21/11. Evite conectar e desconectar o número várias vezes seguidas.
 - [ ] Conversas limpas para cada cenário, dados fictícios e notificações, contatos e credenciais ocultos.
@@ -44,13 +45,13 @@ Registre em qual versão e ambiente o vídeo foi gravado.
 | --- | --- |
 | Data, computador e commit | 22/11/2026, notebook da Luiza (Windows 11, 7,8 GB de RAM, Docker Desktop 29.8 com WSL2, Node 22). Branch `feat/4-sus-demo-relatorio` com a `main` (`ede46a1`) mesclada. |
 | Instalação do zero pelo README: onde travou | Instalação concluída: containers no ar, setup ok, WhatsApp conectado e bot respondendo a um “oi”. Seis pontos travaram ou confundiram; detalhes em [Instalação do zero](#instalação-do-zero-22112026). |
-| Pedido com IA | A preencher |
-| Pedido pelo menu | A preencher |
-| Dúvida (FAQ) | A preencher |
-| Emergência e resposta pelo Chatwoot | A preencher |
-| Vendas de teste canceladas | A preencher |
-| Vídeo gravado e reproduzido sem internet | A preencher |
-| Ajustes e responsáveis | A preencher |
+| Pedido com IA | ✅ 22/11, 04:45. Uma mensagem com produto, quantidade, endereço e pagamento; o bot deduziu PI de Teresina e só perguntou o nome. Resumo certo (2 × R$ 110,00 = R$ 220,00) e venda 30962358 criada após o “1”. |
+| Pedido pelo menu | ✅ 22/11, 04:59. Fluxo completo pelo menu (nome, produto, quantidade, rua, número, bairro, cidade, pagamento e troco); “Teresina” sem estado virou Teresina/PI. Venda 30962359 (4 × R$ 110,00 = R$ 440,00) na aba e em “Pedidos de hoje”. Observação: a rua foi respondida em duas linhas (“Rua … / Sim, para entregar”), o bot guardou as duas como rua e o resumo com o erro foi confirmado. |
+| Dúvida (FAQ) | ✅ 22/11, 05:17. “Vocês entregam no domingo?” → “Sim, realizamos entregas aos domingos das 8h às 13h” (dado de demonstração); em seguida o bot retomou o pedido. |
+| Emergência e resposta pelo Chatwoot | ✅ 22/11, 05:20. Orientações de segurança na hora e aviso de atendente; no Chatwoot, conversa aberta para a equipe, prioridade urgente, etiquetas `vazamento` e `urgente` e nota-resumo. A resposta do atendente (05:24) chegou ao WhatsApp no mesmo minuto. Extra: mensagens de um grupo em que o chip está chegaram ao Chatwoot e o bot não respondeu (correção do PR #19 confirmada). |
+| Vendas de teste canceladas | ✅ 30962358, 30962359 e 30962355 (esta de um teste anterior, R$ 1.980,00), com `npm run cancelar-venda`. |
+| Vídeo gravado e reproduzido sem internet | Pendente. |
+| Ajustes e responsáveis | Checklist da demo atualizado (um computador por chip; Chatwoot em “Pendentes”). A decidir com a equipe: avisos no README sobre a instalação (ver abaixo) e tratar resposta de rua com várias linhas. Prints em [relatorio/ensaio-2026-11-22](relatorio/ensaio-2026-11-22/). |
 
 ### Instalação do zero (22/11/2026)
 
