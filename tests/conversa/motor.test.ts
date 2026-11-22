@@ -78,6 +78,20 @@ describe('motor da conversa (menus, sem IA)', () => {
     expect(textoDe(acoes)).toContain('cancelado');
   });
 
+  it('cancela no meio do pedido, pelos menus', async () => {
+    for (const pedido of ['cancelar', 'Quero desistir']) {
+      const { sessao, acoes } = await conversa(deps(), ['oi', 'Maria', '1', pedido]);
+      expect(sessao.estado).toBe('INICIO');
+      expect(sessao.pedido.nome).toBeUndefined();
+      expect(textoDe(acoes)).toContain('cancelado');
+    }
+  });
+
+  it('"cancelar" antes de começar o pedido não responde "cancelado"', async () => {
+    const { acoes } = await conversa(deps(), ['cancelar']);
+    expect(textoDe(acoes)).not.toContain('cancelado');
+  });
+
   it('duas respostas inválidas seguidas transferem para humano', async () => {
     const { acoes } = await conversa(deps(), ['oi', 'Maria', '1', 'muitos', 'sei lá']);
     expect(acoes).toContainEqual(expect.objectContaining({ tipo: 'transferir', motivo: 'nao_entendi' }));

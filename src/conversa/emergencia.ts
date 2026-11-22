@@ -18,3 +18,8 @@ export function ehEmergencia(texto: string): boolean {
 export function pedeHumano(texto: string): boolean {
   return /\b(atendente|humano|pessoa de verdade|falar com alguem)\b/.test(normalizar(texto));
 }
+
+/** A mensagem começa pedindo para cancelar ("cancelar", "quero desistir"); "3" só vale no resumo. */
+export function pedeCancelar(texto: string): boolean {
+  return /^(quero |pode )?(cancelar|cancela|desistir|desisto)\b/.test(normalizar(texto).trim());
+}
