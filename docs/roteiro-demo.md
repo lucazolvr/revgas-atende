@@ -51,7 +51,7 @@ Registre em qual versão e ambiente o vídeo foi gravado.
 | Emergência e resposta pelo Chatwoot | ✅ 22/11, 05:20. Orientações de segurança na hora e aviso de atendente; no Chatwoot, conversa aberta para a equipe, prioridade urgente, etiquetas `vazamento` e `urgente` e nota-resumo. A resposta do atendente (05:24) chegou ao WhatsApp no mesmo minuto. Extra: mensagens de um grupo em que o chip está chegaram ao Chatwoot e o bot não respondeu (correção do PR #19 confirmada). |
 | Vendas de teste canceladas | ✅ 30962358, 30962359 e 30962355 (esta de um teste anterior, R$ 1.980,00), com `npm run cancelar-venda`. |
 | Vídeo gravado e reproduzido sem internet | Pendente. |
-| Ajustes e responsáveis | Checklist da demo atualizado (um computador por chip; Chatwoot em “Pendentes”). A decidir com a equipe: avisos no README sobre a instalação (ver abaixo) e tratar resposta de rua com várias linhas. Prints em [relatorio/ensaio-2026-11-22](relatorio/ensaio-2026-11-22/). |
+| Ajustes e responsáveis | Checklist da demo atualizado (um computador por chip; Chatwoot em “Pendentes”). README corrigido com os avisos da instalação (ver abaixo). A decidir com a equipe: tratar resposta de rua com várias linhas. Prints em [relatorio/ensaio-2026-11-22](relatorio/ensaio-2026-11-22/). |
 
 ### Instalação do zero (22/11/2026)
 

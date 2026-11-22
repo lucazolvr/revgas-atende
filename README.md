@@ -69,13 +69,16 @@ npm test
 Precisa de **Docker Desktop** (≈ 4 GB de RAM livres) e de um **chip separado** (o WAHA não é a API oficial do WhatsApp; o número pode ser bloqueado). **Não use número pessoal:** com o bot ligado, qualquer pessoa que escrever para o número recebe a resposta do bot.
 
 1. `cp .env.example .env` e preencha `POSTGRES_PASSWORD`, `SECRET_KEY_BASE`, `WAHA_API_KEY`, `WAHA_DASHBOARD_PASSWORD`, `BOT_WEBHOOK_TOKEN` e `PAINEL_TOKEN` com valores aleatórios (os tokens com 32+ caracteres).
-2. `docker compose up -d` (a primeira vez demora: baixa as imagens e prepara o banco).
-3. Abra **http://localhost:3000**, crie a conta de administrador e copie o token de acesso do seu perfil para `CHATWOOT_ADMIN_TOKEN`.
+2. `docker compose pull --ignore-buildable` e depois `docker compose up -d` (a primeira vez demora: baixa as imagens e prepara o banco). Se o download falhar ou parar sem erro, rode o `pull` de novo antes do `up`.
+   - Até o passo 5, o `bot` fica reiniciando com `CHATWOOT_BOT_TOKEN: Too small` nos logs. É esperado: o token só existe depois do setup.
+3. Abra **http://localhost:3000**, crie a conta de administrador e copie o token de acesso do seu perfil para `CHATWOOT_ADMIN_TOKEN`. Confira também o número da conta no endereço do painel (`/app/accounts/<número>/...`) e coloque-o em `CHATWOOT_ACCOUNT_ID`: numa instalação nova, ele pode não ser `1`.
 4. `npm install` e `npm run setup`: ele cria o Agent Bot, a caixa de entrada "WhatsApp RevGás", a integração do WAHA com o Chatwoot e a sessão do WhatsApp. Pode rodar de novo sem duplicar nada; numa instalação que vinha da Evolution, veja abaixo.
 5. Coloque o `CHATWOOT_BOT_TOKEN` que o setup mostrou no `.env` e rode `docker compose up -d --build`. A partir daqui, **todo `docker compose up` configura o painel sozinho** (veja abaixo).
-6. Abra **http://127.0.0.1:3002/dashboard** (usuário e senha do `.env`). Na primeira vez, cole a `WAHA_API_KEY` no "Worker" (ícone de lápis) para ele enxergar as sessões. Na sessão `default`, leia o QR code com o celular do chip (WhatsApp → Aparelhos conectados). O QR expira em ~1 min; se a sessão ficar `FAILED`, clique em *Restart*.
+6. Abra **http://127.0.0.1:3002/dashboard** (usuário e senha do `.env`). Na primeira vez, cole a `WAHA_API_KEY` no "Worker" (ícone de lápis) para ele enxergar as sessões. Na sessão `default`, leia o QR code com o celular do chip (WhatsApp → Aparelhos conectados). O QR expira em ~1 min; se a sessão ficar `FAILED`, clique em *Restart* na linha da sessão `default` (tabela *Sessions*, não a de *Workers*).
+   - Na primeira vez, é comum a sessão já estar `FAILED` quando você chega ao dashboard: o `npm run setup` liga a sessão na hora, e os QR expiram enquanto você faz o login e cola a chave no Worker.
    - Evite conectar e desconectar o número várias vezes seguidas: o WhatsApp passa a recusar novos aparelhos por um tempo ("não é possível conectar novos dispositivos no momento").
-7. Mande "oi" para o número do chip. 🎉
+   - **Um computador por vez no chip.** Se dois computadores estiverem conectados ao mesmo número, os dois bots respondem ao cliente. No celular do chip, em *Aparelhos conectados*, deve aparecer só o seu.
+7. Mande "oi" para o número do chip, de outro celular. 🎉 No Chatwoot, as conversas atendidas pelo bot ficam como **pendentes**: troque o filtro da lista de "Abertas" para "Pendentes" ou "Todas" para vê-las.
 
 ### Quem já rodava com a Evolution
 
