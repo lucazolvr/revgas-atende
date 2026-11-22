@@ -37,7 +37,7 @@ comm -23 /tmp/ex.txt /tmp/env.txt
 - **Obrigatórias novas (WAHA):** `WAHA_API_KEY` e `WAHA_DASHBOARD_PASSWORD`, com valores aleatórios. Sem elas o `docker compose` **recusa subir**. `WAHA_DASHBOARD_USERNAME` é opcional.
 - `BOT_WEBHOOK_TOKEN` e `PAINEL_TOKEN`: **32+ caracteres** aleatórios. Com `PAINEL_TOKEN` curto, a aba "Pedido RevGás" fica desligada.
 - Variáveis da Evolution (`EVOLUTION_*`), se ainda existirem: podem ser apagadas, não são mais usadas.
-- `NUMEROS_IA`: números (com DDI e DDD) que usam a IA. Os outros números são atendidos pelos menus.
+- `NUMEROS_IA=*`: a IA atende todos os números (cenário da demo, desde 22/11). Uma lista de números (com DDI e DDD) limita a IA a eles; vazio = só menus.
 - `VENDA_REAL=true` só com `REVGAS_API_KEY`, `REVGAS_CLIENTE_DEMO=5700355` e `REVGAS_ESTABELECIMENTO=2580`. Peça a chave ao Lucas por mensagem privada se não tiver.
 
 Para gerar um valor aleatório: `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"`.
@@ -94,7 +94,7 @@ No WhatsApp, de outro celular, para o número do chip:
 | Mensagem | Esperado |
 |---|---|
 | `oi` | Boas-vindas e "Qual é o seu nome?" |
-| pedido inteiro numa mensagem (número em `NUMEROS_IA`), ex.: *"quero um gás na Rua Nova 10, Centro, Teresina, pago no pix"* | O bot preenche tudo (o estado PI sai de Teresina) e pergunta só o que falta |
+| pedido inteiro numa mensagem, ex.: *"quero um gás na Rua Nova 10, Centro, Teresina, pago no pix"* | O bot preenche tudo (o estado PI sai de Teresina) e pergunta só o que falta |
 | `cancelar` no meio do pedido | "Tudo bem, pedido cancelado." |
 | `cheiro de gás` | Orientações de segurança e conversa marcada como urgente |
 | mensagem num **grupo** onde o chip está | O bot **não** responde |
@@ -123,5 +123,5 @@ O bot só responde conversas com status **pendente** no Chatwoot. Se um atendent
 | Mensagem chega no Chatwoot, bot não responde | Bot antigo (sem `--build`), token errado ou conversa "aberta" | `docker compose up -d --build bot`; confira `docker compose logs bot`; resolva a conversa |
 | Mensagem nem chega no Chatwoot | Sessão não está `WORKING` ou o setup não rodou | Passos 4 e 5 |
 | Dois bots respondendo | Outro computador conectado ao chip | Desconecte os outros aparelhos no celular do chip |
-| IA não entende, só menus | Número fora de `NUMEROS_IA` ou cota do Gemini esgotada | Confira o `.env`; a cota grátis volta no dia seguinte |
+| IA não entende, só menus | `NUMEROS_IA` sem `*` (ou sem o número) ou cota do Gemini esgotada | Confira o `.env`; a cota grátis volta no dia seguinte |
 | Painel sem a cor laranja ou sem "Pedidos de hoje" | `chatwoot-ajustes` não rodou | `docker compose run --rm chatwoot-ajustes` |

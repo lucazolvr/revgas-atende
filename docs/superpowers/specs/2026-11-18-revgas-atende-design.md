@@ -128,6 +128,7 @@ Regras:
 
 - Segredos (`REVGAS_API_KEY`, `GEMINI_API_KEY`, tokens do Chatwoot, chave e senha do painel do WAHA) só no `.env`, que fica no `.gitignore`. O repositório tem só o `.env.example`.
 - **Gemini na cota grátis pode usar os dados para treino.** Por isso a IA só atende números da equipe (`NUMEROS_IA`). Os demais clientes usam o fluxo por menus. Para produção, o relatório recomenda plano pago.
+  - *Atualização de 22/11:* para o cenário da demo, a IA passou a atender todos os números (`NUMEROS_IA=*`). Quem testar deve ser avisado de que as mensagens vão para o Gemini na cota grátis.
 - O webhook do bot só é acessível pela rede interna do Docker, com token secreto no caminho (`/webhook/<BOT_WEBHOOK_TOKEN>`). As portas expostas no host ficam em `127.0.0.1`.
 - O log de métricas não grava texto de mensagens, nome, telefone nem endereço: só eventos, estados, tempos e IDs internos.
 - **WhatsApp não oficial:** usar um chip separado, que pode ser bloqueado sem prejuízo.

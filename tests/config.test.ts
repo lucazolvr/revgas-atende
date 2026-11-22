@@ -23,6 +23,11 @@ describe('carregarConfig', () => {
     ]);
   });
 
+  it('NUMEROS_IA=* liga a IA para todos', () => {
+    expect(carregarConfig({ ...base, NUMEROS_IA: ' * ' }).NUMEROS_IA).toEqual(['*']);
+    expect(carregarConfig(base).NUMEROS_IA).toEqual([]);
+  });
+
   it('painel: desligado sem token, recusa token curto e lê as origens', () => {
     expect(carregarConfig(base).PAINEL_TOKEN).toBeUndefined();
     expect(carregarConfig(base).PAINEL_ORIGENS).toEqual(['http://localhost:3000', 'http://127.0.0.1:3000']);
