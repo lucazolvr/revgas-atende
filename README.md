@@ -79,6 +79,8 @@ Precisa de **Docker Desktop** (≈ 4 GB de RAM livres) e de um **chip separado**
 
 ### Quem já rodava com a Evolution
 
+> Guia completo de atualização (também para o assistente de IA de cada integrante): [docs/atualizar-ambiente.md](docs/atualizar-ambiente.md).
+
 1. Coloque `WAHA_API_KEY` e `WAHA_DASHBOARD_PASSWORD` no `.env`, com valores aleatórios (sem elas, o `docker compose` não sobe).
 2. `docker compose up -d --remove-orphans`: sobe o WAHA e remove o container da Evolution, que senão continuaria ligado ao número.
 3. `npm run setup`: reaproveita a caixa "WhatsApp RevGás" e só troca o endereço dela para o WAHA. As conversas antigas ficam; o WAHA acha os contatos que já existem pelo telefone ou pelo identificador do WhatsApp.
