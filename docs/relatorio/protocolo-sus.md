@@ -3,7 +3,7 @@
 ## Preparação
 
 1. **Ambiente.** O bot roda no computador da equipe que estiver com o chip da revenda conectado ao WAHA (QR em `http://127.0.0.1:3002/dashboard`). As sessões só podem acontecer enquanto esse computador estiver ligado. Antes das sessões, faça um piloto com alguém da equipe e anote no relatório a data, o computador e o commit em execução.
-2. **Modo de atendimento.** Os números dos participantes **não** entram em `NUMEROS_IA`: na cota grátis do Gemini, as mensagens podem ser usadas pelo Google. Todos os participantes são atendidos pelo **menu**, e o relatório deve dizer que o SUS avalia esse fluxo.
+2. **Modo de atendimento.** Os números dos participantes **não** entram em `NUMEROS_IA`: na cota grátis do Gemini, as mensagens podem ser usadas pelo Google. Todos os participantes são atendidos pelo **menu**, e o relatório deve dizer que o SUS avalia esse fluxo. Se o `.env` estiver com `NUMEROS_IA=*` (configuração da demo, que liga a IA para todos), troque pela lista da equipe antes das sessões e rode `docker compose up -d --force-recreate bot`.
 3. **Vendas de teste.** Com `VENDA_REAL=true`, cada pedido confirmado cria uma venda na API de teste da RevGás (estabelecimento de demonstração 2580). Anote o número do pedido de cada sessão e cancele a venda depois, pela aba "Pedido RevGás" no Chatwoot ou com `npm run cancelar-venda -- <id>`.
 4. **Participantes.** Convide de 5 a 8 pessoas para uma sessão individual e explique que a participação é voluntária. Use a mesma versão do bot e o mesmo cenário em todas as sessões. Identifique cada sessão com P01, P02 e assim por diante. Guarde o material bruto em local de acesso restrito à equipe.
 

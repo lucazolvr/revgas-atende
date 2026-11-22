@@ -43,9 +43,15 @@ Lewis et al. (2020) combinam geração de texto com recuperação de informaçã
 
 ## 3. Arquitetura
 
-O cliente conversa no WhatsApp. O WAHA (versão Core, motor GOWS) faz a ponte entre o WhatsApp e o Chatwoot: entrega as mensagens do cliente na caixa "WhatsApp RevGás" e leva ao WhatsApp as respostas do bot e dos atendentes. O Chatwoot aciona o webhook do bot, que roda em Node.js e TypeScript, executa o fluxo de pedido, guarda o estado no Redis e responde pela API do Chatwoot. O bot atende só conversas no privado e ignora grupos.
+O cliente conversa no WhatsApp. O WAHA (versão Core, motor GOWS) faz a ponte entre o WhatsApp e o Chatwoot: entrega as mensagens do cliente na caixa "WhatsApp RevGás" e leva ao WhatsApp as respostas do bot e dos atendentes. O Chatwoot aciona o webhook do bot, que roda em Node.js e TypeScript, executa o fluxo de pedido, guarda o estado no Redis e responde pela API do Chatwoot. O bot atende só conversas no privado e ignora grupos. A Figura 1 mostra os componentes e as ligações entre eles.
 
-O Gemini interpreta texto livre para os números configurados em `NUMEROS_IA`. Os demais números são atendidos por menus numerados, e o mesmo fluxo funciona sem IA. O catálogo fornece produto e preço, que nunca vêm da IA. Dúvidas frequentes são respondidas por uma FAQ com RAG (`src/conhecimento/`). A venda confirmada é criada pela API de teste que a RevGás liberou para a faculdade (estabelecimento de demonstração 2580). Na transferência, a conversa é aberta para a equipe no Chatwoot, com nota-resumo, etiquetas e a aba "Pedido RevGás", que mostra o pedido e a venda no ERP.
+**Figura 1 – Arquitetura do RevGás Atende**
+
+![Arquitetura do RevGás Atende](figuras/arquitetura.png)
+
+Fonte: Elaborado pelos autores (2026).
+
+O Gemini interpreta texto livre para os números configurados em `NUMEROS_IA`, que aceita uma lista de números ou `*` para todos, configuração usada no cenário da demonstração. Os números fora da lista são atendidos por menus numerados, e os menus também são o caminho de reserva quando a IA demora ou falha: o mesmo fluxo funciona sem IA. O catálogo fornece produto e preço, que nunca vêm da IA. Dúvidas frequentes são respondidas por uma FAQ com RAG (`src/conhecimento/`). A venda confirmada é criada pela API de teste que a RevGás liberou para a faculdade (estabelecimento de demonstração 2580). Na transferência, a conversa é aberta para a equipe no Chatwoot, com nota-resumo, etiquetas e a aba "Pedido RevGás", que mostra o pedido e a venda no ERP.
 
 Referências internas: [README](../../README.md), [documento de design](../superpowers/specs/2026-11-18-revgas-atende-design.md) e [registro da troca de conector](../decisoes/2026-11-21-troca-evolution-waha.md).
 
@@ -83,7 +89,7 @@ Ensaio do roteiro da demo com o WhatsApp real, seguindo o README do zero em um c
 
 ### 4.3 Avaliação de usabilidade
 
-Recrutar de 5 a 8 pessoas para fazer a jornada de pedido pelo WhatsApp com o bot em execução. Os participantes não estão em `NUMEROS_IA`, porque na cota grátis do Gemini as mensagens podem ser usadas pelo Google. Por isso, **o teste avalia o fluxo por menus**. Aplicar a escala SUS (Brooke, 1996) logo após a tentativa e coletar três respostas abertas. Os itens da escala seguem a versão brasileira validada (Lourenço; Valentim; Lopes, 2022), com uma adaptação: "sistema" foi substituído por "atendimento", para se referir ao atendimento pelo WhatsApp. A nota SUS resume a usabilidade percebida em pontos. A codificação temática (Braun; Clarke, 2006) descreve os motivos relatados para facilidades e dificuldades. O [protocolo de teste](protocolo-sus.md) detalha a tarefa, o instrumento, a pontuação e a análise.
+Recrutar de 5 a 8 pessoas para fazer a jornada de pedido pelo WhatsApp com o bot em execução. Durante as sessões, `NUMEROS_IA` fica com a lista da equipe, sem `*`, e os participantes não entram nela, porque na cota grátis do Gemini as mensagens podem ser usadas pelo Google. Por isso, **o teste avalia o fluxo por menus**. Aplicar a escala SUS (Brooke, 1996) logo após a tentativa e coletar três respostas abertas. Os itens da escala seguem a versão brasileira validada (Lourenço; Valentim; Lopes, 2022), com uma adaptação: "sistema" foi substituído por "atendimento", para se referir ao atendimento pelo WhatsApp. A nota SUS resume a usabilidade percebida em pontos. A codificação temática (Braun; Clarke, 2006) descreve os motivos relatados para facilidades e dificuldades. O [protocolo de teste](protocolo-sus.md) detalha a tarefa, o instrumento, a pontuação e a análise.
 
 ## 5. Resultados
 
@@ -102,6 +108,26 @@ Recrutar de 5 a 8 pessoas para fazer a jornada de pedido pelo WhatsApp com o bot
 Fonte: Elaborado pelos autores (2026).
 
 Os números são da versão do bot medida em 19/11. Depois disso, o bot passou a deduzir o estado pela cidade e a perguntar cidade e estado juntos, o que reduz o caminho pelo menu de 11 para 10 mensagens em um pedido em Teresina.
+
+A Figura 2 mostra a acurácia por intenção; a Figura 3 compara, para cada perfil, o número de mensagens até concluir o pedido pelos dois caminhos; e a Figura 4 mostra a variação do tempo de resposta do Gemini entre as rodadas, com o limite de 8 s do bot.
+
+**Figura 2 – Acurácia por intenção (60 mensagens)**
+
+![Acurácia por intenção (60 mensagens)](avaliacao-ia/figuras/1-acuracia-intencao.png)
+
+Fonte: Elaborado pelos autores (2026), a partir do estudo de avaliação da IA.
+
+**Figura 3 – Mensagens até concluir o pedido, por perfil, pelo menu e com IA**
+
+![Mensagens até concluir o pedido, por perfil, pelo menu e com IA](avaliacao-ia/figuras/5-mensagens-por-perfil.png)
+
+Fonte: Elaborado pelos autores (2026), a partir do estudo de avaliação da IA.
+
+**Figura 4 – Tempo por chamada ao Gemini em cada rodada**
+
+![Tempo por chamada ao Gemini em cada rodada](avaliacao-ia/figuras/7-latencia-rodadas.png)
+
+Fonte: Elaborado pelos autores (2026), a partir do estudo de avaliação da IA.
 
 ### 5.2 Falhas reveladas pelos testes
 
@@ -148,7 +174,7 @@ Pontos a discutir quando os dados estiverem disponíveis:
 As ameaças à validade do estudo quantitativo seguem a classificação de Wohlin et al. (2012) e estão detalhadas no [estudo de avaliação](avaliacao-ia/README.md#5-ameaças-à-validade). As principais limitações do trabalho são:
 
 - **Conector não oficial:** o WAHA, assim como a Evolution, não é a API oficial do WhatsApp. A disponibilidade do canal depende da sessão, e o número pode ser bloqueado. O caminho para produção é a WhatsApp Cloud API.
-- **Cota gratuita do Gemini:** a latência variou muito entre horários, e as mensagens podem ser usadas pelo Google. Por isso a IA só atende números da equipe, e o teste com usuários avalia o fluxo por menus.
+- **Cota gratuita do Gemini:** a latência variou muito entre horários, e as mensagens podem ser usadas pelo Google. Por isso, a IA para todos os números (`NUMEROS_IA=*`) fica restrita à demonstração, com aviso a quem testa; com pessoas de fora da equipe, como no teste com usuários, vale o fluxo por menus. Para clientes reais, seria necessário um plano pago.
 - **Dados da avaliação:** as mensagens e os perfis foram escritos pela equipe, e o cliente simulado responde sempre de forma cooperativa. Pessoas reais erram, mudam de ideia e mandam áudio.
 - **Ambiente de demonstração:** todas as vendas usam o cliente de demonstração da API de teste. Os dados da FAQ (horário, área de entrega, pagamento) são fictícios ([dados de demonstração](../dados-de-demonstracao.md)).
 - **Amostra:** o teste com usuários usa uma amostra pequena e de conveniência. Permite identificar dificuldades na jornada observada, com alcance limitado para generalizações.
