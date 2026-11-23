@@ -39,7 +39,7 @@ function criarFormulario() {
       'inteligência artificial do Google, na cota gratuita, na qual o Google pode usar o conteúdo para melhorar ' +
       'seus produtos. Por isso, não envie dados pessoais reais além do seu número de telefone, que fica visível ' +
       'para a equipe no painel de atendimento durante o teste.\n' +
-      '• O questionário não pede nome nem e-mail. Suas respostas são identificadas só por um código (P01 a P08) ' +
+      '• O questionário não pede nome nem e-mail. Suas respostas são identificadas só por um código (P01 a P10) ' +
       'e aparecem no relatório sem identificação.\n' +
       '• O material das sessões fica com acesso restrito à equipe e é apagado após a entrega do trabalho.');
   var consentimento = form.addMultipleChoiceItem()

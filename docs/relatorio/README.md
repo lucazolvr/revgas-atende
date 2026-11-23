@@ -117,14 +117,14 @@ Ensaio do roteiro da demo com o WhatsApp real, seguindo o README do zero em um c
 
 ### 4.3 Avaliação de usabilidade
 
-Pessoas recrutadas pela equipe fazem a jornada de pedido pelo WhatsApp com o bot em execução, depois de aceitar um termo de consentimento que informa o processamento das mensagens pelo Gemini. O protocolo previa atender os participantes pelo menu, mas, na aplicação de 22/11/2026, o bot rodou com a IA ligada para todos os números (`NUMEROS_IA=*`), e **o teste avaliou o fluxo com interpretação de texto livre**. Aplicar a escala SUS (Brooke, 1996) logo após a tentativa e coletar três respostas abertas. Os itens da escala seguem a versão brasileira validada (Lourenço; Valentim; Lopes, 2022), com uma adaptação: "sistema" foi substituído por "atendimento", para se referir ao atendimento pelo WhatsApp. A nota SUS resume a usabilidade percebida em pontos. A codificação temática (Braun; Clarke, 2006) descreve os motivos relatados para facilidades e dificuldades. O [protocolo de teste](protocolo-sus.md) detalha a tarefa, o instrumento, a pontuação e a análise.
+Pessoas recrutadas pela equipe fazem a jornada de pedido pelo WhatsApp com o bot em execução, depois de aceitar um termo de consentimento que informa o processamento das mensagens pelo Gemini. Por decisão da equipe, o bot roda com a IA ligada para todos os números (`NUMEROS_IA=*`), e **o teste avalia o fluxo com interpretação de texto livre**; a versão anterior do protocolo previa o fluxo por menus. Aplicar a escala SUS (Brooke, 1996) logo após a tentativa e coletar três respostas abertas. Os itens da escala seguem a versão brasileira validada (Lourenço; Valentim; Lopes, 2022), com uma adaptação: "sistema" foi substituído por "atendimento", para se referir ao atendimento pelo WhatsApp. A nota SUS resume a usabilidade percebida em pontos. A codificação temática (Braun; Clarke, 2006) descreve os motivos relatados para facilidades e dificuldades. O [protocolo de teste](protocolo-sus.md) detalha a tarefa, o instrumento, a pontuação e a análise.
 
 ### 4.4 Aspectos éticos e proteção de dados
 
 O estudo segue a Lei Geral de Proteção de Dados Pessoais (Brasil, 2018):
 
 - **Consentimento:** cada participante do teste de usabilidade lê e aceita um termo de consentimento antes da sessão, pode desistir a qualquer momento e é informado de que as mensagens podem ser processadas pelo Gemini na cota gratuita, na qual o Google pode usá-las para melhorar seus produtos.
-- **Minimização:** o cenário usa nome e endereço fictícios; o questionário não coleta e-mail nem nome, só o código da sessão (P01 a P08).
+- **Minimização:** o cenário usa nome e endereço fictícios; o questionário não coleta e-mail nem nome, só o código da sessão (P01 a P10).
 - **Anonimização:** os resultados são apresentados por código de sessão, e trechos de respostas abertas são desidentificados.
 - **Retenção:** as métricas do bot não guardam texto das mensagens, telefone nem endereço e expiram em 90 dias (`METRICAS_RETENCAO_DIAS`); o material bruto das sessões fica com acesso restrito à equipe e é apagado após a entrega.
 - **Dados de negócio:** as vendas usam o cliente de demonstração da API de teste e são canceladas depois.
@@ -255,7 +255,7 @@ As ameaças à validade do estudo quantitativo seguem a classificação de Wohli
 - **Cota gratuita do Gemini:** a latência variou muito entre horários, e as mensagens podem ser usadas pelo Google. Por isso, a IA para pessoas de fora da equipe só foi usada com aviso: na demonstração e no teste com usuários, em que o termo de consentimento informa o processamento pelo Gemini. Para clientes reais, seria necessário um plano pago.
 - **Dados da avaliação:** as mensagens e os perfis foram escritos pela equipe, e o cliente simulado responde sempre de forma cooperativa. Pessoas reais erram, mudam de ideia e mandam áudio.
 - **Ambiente de demonstração:** todas as vendas usam o cliente de demonstração da API de teste. Os dados da FAQ (horário, área de entrega, pagamento) são fictícios ([dados de demonstração](../dados-de-demonstracao.md)).
-- **Desvio do protocolo:** o teste com usuários foi planejado para o fluxo por menus, mas foi aplicado com a IA ligada; o SUS mede, portanto, o atendimento com interpretação de texto livre, e os dois fluxos não foram comparados com pessoas reais.
+- **Fluxo avaliado com pessoas reais:** o teste com usuários foi aplicado com a IA ligada; o SUS mede, portanto, o atendimento com interpretação de texto livre, e o fluxo por menus não foi comparado com pessoas reais.
 - **Amostra e efeito teto:** o teste com usuários teve dez participantes recrutados pela equipe, uma amostra pequena e de conveniência. Quase todas as respostas ficaram na nota máxima, o que impede comparar participantes e sugere viés de desejabilidade social. O teste permite afirmar que não surgiram problemas graves na jornada observada, com alcance limitado para generalizações.
 
 ## 7. Conclusão

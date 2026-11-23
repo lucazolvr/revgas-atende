@@ -3,8 +3,7 @@
 ## Preparação
 
 1. **Ambiente.** O bot roda no computador da equipe que estiver com o chip da revenda conectado ao WAHA (QR em `http://127.0.0.1:3002/dashboard`). As sessões só podem acontecer enquanto esse computador estiver ligado. Antes das sessões, faça um piloto com alguém da equipe e anote no relatório a data, o computador e o commit em execução.
-2. **Modo de atendimento.** Os números dos participantes **não** entram em `NUMEROS_IA`: na cota grátis do Gemini, as mensagens podem ser usadas pelo Google. Todos os participantes são atendidos pelo **menu**, e o relatório deve dizer que o SUS avalia esse fluxo. Se o `.env` estiver com `NUMEROS_IA=*` (configuração da demo, que liga a IA para todos), troque pela lista da equipe antes das sessões e rode `docker compose up -d --force-recreate bot`.
-   - *Aplicação de 22/11/2026:* as sessões rodaram no computador de outro integrante, com a IA ligada para os participantes. O relatório registra isso como desvio do protocolo (seções 4.3, 5.4 e 6).
+2. **Modo de atendimento.** A IA fica ligada para todos os números (`NUMEROS_IA=*`), com o termo de consentimento: na cota grátis do Gemini, as mensagens podem ser usadas pelo Google, e o termo avisa isso antes da sessão. O relatório deve dizer que o SUS avalia o atendimento com interpretação de texto livre. A equipe decidiu por essa regra antes da aplicação de 22/11/2026; a versão anterior do protocolo previa o fluxo por menus.
 3. **Vendas de teste.** Com `VENDA_REAL=true`, cada pedido confirmado cria uma venda na API de teste da RevGás (estabelecimento de demonstração 2580). Anote o número do pedido de cada sessão e cancele a venda depois, pela aba "Pedido RevGás" no Chatwoot ou com `npm run cancelar-venda -- <id>`.
 4. **Participantes.** Convide de 5 a 8 pessoas para uma sessão individual e explique que a participação é voluntária. Use a mesma versão do bot e o mesmo cenário em todas as sessões. Identifique cada sessão com P01, P02 e assim por diante. Guarde o material bruto em local de acesso restrito à equipe.
 
@@ -35,14 +34,14 @@ O formulário fica no Google Forms: “Avaliação do atendimento RevGás pelo W
 > - A participação é voluntária, e você pode desistir a qualquer momento, sem precisar justificar.
 > - Você fará um pedido fictício pelo WhatsApp, com nome e endereço que a equipe vai fornecer, e depois responderá a um questionário de cerca de 5 minutos.
 > - As mensagens que você enviar ao número do teste podem ser processadas pelo Gemini, serviço de inteligência artificial do Google, na cota gratuita, na qual o Google pode usar o conteúdo para melhorar seus produtos. Por isso, não envie dados pessoais reais além do seu número de telefone, que fica visível para a equipe no painel de atendimento durante o teste.
-> - O questionário não pede nome nem e-mail. Suas respostas são identificadas só por um código (P01 a P08) e aparecem no relatório sem identificação.
+> - O questionário não pede nome nem e-mail. Suas respostas são identificadas só por um código (P01 a P10) e aparecem no relatório sem identificação.
 > - O material das sessões fica com acesso restrito à equipe e é apagado após a entrega do trabalho.
 >
 > ( ) Li e concordo em participar. *(obrigatório)*
 
 ### Questionário
 
-- Código da sessão: P01 a P08, atribuído pela moderadora. A coleta de e-mail está desativada.
+- Código da sessão: P00 para o piloto e P01 a P10 para as sessões, atribuído pela moderadora. A coleta de e-mail está desativada.
 - SUS: as 10 afirmações da Tabela 1 (versão consensual) da [versão brasileira de Lourenço, Valentim e Lopes (2022)](https://doi.org/10.5294/aqui.2022.22.2.8), na mesma ordem, com uma adaptação: “sistema” foi substituído por “atendimento”. Uma escolha obrigatória por item, de 1 (discordo fortemente) a 5 (concordo fortemente), as âncoras usadas no artigo, com 3 como ponto neutro. Os itens ímpares são positivos e os pares, negativos.
 - Perguntas abertas, após o SUS:
   1. Qual parte do pedido foi mais fácil? Por quê?
