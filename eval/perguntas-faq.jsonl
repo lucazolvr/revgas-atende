@@ -1,0 +1,27 @@
+{"id":1,"pergunta":"vcs entregam em timon?","esperado":["config/faq/area-entrega.md"]}
+{"id":2,"pergunta":"chega no mocambinho?","esperado":["config/faq/area-entrega.md"]}
+{"id":3,"pergunta":"quanto tempo demora pra chegar o gas","esperado":["config/faq/area-entrega.md"]}
+{"id":4,"pergunta":"moro no parque piaui, vcs vem aqui?","esperado":["config/faq/area-entrega.md"]}
+{"id":5,"pergunta":"tem gás no domingo?","esperado":["config/faq/horario.md"]}
+{"id":6,"pergunta":"ate que horas vcs abrem hj","esperado":["config/faq/horario.md"]}
+{"id":7,"pergunta":"feriado funciona?","esperado":["config/faq/horario.md"]}
+{"id":8,"pergunta":"posso pedir umas 19h50 ainda?","esperado":["config/faq/horario.md"]}
+{"id":9,"pergunta":"aceita pix?","esperado":["config/faq/pagamento.md"]}
+{"id":10,"pergunta":"o entregador leva troco pra 100?","esperado":["config/faq/pagamento.md"]}
+{"id":11,"pergunta":"da pra parcelar no cartao","esperado":["config/faq/pagamento.md"]}
+{"id":12,"pergunta":"cobra taxa pra entregar?","esperado":["config/faq/pagamento.md"]}
+{"id":13,"pergunta":"qto ta o p13","esperado":["config/catalogo.json","config/faq/preco.md"]}
+{"id":14,"pergunta":"qual o valor do botijao hoje","esperado":["config/catalogo.json","config/faq/preco.md"]}
+{"id":15,"pergunta":"ta caro o gas ai?","esperado":["config/catalogo.json","config/faq/preco.md"]}
+{"id":16,"pergunta":"o que eu faço se sentir cheiro de gas em casa","esperado":["config/faq/seguranca.md"]}
+{"id":17,"pergunta":"a mangueira ta chiando, posso arrumar sozinho?","esperado":["config/faq/seguranca.md"]}
+{"id":18,"pergunta":"preciso devolver o vazio?","esperado":["config/faq/troca-botijao.md"]}
+{"id":19,"pergunta":"nao tenho casco, consigo comprar mesmo assim?","esperado":["config/faq/troca-botijao.md"]}
+{"id":20,"pergunta":"meu botijao ta todo enferrujado, vcs trocam?","esperado":["config/faq/troca-botijao.md"]}
+{"id":21,"pergunta":"vocês vendem água mineral?","esperado":[]}
+{"id":22,"pergunta":"qual o time de vocês?","esperado":[]}
+{"id":23,"pergunta":"vcs vendem fogao?","esperado":[]}
+{"id":24,"pergunta":"tem vaga de emprego ai","esperado":[]}
+{"id":25,"pergunta":"qual o cnpj da empresa","esperado":[]}
+{"id":26,"pergunta":"vcs consertam fogão?","esperado":[]}
+{"id":27,"pergunta":"vai chover amanha em teresina?","esperado":[]}

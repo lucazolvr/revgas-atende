@@ -117,3 +117,21 @@ export function wilcoxonPareado(a: number[], b: number[]) {
   const z = sigma ? (Math.abs(w - mu) - 0.5) / sigma : 0;
   return { n, wMais, wMenos, z, p: Math.min(1, 2 * (1 - cdfNormal(z))) };
 }
+
+/**
+ * Teste de McNemar exato (binomial, bicaudal) para dois métodos nas mesmas perguntas.
+ * `soA` = perguntas que só o método A acertou; `soB` = só o B. As que os dois acertaram ou
+ * erraram não entram. Com poucas discordâncias, o teste tem pouco poder: p alto não prova empate.
+ */
+export function mcnemarExato(soA: number, soB: number) {
+  const n = soA + soB;
+  if (n === 0) return { n, p: 1 };
+  const k = Math.min(soA, soB);
+  let cauda = 0;
+  let comb = 1; // C(n, 0)
+  for (let i = 0; i <= k; i++) {
+    cauda += comb;
+    comb = (comb * (n - i)) / (i + 1);
+  }
+  return { n, p: Math.min(1, (2 * cauda) / 2 ** n) };
+}

@@ -298,6 +298,8 @@ npm run eval:metricas         # resumo do uso real (teste com usuários/demo), a
 | `eval/cliente-simulado.ts` | Cliente simulado que conversa com o motor real |
 | `eval/resultados/` | Resultados por rodada, em Markdown (tabelas) e JSON (dados brutos) |
 
+A avaliação da busca na FAQ (RAG híbrido × vetorial) está em [avaliacao-rag.md](avaliacao-rag.md) (`npm run eval:rag`).
+
 ## 8. Para o relatório final (seção 5, "Resultados")
 
 Texto pronto para as linhas correspondentes da tabela de resultados do [relatório da equipe](../README.md):
