@@ -25,7 +25,7 @@ Depois das sessões, `npm run eval:metricas` resume o uso real a partir dos regi
 
 ## Formulário
 
-O formulário fica no Google Forms: “Avaliação do atendimento RevGás pelo WhatsApp”. Para criá-lo, rode o script [formulario-sus.gs](formulario-sus.gs) em script.google.com (as instruções estão no começo do arquivo); ele monta todas as seções abaixo. A primeira seção é o termo de consentimento (Lei nº 13.709/2018, LGPD); sem o “Li e concordo”, o formulário não avança. A pessoa lê e aceita o termo **antes** de começar a conversa com o bot.
+O formulário fica no Google Forms: “Avaliação do atendimento RevGás pelo WhatsApp”. Para criá-lo, rode o script [formulario-sus.gs](formulario-sus.gs) em script.google.com (as instruções estão no começo do arquivo); ele monta todas as seções abaixo. Formulário criado em 22/11/2026; link para os participantes: <https://docs.google.com/forms/d/e/1FAIpQLSctp1MYC3UgQWIgiB95XkqblI6BJYuDQqF-3aH5uOD5j_Yfdg/viewform> (o link de edição fica só com a equipe). A primeira seção é o termo de consentimento (Lei nº 13.709/2018, LGPD); sem o “Li e concordo”, o formulário não avança. A pessoa lê e aceita o termo **antes** de começar a conversa com o bot.
 
 ### Termo de consentimento (primeira seção do formulário)
 
