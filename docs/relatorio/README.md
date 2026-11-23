@@ -2,7 +2,7 @@
 
 Projeto de Extensão VI · Transformação Digital · 2026.2
 
-**Versão para revisão.** Os resultados quantitativos da avaliação da IA ([issue #2](https://github.com/lucazolvr/revgas-atende/issues/2)) já estão incorporados, e a instalação do zero pelo README e os cinco cenários do ensaio com o WhatsApp real foram validados em 22/11/2026. O vídeo do plano B foi gravado, e o teste com usuários (SUS) foi aplicado em 22/11/2026. Falta registrar as anotações de observação das sessões (seção 5.4).
+**Versão para revisão.** Os resultados quantitativos da avaliação da IA ([issue #2](https://github.com/lucazolvr/revgas-atende/issues/2)) já estão incorporados, e a instalação do zero pelo README e os cinco cenários do ensaio com o WhatsApp real foram validados em 22/11/2026. O vídeo do plano B foi gravado, e o teste com usuários (SUS) foi aplicado em 22/11/2026. Os resultados estão na seção 5.4.
 
 **Formato.** Este rascunho já segue a estrutura, as citações (NBR 10520, autor-data) e as referências (NBR 6023) da ABNT. A formatação de página (A4, margens, fonte, espaçamento, paginação) e os elementos pré-textuais (capa, sumário) entram na versão em Word, que segue o modelo de relatório usado pela turma; veja [Para a versão final](#para-a-versão-final-abnt).
 
@@ -117,7 +117,7 @@ Ensaio do roteiro da demo com o WhatsApp real, seguindo o README do zero em um c
 
 ### 4.3 Avaliação de usabilidade
 
-Recrutar de 5 a 8 pessoas para fazer a jornada de pedido pelo WhatsApp com o bot em execução. Durante as sessões, `NUMEROS_IA` fica com a lista da equipe, sem `*`, e os participantes não entram nela, porque na cota grátis do Gemini as mensagens podem ser usadas pelo Google. Por isso, **o teste avalia o fluxo por menus**. Aplicar a escala SUS (Brooke, 1996) logo após a tentativa e coletar três respostas abertas. Os itens da escala seguem a versão brasileira validada (Lourenço; Valentim; Lopes, 2022), com uma adaptação: "sistema" foi substituído por "atendimento", para se referir ao atendimento pelo WhatsApp. A nota SUS resume a usabilidade percebida em pontos. A codificação temática (Braun; Clarke, 2006) descreve os motivos relatados para facilidades e dificuldades. O [protocolo de teste](protocolo-sus.md) detalha a tarefa, o instrumento, a pontuação e a análise.
+Pessoas recrutadas pela equipe fazem a jornada de pedido pelo WhatsApp com o bot em execução, depois de aceitar um termo de consentimento que informa o processamento das mensagens pelo Gemini. O protocolo previa atender os participantes pelo menu, mas, na aplicação de 22/11/2026, o bot rodou com a IA ligada para os participantes, e **o teste avaliou o fluxo com interpretação de texto livre**. Aplicar a escala SUS (Brooke, 1996) logo após a tentativa e coletar três respostas abertas. Os itens da escala seguem a versão brasileira validada (Lourenço; Valentim; Lopes, 2022), com uma adaptação: "sistema" foi substituído por "atendimento", para se referir ao atendimento pelo WhatsApp. A nota SUS resume a usabilidade percebida em pontos. A codificação temática (Braun; Clarke, 2006) descreve os motivos relatados para facilidades e dificuldades. O [protocolo de teste](protocolo-sus.md) detalha a tarefa, o instrumento, a pontuação e a análise.
 
 ### 4.4 Aspectos éticos e proteção de dados
 
@@ -200,7 +200,24 @@ O ensaio também confirmou a correção do PR #19: mensagens de um grupo em que 
 
 ### 5.4 Avaliação pelo SUS e respostas abertas
 
-**Sessões.** Dez pessoas participaram em 22/11/2026, identificadas de P01 a P10. Todas aceitaram o termo de consentimento, e os dez questionários estão completos. O piloto (P00) não foi registrado no formulário. [Completar com as anotações das sessões: modo de atendimento (menu ou IA), quantas pessoas concluíram o pedido, tempo, onde travaram e se precisaram de ajuda.]
+**Sessões.** As sessões aconteceram em 22/11/2026, entre 21h43 e 22h25, com o bot em execução no computador de um integrante da equipe e a IA ligada para os participantes. O formulário recebeu dez questionários completos, identificados de P01 a P10, todos com o termo de consentimento aceito; o piloto (P00) não foi registrado. No Chatwoot, foram registradas oito conversas de participantes, e todas terminaram em venda confirmada, sem transferência para atendente (Tabela 3). A diferença entre dez questionários e oito conversas não pôde ser esclarecida, porque, para preservar o anonimato, as conversas não foram ligadas aos códigos do formulário.
+
+**Tabela 3 – Conversas registradas nas sessões do teste com usuários**
+
+| Conversa | Início | Mensagens do cliente | Tempo até a venda | Resultado |
+| --- | --- | ---: | ---: | --- |
+| 1 | 21h43 | 9 | 1,7 min | Venda |
+| 2 | 21h44 | 10 | 3,7 min | Venda |
+| 3 | 21h44 | 9 | 2,3 min | Venda |
+| 4 | 21h48 | 10 | 11,6 min | Venda |
+| 5 | 21h56 | 4 | 0,6 min | Venda |
+| 6 | 21h59 | 9 | 1,4 min | Venda |
+| 7 | 22h06 | 10 | 3,1 min | Venda |
+| 8 | 22h14 | 9 | 2,0 min | Venda |
+
+Fonte: Elaborado pelos autores (2026).
+
+A mediana foi de 9 mensagens (de 4 a 10) e de 2,2 minutos até a venda (de 0,6 a 11,6 minutos; média de 3,3 minutos, ou 2,1 sem a conversa mais longa). Com pessoas reais, o caminho com IA ficou entre os dois resultados do experimento com cliente simulado (mediana de 6 mensagens com IA e de 11 pelo menu), o que é coerente com a observação de que pessoas reais nem sempre mandam o pedido completo numa única mensagem. As oito vendas de teste foram registradas na API de teste da RevGás.
 
 **Nota SUS.** A nota de cada sessão foi calculada como em Brooke (1996), de 0 a 100 pontos. A média foi de 99,0 pontos, a mediana de 100 e o intervalo observado de 90 a 100 (desvio-padrão de 3,2). Nove participantes deram a nota máxima (Tabela 2).
 
@@ -235,9 +252,10 @@ Fonte: Elaborado pelos autores (2026).
 As ameaças à validade do estudo quantitativo seguem a classificação de Wohlin et al. (2012) e estão detalhadas no [estudo de avaliação](avaliacao-ia/README.md#5-ameaças-à-validade). As principais limitações do trabalho são:
 
 - **Conector não oficial:** o WAHA, assim como a Evolution, não é a API oficial do WhatsApp. A disponibilidade do canal depende da sessão, e o número pode ser bloqueado. O caminho para produção é a WhatsApp Cloud API.
-- **Cota gratuita do Gemini:** a latência variou muito entre horários, e as mensagens podem ser usadas pelo Google. Por isso, a IA para todos os números (`NUMEROS_IA=*`) fica restrita à demonstração, com aviso a quem testa; com pessoas de fora da equipe, como no teste com usuários, vale o fluxo por menus. Para clientes reais, seria necessário um plano pago.
+- **Cota gratuita do Gemini:** a latência variou muito entre horários, e as mensagens podem ser usadas pelo Google. Por isso, a IA para pessoas de fora da equipe só foi usada com aviso: na demonstração e no teste com usuários, em que o termo de consentimento informa o processamento pelo Gemini. Para clientes reais, seria necessário um plano pago.
 - **Dados da avaliação:** as mensagens e os perfis foram escritos pela equipe, e o cliente simulado responde sempre de forma cooperativa. Pessoas reais erram, mudam de ideia e mandam áudio.
 - **Ambiente de demonstração:** todas as vendas usam o cliente de demonstração da API de teste. Os dados da FAQ (horário, área de entrega, pagamento) são fictícios ([dados de demonstração](../dados-de-demonstracao.md)).
+- **Desvio do protocolo:** o teste com usuários foi planejado para o fluxo por menus, mas foi aplicado com a IA ligada; o SUS mede, portanto, o atendimento com interpretação de texto livre, e os dois fluxos não foram comparados com pessoas reais.
 - **Amostra e efeito teto:** o teste com usuários teve dez participantes recrutados pela equipe, uma amostra pequena e de conveniência. Quase todas as respostas ficaram na nota máxima, o que impede comparar participantes e sugere viés de desejabilidade social. O teste permite afirmar que não surgiram problemas graves na jornada observada, com alcance limitado para generalizações.
 
 ## 7. Conclusão
