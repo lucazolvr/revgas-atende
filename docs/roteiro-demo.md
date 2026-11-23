@@ -23,7 +23,7 @@ Base: [seção 9 do documento de design](superpowers/specs/2026-11-18-revgas-ate
 | 1:45–2:50 | Pedido pelo menu | Do número fora de `NUMEROS_IA`, inicie com “oi” e escolha as opções do menu. Informe os dados de demonstração, confira o resumo e confirme. Mostre que o caminho sem IA também chega à venda. |
 | 2:50–3:30 | Dúvida frequente (RAG) | Pergunte “Vocês entregam no domingo?”. A FAQ de demonstração responde com o horário de domingo (8h às 13h, dado fictício). Mostre que a resposta vem da base de conhecimento. |
 | 3:30–4:50 | Emergência simulada | Em conversa separada, envie “Tô sentindo cheiro de gás”. Mostre as orientações de segurança imediatas e a conversa no Chatwoot como urgente, com etiquetas de vazamento. O atendente responde pelo painel e a resposta chega ao WhatsApp. |
-| 4:50–5:30 | Avaliação | Mostre os resultados medidos: intenção 100%, F1 de 97,2% e −45% de mensagens com IA (Wilcoxon p = 0,00014), e a síntese do teste com usuários (SUS). Identifique qualquer medição ainda pendente. |
+| 4:50–5:30 | Avaliação | Mostre os resultados medidos: intenção 100%, F1 de 97,2% e −45% de mensagens com IA (Wilcoxon p = 0,00014), e a síntese do teste com usuários: dez participantes, SUS médio de 99,0 (mediana de 100), oito pedidos concluídos com mediana de 9 mensagens, com a ressalva do efeito teto. |
 
 Depois da demo, cancele as vendas de teste pela aba “Pedido RevGás” ou com `npm run cancelar-venda -- <id>`.
 

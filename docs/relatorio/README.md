@@ -2,7 +2,7 @@
 
 Projeto de Extensão VI · Transformação Digital · 2026.2
 
-**Versão para revisão.** Os resultados quantitativos da avaliação da IA ([issue #2](https://github.com/lucazolvr/revgas-atende/issues/2)) já estão incorporados, e a instalação do zero pelo README e os cinco cenários do ensaio com o WhatsApp real foram validados em 22/11/2026. O vídeo do plano B foi gravado, e o teste com usuários (SUS) foi aplicado em 22/11/2026. Os resultados estão na seção 5.4.
+**Versão para revisão da equipe.** Os resultados quantitativos da avaliação da IA ([issue #2](https://github.com/lucazolvr/revgas-atende/issues/2)) já estão incorporados, e a instalação do zero pelo README e os cinco cenários do ensaio com o WhatsApp real foram validados em 22/11/2026. O vídeo do plano B foi gravado, e o teste com usuários (SUS) foi aplicado em 22/11/2026, com os resultados na seção 5.4. Todas as seções estão completas; falta a revisão da equipe.
 
 **Formato.** Este rascunho já segue a estrutura, as citações (NBR 10520, autor-data) e as referências (NBR 6023) da ABNT. A formatação de página (A4, margens, fonte, espaçamento, paginação) e os elementos pré-textuais (capa, sumário) entram na versão em Word, que segue o modelo de relatório usado pela turma; veja [Para a versão final](#para-a-versão-final-abnt).
 
@@ -117,7 +117,7 @@ Ensaio do roteiro da demo com o WhatsApp real, seguindo o README do zero em um c
 
 ### 4.3 Avaliação de usabilidade
 
-Pessoas recrutadas pela equipe fazem a jornada de pedido pelo WhatsApp com o bot em execução, depois de aceitar um termo de consentimento que informa o processamento das mensagens pelo Gemini. O protocolo previa atender os participantes pelo menu, mas, na aplicação de 22/11/2026, o bot rodou com a IA ligada para os participantes, e **o teste avaliou o fluxo com interpretação de texto livre**. Aplicar a escala SUS (Brooke, 1996) logo após a tentativa e coletar três respostas abertas. Os itens da escala seguem a versão brasileira validada (Lourenço; Valentim; Lopes, 2022), com uma adaptação: "sistema" foi substituído por "atendimento", para se referir ao atendimento pelo WhatsApp. A nota SUS resume a usabilidade percebida em pontos. A codificação temática (Braun; Clarke, 2006) descreve os motivos relatados para facilidades e dificuldades. O [protocolo de teste](protocolo-sus.md) detalha a tarefa, o instrumento, a pontuação e a análise.
+Pessoas recrutadas pela equipe fazem a jornada de pedido pelo WhatsApp com o bot em execução, depois de aceitar um termo de consentimento que informa o processamento das mensagens pelo Gemini. O protocolo previa atender os participantes pelo menu, mas, na aplicação de 22/11/2026, o bot rodou com a IA ligada para todos os números (`NUMEROS_IA=*`), e **o teste avaliou o fluxo com interpretação de texto livre**. Aplicar a escala SUS (Brooke, 1996) logo após a tentativa e coletar três respostas abertas. Os itens da escala seguem a versão brasileira validada (Lourenço; Valentim; Lopes, 2022), com uma adaptação: "sistema" foi substituído por "atendimento", para se referir ao atendimento pelo WhatsApp. A nota SUS resume a usabilidade percebida em pontos. A codificação temática (Braun; Clarke, 2006) descreve os motivos relatados para facilidades e dificuldades. O [protocolo de teste](protocolo-sus.md) detalha a tarefa, o instrumento, a pontuação e a análise.
 
 ### 4.4 Aspectos éticos e proteção de dados
 
@@ -200,7 +200,7 @@ O ensaio também confirmou a correção do PR #19: mensagens de um grupo em que 
 
 ### 5.4 Avaliação pelo SUS e respostas abertas
 
-**Sessões.** As sessões aconteceram em 22/11/2026, entre 21h43 e 22h25, com o bot em execução no computador de um integrante da equipe e a IA ligada para os participantes. O formulário recebeu dez questionários completos, identificados de P01 a P10, todos com o termo de consentimento aceito; o piloto (P00) não foi registrado. No Chatwoot, foram registradas oito conversas de participantes, e todas terminaram em venda confirmada, sem transferência para atendente (Tabela 3). A diferença entre dez questionários e oito conversas não pôde ser esclarecida, porque, para preservar o anonimato, as conversas não foram ligadas aos códigos do formulário.
+**Sessões.** As sessões aconteceram em 22/11/2026, entre 21h43 e 22h25, com o bot em execução no computador de um integrante da equipe e a IA ligada para todos os números (`NUMEROS_IA=*`). O formulário recebeu dez questionários completos, identificados de P01 a P10, todos com o termo de consentimento aceito; o piloto (P00) não foi registrado. No Chatwoot, foram registradas oito conversas de participantes, e todas terminaram em venda confirmada, sem transferência para atendente (Tabela 3). A diferença entre dez questionários e oito conversas não pôde ser esclarecida, porque, para preservar o anonimato, as conversas não foram ligadas aos códigos do formulário.
 
 **Tabela 3 – Conversas registradas nas sessões do teste com usuários**
 
@@ -217,7 +217,7 @@ O ensaio também confirmou a correção do PR #19: mensagens de um grupo em que 
 
 Fonte: Elaborado pelos autores (2026).
 
-A mediana foi de 9 mensagens (de 4 a 10) e de 2,2 minutos até a venda (de 0,6 a 11,6 minutos; média de 3,3 minutos, ou 2,1 sem a conversa mais longa). Com pessoas reais, o caminho com IA ficou entre os dois resultados do experimento com cliente simulado (mediana de 6 mensagens com IA e de 11 pelo menu), o que é coerente com a observação de que pessoas reais nem sempre mandam o pedido completo numa única mensagem. As oito vendas de teste foram registradas na API de teste da RevGás.
+A mediana foi de 9 mensagens (de 4 a 10) e de 2,2 minutos até a venda (de 0,6 a 11,6 minutos; média de 3,3 minutos, ou 2,1 sem a conversa mais longa). Com pessoas reais, o caminho com IA ficou entre os dois resultados do experimento com cliente simulado (mediana de 6 mensagens com IA e de 11 pelo menu), o que é coerente com a observação de que pessoas reais nem sempre mandam o pedido completo numa única mensagem. As oito vendas de teste foram registradas na API de teste da RevGás e canceladas depois das sessões.
 
 **Nota SUS.** A nota de cada sessão foi calculada como em Brooke (1996), de 0 a 100 pontos. A média foi de 99,0 pontos, a mediana de 100 e o intervalo observado de 90 a 100 (desvio-padrão de 3,2). Nove participantes deram a nota máxima (Tabela 2).
 
@@ -299,11 +299,11 @@ WOHLIN, C. *et al.* **Experimentation in software engineering**. Berlin: Springe
 Checklist para montar o documento entregue, conforme a issue [#4](https://github.com/lucazolvr/revgas-atende/issues/4). A faculdade não tem modelo próprio; a turma usa como referência o relatório final de outro grupo da disciplina, que define a capa e a ordem dos elementos.
 
 - [x] **Ferramenta:** Word, gerado a partir deste rascunho (decisão da equipe).
-- [ ] **Pré-textuais, no modelo da turma:** capa (instituição, curso, Projeto de Extensão VI, professora, nomes completos da equipe, título, Teresina, 2026), resumo e palavras-chave, lista de abreviaturas e siglas e sumário (NBR 6027). Falta o sobrenome da professora.
-- [ ] **Página:** A4; margens de 3 cm em cima e à esquerda e de 2 cm embaixo e à direita; Arial ou Times New Roman 12 no texto e 10 em citações longas, notas, legendas e fontes; espaçamento 1,5 no texto e simples em citações longas, referências e legendas.
-- [ ] **Paginação:** contada a partir da página seguinte à capa (não há folha de rosto no modelo da turma) e mostrada a partir da introdução, no canto superior direito.
-- [ ] **Seções:** numeração progressiva (NBR 6024), com as seções primárias e secundárias em maiúsculas no sumário, e listas como alíneas a), b), c).
-- [ ] **Figuras e tabelas:** título acima (“Figura 1 – Acurácia por intenção”) e fonte abaixo (“Fonte: Elaborado pelos autores (2026).”). As 7 figuras do [estudo de avaliação](avaliacao-ia/figuras/) estão em 200 dpi e podem entrar direto.
-- [ ] **Referências:** em ordem alfabética, alinhadas à esquerda, espaçamento simples e uma linha em branco entre elas (NBR 6023). Só entram obras citadas no texto.
+- [x] **Pré-textuais, no modelo da turma:** capa (instituição, curso, Projeto de Extensão VI, professor, nomes completos da equipe, título, Teresina, 2026), resumo e palavras-chave, lista de abreviaturas e siglas e sumário (NBR 6027).
+- [x] **Página:** A4; margens de 3 cm em cima e à esquerda e de 2 cm embaixo e à direita; Arial ou Times New Roman 12 no texto e 10 em citações longas, notas, legendas e fontes; espaçamento 1,5 no texto e simples em citações longas, referências e legendas.
+- [x] **Paginação:** contada a partir da página seguinte à capa (não há folha de rosto no modelo da turma) e mostrada a partir da introdução, no canto superior direito.
+- [x] **Seções:** numeração progressiva (NBR 6024), com as seções primárias e secundárias em maiúsculas no sumário, e listas como alíneas a), b), c).
+- [x] **Figuras e tabelas:** título acima (“Figura 1 – Acurácia por intenção”) e fonte abaixo (“Fonte: Elaborado pelos autores (2026).”). As 7 figuras do [estudo de avaliação](avaliacao-ia/figuras/) estão em 200 dpi e podem entrar direto.
+- [x] **Referências:** em ordem alfabética, alinhadas à esquerda, espaçamento simples e uma linha em branco entre elas (NBR 6023). Só entram obras citadas no texto.
 - [ ] **Pós-textuais:** apêndices com o [protocolo de teste](protocolo-sus.md) e o questionário SUS, e com o [roteiro da demo](../roteiro-demo.md), se a equipe quiser.
-- [ ] **Dados fictícios declarados:** horário, bairros e regras da FAQ são de demonstração; as métricas são reais ([dados de demonstração](../dados-de-demonstracao.md)).
+- [x] **Dados fictícios declarados:** horário, bairros e regras da FAQ são de demonstração; as métricas são reais ([dados de demonstração](../dados-de-demonstracao.md)).

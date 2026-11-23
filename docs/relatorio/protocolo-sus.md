@@ -20,7 +20,7 @@ Observe sem antecipar respostas. Registre se houve confirmação, abandono ou tr
 
 | Sessão | Data e hora | Concluiu? | Mensagens até concluir | Tempo | Onde travou | Precisou de ajuda? | Nº do pedido (cancelado?) |
 | --- | --- | --- | ---: | --- | --- | --- | --- |
-| P01 | | | | | | | |
+| — | Ver a Tabela 3 do relatório (seção 5.4): oito conversas em 22/11/2026, todas com venda, sem ligação com os códigos do formulário | | | | | | Canceladas |
 
 Depois das sessões, `npm run eval:metricas` resume o uso real a partir dos registros do bot (`dados/metricas*.jsonl`), sem texto das mensagens nem dados pessoais. Use esse resumo para conferir as mensagens e os tempos anotados.
 
@@ -65,6 +65,6 @@ Leia todas as respostas, destaque passagens relevantes e atribua códigos curtos
 
 | Tema | Códigos associados | Pessoas distintas | Evidência desidentificada | Ajuste proposto |
 | --- | --- | ---: | --- | --- |
-| A preencher após a coleta | | | | |
+| Ver o Quadro 4 do relatório (seção 5.4) | | | | |
 
 Fontes do método: [Brooke, 1996](https://hci-studies.org/methods-and-measures/downloads/SUS_Brooke1996.pdf), [Lourenço, Valentim e Lopes, 2022](https://doi.org/10.5294/aqui.2022.22.2.8) e [Braun e Clarke, 2006](https://doi.org/10.1191/1478088706qp063oa).
