@@ -25,7 +25,7 @@ Depois das sessões, `npm run eval:metricas` resume o uso real a partir dos regi
 
 ## Formulário
 
-O formulário está no Google Forms: “Avaliação do atendimento RevGás pelo WhatsApp”. A primeira seção é o termo de consentimento (Lei nº 13.709/2018, LGPD); sem o “Li e concordo”, o formulário não avança. A pessoa lê e aceita o termo **antes** de começar a conversa com o bot.
+O formulário fica no Google Forms: “Avaliação do atendimento RevGás pelo WhatsApp”. Para criá-lo, rode o script [formulario-sus.gs](formulario-sus.gs) em script.google.com (as instruções estão no começo do arquivo); ele monta todas as seções abaixo. A primeira seção é o termo de consentimento (Lei nº 13.709/2018, LGPD); sem o “Li e concordo”, o formulário não avança. A pessoa lê e aceita o termo **antes** de começar a conversa com o bot.
 
 ### Termo de consentimento (primeira seção do formulário)
 
@@ -42,7 +42,7 @@ O formulário está no Google Forms: “Avaliação do atendimento RevGás pelo 
 ### Questionário
 
 - Código da sessão: P01 a P08, atribuído pela moderadora. A coleta de e-mail está desativada.
-- SUS: as 10 afirmações da Tabela 1 da [versão brasileira de Lourenço, Valentim e Lopes (2022)](https://doi.org/10.5294/aqui.2022.22.2.8), na mesma ordem, com uma adaptação: “sistema” foi substituído por “atendimento”. Uma escolha obrigatória por item, de 1 (Discordo totalmente) a 5 (Concordo totalmente), com 3 como ponto neutro. Os itens ímpares são positivos e os pares, negativos.
+- SUS: as 10 afirmações da Tabela 1 (versão consensual) da [versão brasileira de Lourenço, Valentim e Lopes (2022)](https://doi.org/10.5294/aqui.2022.22.2.8), na mesma ordem, com uma adaptação: “sistema” foi substituído por “atendimento”. Uma escolha obrigatória por item, de 1 (discordo fortemente) a 5 (concordo fortemente), as âncoras usadas no artigo, com 3 como ponto neutro. Os itens ímpares são positivos e os pares, negativos.
 - Perguntas abertas, após o SUS:
   1. Qual parte do pedido foi mais fácil? Por quê?
   2. Em que momento você teve dificuldade ou ficou sem saber o que fazer? O que aconteceu?
