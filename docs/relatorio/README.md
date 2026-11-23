@@ -2,13 +2,13 @@
 
 Projeto de Extensão VI · Transformação Digital · 2026.2
 
-**Versão para revisão.** Os resultados quantitativos da avaliação da IA ([issue #2](https://github.com/lucazolvr/revgas-atende/issues/2)) já estão incorporados, e a instalação do zero pelo README e os cinco cenários do ensaio com o WhatsApp real foram validados em 22/11/2026. Faltam o teste com usuários (SUS), o vídeo do plano B e a conclusão baseada neles.
+**Versão para revisão.** Os resultados quantitativos da avaliação da IA ([issue #2](https://github.com/lucazolvr/revgas-atende/issues/2)) já estão incorporados, e a instalação do zero pelo README e os cinco cenários do ensaio com o WhatsApp real foram validados em 22/11/2026. O vídeo do plano B foi gravado, e o teste com usuários (SUS) foi aplicado em 22/11/2026. Falta registrar as anotações de observação das sessões (seção 5.4).
 
 **Formato.** Este rascunho já segue a estrutura, as citações (NBR 10520, autor-data) e as referências (NBR 6023) da ABNT. A formatação de página (A4, margens, fonte, espaçamento, paginação) e os elementos pré-textuais (capa, sumário) entram na versão em Word, que segue o modelo de relatório usado pela turma; veja [Para a versão final](#para-a-versão-final-abnt).
 
 ## Resumo
 
-Pedidos de gás recebidos pelo WhatsApp costumam ser transcritos à mão para o sistema de gestão da revenda, o que exige conferir dados em dois sistemas e gera retrabalho. Este trabalho apresenta o RevGás Atende, um atendente virtual que coleta e valida o pedido na própria conversa, registra a venda no ERP RevGás somente após a confirmação do cliente e transfere a conversa para um atendente humano no Chatwoot quando necessário. A inteligência artificial (Gemini) interpreta mensagens em texto livre, enquanto preço, produto e criação da venda são decididos pelo código; sem IA, o mesmo fluxo funciona por menus numerados. A avaliação quantitativa usou 60 mensagens rotuladas e um experimento pareado com 20 perfis de cliente. A IA identificou a intenção em 100% das mensagens, extraiu os dados com F1 de 97,2% e reduziu em 45% a mediana de mensagens do cliente em relação ao menu (teste de Wilcoxon, p < 0,001), sem registrar pedidos errados. Os testes também revelaram defeitos, como respostas indevidas em grupos do WhatsApp, e motivaram a troca do conector do WhatsApp. No ensaio de ponta a ponta com o WhatsApp real, os cinco cenários previstos (pedido com IA, pedido pelo menu, dúvida, emergência e resposta do atendente) tiveram o resultado esperado. [Completar com a nota SUS.]
+Pedidos de gás recebidos pelo WhatsApp costumam ser transcritos à mão para o sistema de gestão da revenda, o que exige conferir dados em dois sistemas e gera retrabalho. Este trabalho apresenta o RevGás Atende, um atendente virtual que coleta e valida o pedido na própria conversa, registra a venda no ERP RevGás somente após a confirmação do cliente e transfere a conversa para um atendente humano no Chatwoot quando necessário. A inteligência artificial (Gemini) interpreta mensagens em texto livre, enquanto preço, produto e criação da venda são decididos pelo código; sem IA, o mesmo fluxo funciona por menus numerados. A avaliação quantitativa usou 60 mensagens rotuladas e um experimento pareado com 20 perfis de cliente. A IA identificou a intenção em 100% das mensagens, extraiu os dados com F1 de 97,2% e reduziu em 45% a mediana de mensagens do cliente em relação ao menu (teste de Wilcoxon, p < 0,001), sem registrar pedidos errados. Os testes também revelaram defeitos, como respostas indevidas em grupos do WhatsApp, e motivaram a troca do conector do WhatsApp. No ensaio de ponta a ponta com o WhatsApp real, os cinco cenários previstos (pedido com IA, pedido pelo menu, dúvida, emergência e resposta do atendente) tiveram o resultado esperado. No teste de usabilidade com dez participantes, a nota SUS média foi de 99,0 pontos (mediana de 100), com efeito teto que limita a interpretação.
 
 **Palavras-chave:** chatbot; atendimento ao cliente; WhatsApp; modelos de linguagem; geração aumentada por recuperação.
 
@@ -200,13 +200,35 @@ O ensaio também confirmou a correção do PR #19: mensagens de um grupo em que 
 
 ### 5.4 Avaliação pelo SUS e respostas abertas
 
-**Pendente.** Registrar as sessões válidas, a média, a mediana e o intervalo das notas, os temas das respostas abertas, quantas pessoas citaram cada tema e os ajustes propostos.
+**Sessões.** Dez pessoas participaram em 22/11/2026, identificadas de P01 a P10. Todas aceitaram o termo de consentimento, e os dez questionários estão completos. O piloto (P00) não foi registrado no formulário. [Completar com as anotações das sessões: modo de atendimento (menu ou IA), quantas pessoas concluíram o pedido, tempo, onde travaram e se precisaram de ajuda.]
 
-Pontos a discutir quando os dados estiverem disponíveis:
+**Nota SUS.** A nota de cada sessão foi calculada como em Brooke (1996), de 0 a 100 pontos. A média foi de 99,0 pontos, a mediana de 100 e o intervalo observado de 90 a 100 (desvio-padrão de 3,2). Nove participantes deram a nota máxima (Tabela 2).
 
-- O experimento mostrou que a IA reduz as idas e voltas, mas aumenta a digitação. O teste com usuários pode mostrar se isso pesa na percepção das pessoas, embora avalie o fluxo por menus.
-- Em quais etapas do menu os participantes travaram ou pediram ajuda.
-- Falhas e resultados inconclusivos devem ser relatados junto dos casos bem-sucedidos.
+**Tabela 2 – Nota SUS por sessão**
+
+| Sessão | P01 | P02 | P03 | P04 | P05 | P06 | P07 | P08 | P09 | P10 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Nota SUS | 100 | 100 | 100 | 100 | 90 | 100 | 100 | 100 | 100 | 100 |
+
+Fonte: Elaborado pelos autores (2026).
+
+**Leitura dos resultados.** As notas indicam que nenhum participante percebeu problema de usabilidade relevante na jornada, mas o resultado precisa ser lido com cautela. Nove dos dez questionários têm exatamente o mesmo padrão, com 5 em todas as afirmações positivas e 1 em todas as negativas, o que caracteriza efeito teto: a escala não distingue diferenças entre os participantes. Esse padrão também é compatível com respostas dadas sem a leitura atenta de cada item e com o viés de desejabilidade social, já que os participantes foram recrutados pela equipe e responderam logo após uma sessão moderada. A única divergência foi no item 4 da sessão P05 (“precisaria de ajuda de uma pessoa técnica”), marcado com 5 enquanto todos os outros itens tiveram a avaliação mais favorável. Não é possível saber se a pessoa sentiu necessidade de ajuda ou se leu o item negativo como positivo, um erro conhecido em escalas que alternam itens positivos e negativos.
+
+**Respostas abertas.** As respostas foram curtas, e três participantes deixaram pelo menos uma pergunta em branco ou com um ponto. A codificação temática (Braun; Clarke, 2006) resultou em cinco temas (Quadro 4). Nenhum participante relatou dificuldade nem sugeriu mudança.
+
+**Quadro 4 – Temas das respostas abertas**
+
+| Tema | Códigos associados | Pessoas distintas | Evidência desidentificada |
+| --- | --- | --- | --- |
+| Processo fácil e bem guiado | facilidade geral, explicação clara, condução pelo bot | 5 (P01, P03, P04, P05, P10) | “Todo o pedido foi fácil, intuitivo e muito bem guiado pelo bot” |
+| Rapidez e praticidade | resposta rápida, prático | 3 (P02, P05, P08) | “muito rápido a resposta” |
+| Clareza do produto, do valor e da confirmação | produto e valor claros, confirmação, forma de pagamento | 2 (P02, P09) | “identificar o produto e o seu valor” |
+| Ausência de dificuldade | nenhuma dificuldade relatada | 10 (todos) | “Não tive momentos de dificuldade” |
+| Nenhuma mudança sugerida | “nada”, “está perfeito”, sem ajustes | 7 (P01 a P05, P08, P10); 3 sem resposta (P06, P07, P09) | “Não acho que precise de ajustes” |
+
+Fonte: Elaborado pelos autores (2026).
+
+**Ajustes propostos.** Como as sessões não apontaram dificuldades, os ajustes vêm do ensaio de ponta a ponta (seção 5.3), como tratar respostas de rua com várias linhas. Para que um próximo teste discrimine melhor a usabilidade, recomenda-se recrutar pessoas de fora do círculo da equipe, incluir tarefas com correção de dados e troco e registrar a observação de cada sessão junto com o questionário.
 
 ## 6. Limitações
 
@@ -216,13 +238,13 @@ As ameaças à validade do estudo quantitativo seguem a classificação de Wohli
 - **Cota gratuita do Gemini:** a latência variou muito entre horários, e as mensagens podem ser usadas pelo Google. Por isso, a IA para todos os números (`NUMEROS_IA=*`) fica restrita à demonstração, com aviso a quem testa; com pessoas de fora da equipe, como no teste com usuários, vale o fluxo por menus. Para clientes reais, seria necessário um plano pago.
 - **Dados da avaliação:** as mensagens e os perfis foram escritos pela equipe, e o cliente simulado responde sempre de forma cooperativa. Pessoas reais erram, mudam de ideia e mandam áudio.
 - **Ambiente de demonstração:** todas as vendas usam o cliente de demonstração da API de teste. Os dados da FAQ (horário, área de entrega, pagamento) são fictícios ([dados de demonstração](../dados-de-demonstracao.md)).
-- **Amostra:** o teste com usuários usa uma amostra pequena e de conveniência. Permite identificar dificuldades na jornada observada, com alcance limitado para generalizações.
+- **Amostra e efeito teto:** o teste com usuários teve dez participantes recrutados pela equipe, uma amostra pequena e de conveniência. Quase todas as respostas ficaram na nota máxima, o que impede comparar participantes e sugere viés de desejabilidade social. O teste permite afirmar que não surgiram problemas graves na jornada observada, com alcance limitado para generalizações.
 
 ## 7. Conclusão
 
 A proposta conecta um fluxo de pedido no WhatsApp a regras de validação e a atendimento humano no Chatwoot. A avaliação quantitativa confirmou que a interpretação por IA reduz o número de mensagens sem registrar pedidos errados, e que o sistema continua atendendo pelo menu quando a IA falha ou demora. A troca do conector mostrou a vantagem de manter o canal isolado da lógica do bot. O ensaio com o WhatsApp real, seguindo o README do zero, mostrou o fluxo completo funcionando, do pedido à venda e da emergência à resposta humana, e apontou ajustes de documentação e de operação que facilitam a instalação e a demonstração.
 
-**A completar após a coleta:** a nota SUS, as dificuldades relatadas pelos participantes e as melhorias que esses dados sustentam.
+O teste com usuários não revelou dificuldades: os dez participantes avaliaram o atendimento com nota SUS média de 99,0, e nenhum relatou problema nas respostas abertas. Como as notas ficaram no teto e a amostra foi de conveniência, o resultado mostra a ausência de problemas graves na jornada testada, e não uma medida precisa de usabilidade. Um próximo ciclo deve incluir pessoas de fora do círculo da equipe e tarefas com correção de dados.
 
 ## Referências
 
