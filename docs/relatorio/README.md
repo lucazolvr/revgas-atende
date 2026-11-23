@@ -17,13 +17,16 @@ Pedidos de gás recebidos pelo WhatsApp costumam ser transcritos à mão para o 
 | Sigla | Significado |
 | --- | --- |
 | API | Interface de programação de aplicações (*Application Programming Interface*) |
+| BM25 | *Best Matching 25*, função de ranqueamento por palavras-chave |
 | ERP | Sistema integrado de gestão empresarial (*Enterprise Resource Planning*) |
 | F1 | Média harmônica entre precisão e revocação |
 | FAQ | Perguntas frequentes (*Frequently Asked Questions*) |
 | IA | Inteligência artificial |
+| LGPD | Lei Geral de Proteção de Dados Pessoais |
 | LLM | Modelo de linguagem de grande escala (*Large Language Model*) |
 | QR | Código de resposta rápida (*Quick Response*) |
 | RAG | Geração aumentada por recuperação (*Retrieval-Augmented Generation*) |
+| RRF | Fusão de rankings por posição recíproca (*Reciprocal Rank Fusion*) |
 | SUS | Escala de usabilidade de sistemas (*System Usability Scale*) |
 | WAHA | *WhatsApp HTTP API*, conector não oficial do WhatsApp |
 
@@ -73,7 +76,31 @@ A equipe comparou quatro alternativas: registrar a licença da Evolution 2.4, ad
 
 No teste de ponta a ponta com o WAHA, a resposta do bot chegou ao WhatsApp em 0,2 a 1,4 s, contra travamentos de 21 a 69 s observados na Evolution. O pedido com IA foi concluído, a venda foi criada na API de teste e a transferência por emergência funcionou. A troca não alterou o bot, porque ele só se comunica com o Chatwoot. Essa decisão mostra a vantagem de isolar o canal: a peça que falhou pôde ser substituída sem mexer na lógica do atendimento. O WAHA continua sendo um conector não oficial, com o mesmo risco de bloqueio do número.
 
+### 3.2 Técnicas propostas e implementadas
+
+O Quadro 2 compara as técnicas apresentadas na disciplina para chatbots com o que foi implementado no RevGás Atende e justifica as que ficaram de fora.
+
+**Quadro 2 – Técnicas propostas para o chatbot e situação no RevGás Atende**
+
+| Técnica | Situação | Como ou por quê |
+| --- | --- | --- |
+| Classificação de intenção | Implementada | O Gemini classifica a mensagem em intenções fixas (pedido, dúvida, emergência, atendente humano, confirmar, corrigir e cancelar), validadas por esquema. |
+| Extração de entidades | Implementada | Produto, quantidade, endereço e pagamento em JSON validado; o que falta é perguntado pelo menu. |
+| Memória da conversa | Implementada | O estado da conversa e o pedido em andamento ficam guardados no Redis, por conversa. |
+| Transferência para humano | Implementada | A conversa vai para o Chatwoot com nota-resumo, etiquetas e prioridade. |
+| Guardrails | Implementada | Preço e produto vêm do catálogo, nunca da IA; a venda só é criada após o “1 - Confirmar”; o RAG recusa responder sem fonte. |
+| Tool calling | Parcial, por decisão de projeto | A chamada à API do ERP é feita pelo código, não escolhida pela IA: uma venda é uma ação com efeito real e não pode depender de um modelo. |
+| RAG | Implementada | A FAQ responde a partir de trechos recuperados por similaridade de vetores (`gemini-embedding-001`, cosseno, limiar 0,65, até 3 trechos) e recusa responder quando nenhum trecho passa do limiar. |
+| RAG híbrido (vetores e palavras-chave) com fusão de rankings | Implementada | A busca vetorial é combinada com palavras-chave por BM25 (Robertson; Zaragoza, 2009), e os dois rankings são unidos por Reciprocal Rank Fusion (Cormack; Clarke; Buettcher, 2009). Em 27 perguntas rotuladas, empatou com a busca só vetorial nos limiares atuais (acerto@1 de 80% × 85%; acerto@3 de 95% × 90%). Com limiar de cosseno 0,70, o híbrido recusa 100% das perguntas fora da FAQ e mantém 75% de acerto@1, contra 50% do vetorial. |
+| Query rewriting ou expansion, multi-query, HyDE e HyPE | Não implementadas | A FAQ é pequena (seis temas: área de entrega, horário, pagamento, preço, segurança e troca de botijão), e cada técnica acrescenta uma chamada ao Gemini por pergunta, o que pesa na cota gratuita e na latência. |
+| GraphRAG e Agentic RAG | Não implementadas | Pedem uma base com relacionamentos entre documentos ou várias fontes; o escopo tem uma FAQ e uma API. |
+| Text-to-SQL controlado | Não se aplica | A RevGás liberou só a API de vendas (ambiente de teste), sem acesso ao banco de dados do ERP. O Postgres do projeto pertence ao Chatwoot, e o Redis guarda as sessões; nenhum dos dois é consultado pela IA. |
+
+Fonte: Elaborado pelos autores (2026).
+
 ## 4. Método
+
+O estudo combina métodos quantitativos (avaliação offline e experimento pareado) e qualitativos (observação das sessões e codificação temática das respostas abertas), em abordagem de métodos mistos.
 
 ### 4.1 Avaliação quantitativa
 
@@ -81,7 +108,8 @@ Conduzida por Lucas Oliveira em 19/11/2026. O estudo completo está em [avaliaca
 
 - **Avaliação offline da IA:** 60 mensagens escritas e rotuladas pela equipe, com gírias, erros de digitação e abreviações. Mede a acurácia de intenção e a precisão, revocação e F1 por campo do pedido (Sokolova; Lapalme, 2009).
 - **Experimento pareado, menu × IA:** 20 perfis de cliente fazem o mesmo pedido pelos dois caminhos, por um cliente simulado que conversa com o motor real do bot, com a API de vendas falsa. Hipótese H1: com IA, o cliente conclui o pedido com menos mensagens. Teste de postos sinalizados de Wilcoxon (Wilcoxon, 1945), bicaudal, α = 0,05.
-- **Testes automatizados:** suíte do Vitest, executada com `npm test`, sem rede nem chaves.
+- **Avaliação da busca na FAQ:** conduzida por João Vitor em 22/11/2026, com 27 perguntas rotuladas pela equipe (20 cobertas pela FAQ e 7 de fora). Compara a busca só vetorial com a híbrida pelo acerto@1, pelo acerto@3 e pela recusa correta, com o teste de McNemar exato (McNemar, 1947) nas mesmas perguntas. O estudo completo está em [avaliacao-rag](avaliacao-ia/avaliacao-rag.md).
+- **Testes automatizados:** suíte do Vitest, executada com `npm test`, sem rede nem chaves, e cobertura medida com `vitest --coverage`.
 
 ### 4.2 Validação de ponta a ponta
 
@@ -90,6 +118,16 @@ Ensaio do roteiro da demo com o WhatsApp real, seguindo o README do zero em um c
 ### 4.3 Avaliação de usabilidade
 
 Recrutar de 5 a 8 pessoas para fazer a jornada de pedido pelo WhatsApp com o bot em execução. Durante as sessões, `NUMEROS_IA` fica com a lista da equipe, sem `*`, e os participantes não entram nela, porque na cota grátis do Gemini as mensagens podem ser usadas pelo Google. Por isso, **o teste avalia o fluxo por menus**. Aplicar a escala SUS (Brooke, 1996) logo após a tentativa e coletar três respostas abertas. Os itens da escala seguem a versão brasileira validada (Lourenço; Valentim; Lopes, 2022), com uma adaptação: "sistema" foi substituído por "atendimento", para se referir ao atendimento pelo WhatsApp. A nota SUS resume a usabilidade percebida em pontos. A codificação temática (Braun; Clarke, 2006) descreve os motivos relatados para facilidades e dificuldades. O [protocolo de teste](protocolo-sus.md) detalha a tarefa, o instrumento, a pontuação e a análise.
+
+### 4.4 Aspectos éticos e proteção de dados
+
+O estudo segue a Lei Geral de Proteção de Dados Pessoais (Brasil, 2018):
+
+- **Consentimento:** cada participante do teste de usabilidade lê e aceita um termo de consentimento antes da sessão, pode desistir a qualquer momento e é informado de que as mensagens podem ser processadas pelo Gemini na cota gratuita, na qual o Google pode usá-las para melhorar seus produtos.
+- **Minimização:** o cenário usa nome e endereço fictícios; o questionário não coleta e-mail nem nome, só o código da sessão (P01 a P08).
+- **Anonimização:** os resultados são apresentados por código de sessão, e trechos de respostas abertas são desidentificados.
+- **Retenção:** as métricas do bot não guardam texto das mensagens, telefone nem endereço e expiram em 90 dias (`METRICAS_RETENCAO_DIAS`); o material bruto das sessões fica com acesso restrito à equipe e é apagado após a entrega.
+- **Dados de negócio:** as vendas usam o cliente de demonstração da API de teste e são canceladas depois.
 
 ## 5. Resultados
 
@@ -101,13 +139,14 @@ Recrutar de 5 a 8 pessoas para fazer a jornada de pedido pelo WhatsApp com o bot
 | --- | --- | --- |
 | Intenção e entidades | Intenção 100% (60/60). Entidades com F1 de 97,2% (precisão 94,5%, revocação 100%) | 60 mensagens, `gemini-3.1-flash-lite`. Os 5 erros foram extrações a mais, contidas pelo resumo confirmado pelo cliente |
 | Simulação ponta a ponta | 40/40 pedidos concluídos e corretos (20 pelo menu e 20 com IA), sem transferências | Cliente simulado contra o motor real, API RevGás falsa |
-| Comparação com e sem IA | Mediana de mensagens do cliente: 11 pelo menu e 6 com IA (−45%). Wilcoxon p = 0,00014, W− = 0 | 20 pares. A IA foi melhor em 19 e empatou em 1. Com IA, o cliente digitou mais caracteres (mediana 110 × 57) |
-| Latência da IA | Mediana de 0,9 a 5,4 s por chamada, conforme o horário. Na rodada final, 24% das chamadas passaram do limite de 8 s | Acima de 8 s, o bot recorre ao menu e o atendimento continua |
-| Testes automatizados | 72 testes em 12 arquivos, todos passando | `npm test`, sem rede (IA e ERP falsos) |
+| Comparação com e sem IA | Mediana de mensagens do cliente: 11 pelo menu e 6 com IA (−45%). Wilcoxon p = 0,00014, W− = 0, tamanho de efeito r = 1,0 (rank-bisserial) | 20 pares. A IA foi melhor em 19 e empatou em 1. Com IA, o cliente digitou mais caracteres (mediana 110 × 57) |
+| Latência da IA | Mediana de 0,9 a 5,4 s por chamada, conforme o horário. Na rodada final da avaliação offline, mediana de 0,92 s e p95 de 2,35 s por mensagem. Na rodada final do experimento, 24% das chamadas passaram do limite de 8 s | Acima de 8 s, o bot recorre ao menu e o atendimento continua |
+| Busca na FAQ (RAG) | Híbrido: acerto@1 de 80%, acerto@3 de 95% e recusa correta de 4/7. Só vetorial: 85%, 90% e 4/7. McNemar exato p = 1,0 (1 pergunta discordante) | 27 perguntas rotuladas (20 da FAQ e 7 de fora), com os limiares do bot |
+| Testes automatizados | 155 testes em 18 arquivos, todos passando. Cobertura de 63% das linhas de `src/`: conversa 94%, vendas 98%, canal 97% e painel 90% | `npm test` e `vitest --coverage` em 22/11, sem rede (IA e ERP falsos). Os módulos que chamam o Gemini (ia 56%, conhecimento 58%) são avaliados à parte, com a IA real; as páginas do painel não têm teste automatizado |
 
 Fonte: Elaborado pelos autores (2026).
 
-Os números são da versão do bot medida em 19/11. Depois disso, o bot passou a deduzir o estado pela cidade e a perguntar cidade e estado juntos, o que reduz o caminho pelo menu de 11 para 10 mensagens em um pedido em Teresina.
+Os números da IA são da versão do bot medida em 19/11; os da FAQ e dos testes, de 22/11. Depois disso, o bot passou a deduzir o estado pela cidade e a perguntar cidade e estado juntos, o que reduz o caminho pelo menu de 11 para 10 mensagens em um pedido em Teresina.
 
 A Figura 2 mostra a acurácia por intenção; a Figura 3 compara, para cada perfil, o número de mensagens até concluir o pedido pelos dois caminhos; e a Figura 4 mostra a variação do tempo de resposta do Gemini entre as rodadas, com o limite de 8 s do bot.
 
@@ -143,9 +182,9 @@ Os testes encontraram defeitos que os testes unitários não tinham encontrado:
 
 **Instalação do zero (22/11/2026).** Em um notebook com Windows 11 e 7,8 GB de RAM, a instalação pelo README foi concluída: os containers subiram, o `npm run setup` criou o bot, a caixa de entrada e a sessão do WhatsApp, o chip da revenda foi conectado e o bot respondeu a um “oi” vindo de outro número. Seis pontos travaram ou confundiram quem seguia o README pela primeira vez: o download das imagens do Docker falhou e depois travou; o `.env` repassado pela equipe ainda era da Evolution; o identificador da conta do Chatwoot saiu diferente do valor do exemplo; o bot reinicia em ciclo até existir o token do setup, sem aviso no README; a sessão do WhatsApp expira antes de a pessoa abrir o QR; e o celular recusou a primeira leitura do QR. Os detalhes e as sugestões de correção estão no [roteiro da demo](../roteiro-demo.md#instalação-do-zero-22112026).
 
-**Cenários do roteiro (22/11/2026).** Os cinco cenários foram executados com o WhatsApp real, a partir de dois números de teste (um em `NUMEROS_IA` e outro fora), e todos tiveram o resultado esperado (Quadro 2).
+**Cenários do roteiro (22/11/2026).** Os cinco cenários foram executados com o WhatsApp real, a partir de dois números de teste (um em `NUMEROS_IA` e outro fora), e todos tiveram o resultado esperado (Quadro 3).
 
-**Quadro 2 – Resultado dos cenários do ensaio de ponta a ponta**
+**Quadro 3 – Resultado dos cenários do ensaio de ponta a ponta**
 
 | Cenário | Resultado |
 | --- | --- |
@@ -187,15 +226,23 @@ A proposta conecta um fluxo de pedido no WhatsApp a regras de validação e a at
 
 ## Referências
 
+BRASIL. Lei nº 13.709, de 14 de agosto de 2018. Lei Geral de Proteção de Dados Pessoais (LGPD). Brasília, DF: Presidência da República, 2018. Disponível em: <https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm>. Acesso em: 22 nov. 2026.
+
 BRAUN, V.; CLARKE, V. Using thematic analysis in psychology. **Qualitative Research in Psychology**, [*s. l.*], v. 3, n. 2, p. 77-101, 2006. DOI: <https://doi.org/10.1191/1478088706qp063oa>.
 
 BROOKE, J. SUS: a quick and dirty usability scale. *In*: JORDAN, P. W. *et al.* (ed.). **Usability evaluation in industry**. London: Taylor & Francis, 1996. p. 189-194. Disponível em: <https://hci-studies.org/methods-and-measures/downloads/SUS_Brooke1996.pdf>. Acesso em: 22 nov. 2026.
+
+CORMACK, G. V.; CLARKE, C. L. A.; BUETTCHER, S. Reciprocal rank fusion outperforms Condorcet and individual rank learning methods. *In*: INTERNATIONAL ACM SIGIR CONFERENCE ON RESEARCH AND DEVELOPMENT IN INFORMATION RETRIEVAL, 32., 2009, Boston. **Proceedings** [...]. New York: ACM, 2009. p. 758-759. DOI: <https://doi.org/10.1145/1571941.1572114>.
 
 FØLSTAD, A.; SKJUVE, M. Chatbots for customer service: user experience and motivation. *In*: INTERNATIONAL CONFERENCE ON CONVERSATIONAL USER INTERFACES, 1., 2019, Dublin. **Proceedings** [...]. New York: ACM, 2019. p. 1-9. DOI: <https://doi.org/10.1145/3342775.3342784>.
 
 LEWIS, P. *et al.* Retrieval-augmented generation for knowledge-intensive NLP tasks. *In*: CONFERENCE ON NEURAL INFORMATION PROCESSING SYSTEMS, 34., 2020, [*s. l.*]. **Advances in Neural Information Processing Systems**. [*S. l.*]: Curran Associates, 2020. v. 33, p. 9459-9474. Disponível em: <https://proceedings.neurips.cc/paper/2020/hash/6b493230205f780e1bc26945df7481e5-Abstract.html>. Acesso em: 22 nov. 2026.
 
 LOURENÇO, D. F.; VALENTIM, E. C.; LOPES, M. H. B. M. Tradução e adaptação transcultural da System Usability Scale para o português do Brasil. **Aquichan**, Chía, v. 22, n. 2, p. 1-16, 2022. DOI: <https://doi.org/10.5294/aqui.2022.22.2.8>.
+
+MCNEMAR, Q. Note on the sampling error of the difference between correlated proportions or percentages. **Psychometrika**, [*s. l.*], v. 12, n. 2, p. 153-157, 1947. DOI: <https://doi.org/10.1007/BF02295996>.
+
+ROBERTSON, S.; ZARAGOZA, H. The probabilistic relevance framework: BM25 and beyond. **Foundations and Trends in Information Retrieval**, [*s. l.*], v. 4, n. 1-2, p. 1-174, 2009. DOI: <https://doi.org/10.1561/1500000019>.
 
 SCHICK, T. *et al.* Toolformer: language models can teach themselves to use tools. *In*: CONFERENCE ON NEURAL INFORMATION PROCESSING SYSTEMS, 37., 2023, New Orleans. **Advances in Neural Information Processing Systems**. [*S. l.*]: Curran Associates, 2023. v. 36, p. 68539-68551. Disponível em: <https://proceedings.neurips.cc/paper_files/paper/2023/hash/d842425e4bf79ba039352da0f658a906-Abstract-Conference.html>. Acesso em: 22 nov. 2026.
 

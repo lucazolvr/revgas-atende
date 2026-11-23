@@ -25,7 +25,21 @@ Depois das sessões, `npm run eval:metricas` resume o uso real a partir dos regi
 
 ## Formulário
 
-O formulário já está pronto no Google Forms: “Avaliação do atendimento RevGás pelo WhatsApp”.
+O formulário está no Google Forms: “Avaliação do atendimento RevGás pelo WhatsApp”. A primeira seção é o termo de consentimento (Lei nº 13.709/2018, LGPD); sem o “Li e concordo”, o formulário não avança. A pessoa lê e aceita o termo **antes** de começar a conversa com o bot.
+
+### Termo de consentimento (primeira seção do formulário)
+
+> Você está sendo convidado(a) a participar de um teste de usabilidade do RevGás Atende, um atendente virtual de pedidos de gás pelo WhatsApp desenvolvido no Projeto de Extensão VI do curso de Engenharia de Software do iCEV.
+>
+> - A participação é voluntária, e você pode desistir a qualquer momento, sem precisar justificar.
+> - Você fará um pedido fictício pelo WhatsApp, com nome e endereço que a equipe vai fornecer, e depois responderá a um questionário de cerca de 5 minutos.
+> - As mensagens que você enviar ao número do teste podem ser processadas pelo Gemini, serviço de inteligência artificial do Google, na cota gratuita, na qual o Google pode usar o conteúdo para melhorar seus produtos. Por isso, não envie dados pessoais reais além do seu número de telefone, que fica visível para a equipe no painel de atendimento durante o teste.
+> - O questionário não pede nome nem e-mail. Suas respostas são identificadas só por um código (P01 a P08) e aparecem no relatório sem identificação.
+> - O material das sessões fica com acesso restrito à equipe e é apagado após a entrega do trabalho.
+>
+> ( ) Li e concordo em participar. *(obrigatório)*
+
+### Questionário
 
 - Código da sessão: P01 a P08, atribuído pela moderadora. A coleta de e-mail está desativada.
 - SUS: as 10 afirmações da Tabela 1 da [versão brasileira de Lourenço, Valentim e Lopes (2022)](https://doi.org/10.5294/aqui.2022.22.2.8), na mesma ordem, com uma adaptação: “sistema” foi substituído por “atendimento”. Uma escolha obrigatória por item, de 1 (Discordo totalmente) a 5 (Concordo totalmente), com 3 como ponto neutro. Os itens ímpares são positivos e os pares, negativos.
