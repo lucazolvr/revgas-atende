@@ -89,3 +89,7 @@ describe('clienteDaVenda', () => {
     expect(clienteDaVenda({ ...c, establishment_id: c.establishment_id }, pedido.telefone)).toEqual({ nome: 'Maria', endereco: pedido.endereco });
   });
 });
+
+it('corpoDaVenda: com conversaId, a observação liga a venda à conversa', () => {
+  expect(corpoDaVenda(pedido, cat, { ...ids, conversaId: 12 }).observation).toMatch(/Cliente: Maria 5586999990000\. Conversa 12\.$/);
+});

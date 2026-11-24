@@ -5,8 +5,25 @@ export type Resposta = { status: number; dados: unknown };
 /** A requisição saiu, mas a resposta não chegou: a venda PODE ter sido criada. */
 export class TempoEsgotado extends Error {}
 
-/** Uma venda como o bot e o painel mostram. `total` em reais, como a API manda. */
-export type VendaResumo = { id: number; data: string; status: string; total: number; endereco: string; pago: boolean; doBot: boolean };
+/**
+ * Uma venda como o bot e o painel mostram. `total` em reais, como a API manda. `cliente` e
+ * `conversaId` saem da observação que o bot escreve (ver corpoDaVenda); `null` em vendas antigas.
+ */
+export type VendaResumo = {
+  id: number;
+  data: string;
+  status: string;
+  total: number;
+  endereco: string;
+  pago: boolean;
+  doBot: boolean;
+  cliente: string | null;
+  conversaId: number | null;
+  /** "2x GLP 13KG" */
+  itens: string;
+  /** Código da forma de pagamento (PIX, MONEY…); vazio se a venda não tiver. */
+  pagamento: string;
+};
 export type HistoricoVenda = VendaResumo & { logs: { status: string; quando: string }[] };
 export type ProdutoErp = { id: number; descricao: string; estoque: number; ativo: boolean };
 export type SituacaoRevenda = { aceitaPedido: boolean; permiteCancelar: boolean };
@@ -59,6 +76,8 @@ type VendaApi = VendaListada & {
   short_address?: string;
   display_address?: string;
   logs?: { status: string; created_at: string }[];
+  products?: { quantity: number; product_id: number; product_description?: string }[];
+  payments?: { payment_type: string }[];
 };
 
 function resumo(v: VendaApi, estabelecimentoId?: number): VendaResumo {
@@ -70,6 +89,10 @@ function resumo(v: VendaApi, estabelecimentoId?: number): VendaResumo {
     endereco: v.short_address ?? v.display_address ?? `${v.location ?? ''}, ${v.number ?? ''}`,
     pago: !!v.paid,
     doBot: ehDoBot(v, estabelecimentoId),
+    cliente: v.observation?.match(/Cliente: (.+?) \+?\d{10,13}\./)?.[1] ?? null,
+    conversaId: Number(v.observation?.match(/Conversa (\d+)\./)?.[1]) || null,
+    itens: (v.products ?? []).map((p) => `${p.quantity}x ${p.product_description ?? `produto ${p.product_id}`}`).join(', '),
+    pagamento: v.payments?.[0]?.payment_type ?? '',
   };
 }
 
@@ -85,6 +108,8 @@ export class ApiRevGasFalsa implements ApiRevGas, ConsultaVendas, BuscaCliente, 
   proximaResposta?: Resposta | 'timeout';
   produtosErp: ProdutoErp[] = [];
   situacaoErp: SituacaoRevenda = { aceitaPedido: true, permiteCancelar: true };
+  /** Como na API real: venda de outro estabelecimento não é "do bot". Sem valor, aceita qualquer um. */
+  estabelecimentoId?: number;
 
   /** As vendas no formato da listagem da API real. */
   private comoApi(): VendaApi[] {
@@ -95,6 +120,7 @@ export class ApiRevGasFalsa implements ApiRevGas, ConsultaVendas, BuscaCliente, 
       status: this.canceladas.has(i + 1) ? 'CANCEL' : 'ACTIVE',
       total: (v.products ?? []).reduce((s, p) => s + p.value * p.quantity, 0),
       short_address: `${v.location}, ${v.number}`,
+      products: v.products?.map((p) => ({ ...p, product_description: this.produtosErp.find((x) => x.id === p.product_id)?.descricao })),
     }));
   }
 
@@ -108,23 +134,23 @@ export class ApiRevGasFalsa implements ApiRevGas, ConsultaVendas, BuscaCliente, 
 
   async vendasDoCliente(telefone: string) {
     return this.comoApi()
-      .filter((v) => v.status === 'ACTIVE' && ehDoBot(v) && clienteDaVenda(v, telefone))
-      .map((v) => resumo(v))
+      .filter((v) => v.status === 'ACTIVE' && ehDoBot(v, this.estabelecimentoId) && clienteDaVenda(v, telefone))
+      .map((v) => resumo(v, this.estabelecimentoId))
       .sort(recentesPrimeiro)
       .slice(0, MAXIMO_DO_CLIENTE);
   }
 
   async historico(id: number) {
     const v = this.comoApi()[idValido(id) - 1];
-    if (!v || !ehDoBot(v)) return null;
+    if (!v || !ehDoBot(v, this.estabelecimentoId)) return null;
     const logs = [{ status: 'OPEN', quando: v.date }, ...(v.status === 'CANCEL' ? [{ status: 'CANCEL', quando: v.date }] : [])];
-    return { ...resumo(v), logs };
+    return { ...resumo(v, this.estabelecimentoId), logs };
   }
 
   async vendasDoBot(dia: string) {
     return this.comoApi()
-      .filter((v) => ehDoBot(v) && diaDaRevenda(new Date(v.date)) === dia)
-      .map((v) => resumo(v))
+      .filter((v) => ehDoBot(v, this.estabelecimentoId) && diaDaRevenda(new Date(v.date)) === dia)
+      .map((v) => resumo(v, this.estabelecimentoId))
       .sort(recentesPrimeiro);
   }
 
@@ -339,7 +365,9 @@ export class ApiRevGasHttp implements ApiRevGas, ConsultaVendas, BuscaCliente, C
     const registrar = (status: number | null, dados: unknown) => {
       if (!this.aoChamar) return;
       const doCaminho = caminho.match(/^\/sales\/(\d+)/)?.[1];
-      const criada = (dados as { data?: { id?: unknown } } | null)?.data?.id;
+      // A criação devolve { data: { id } } ou { id }, como em registrarVenda.
+      const d = dados as { id?: unknown; data?: { id?: unknown } } | null;
+      const criada = d?.data?.id ?? d?.id;
       try {
         this.aoChamar({
           metodo,
