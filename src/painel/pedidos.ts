@@ -1,7 +1,8 @@
 import type { Redis } from 'ioredis';
 
-/** Fuso da revenda (Teresina, UTC−3): "hoje" é o dia de lá, não o do servidor. */
-const FUSO_REVENDA = 'America/Fortaleza';
+import { diaDaRevenda } from '../vendas/pedido.js';
+
+export { diaDaRevenda };
 
 /** Um pedido confirmado, como a lista "Pedidos de hoje" mostra. */
 export type PedidoRegistrado = {
@@ -17,10 +18,6 @@ export type PedidoRegistrado = {
   endereco: string;
 };
 
-/** Dia (AAAA-MM-DD) de um instante no fuso da revenda. */
-export function diaDaRevenda(quando: Date = new Date()): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: FUSO_REVENDA, year: 'numeric', month: '2-digit', day: '2-digit' }).format(quando);
-}
 
 /**
  * Pedidos confirmados por dia. Guarda dados pessoais (nome, endereço), então só o necessário

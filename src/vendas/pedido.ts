@@ -41,6 +41,14 @@ export type CorpoVenda = {
   broadcast: 'NONE';
 };
 
+/** Fuso da revenda (Teresina, UTC−3): "hoje" é o dia de lá, não o do servidor. */
+const FUSO_REVENDA = 'America/Fortaleza';
+
+/** Dia (AAAA-MM-DD) de um instante no fuso da revenda. */
+export function diaDaRevenda(quando: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: FUSO_REVENDA, year: 'numeric', month: '2-digit', day: '2-digit' }).format(quando);
+}
+
 export const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
 
 export const CAMPOS_ENDERECO = ['logradouro', 'numero', 'bairro', 'cidade', 'uf'] as const;
