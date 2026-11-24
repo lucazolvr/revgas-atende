@@ -113,9 +113,9 @@ O painel **"Integração RevGás"** mostra ao vivo as requisições do bot à AP
 
 1. `docker compose up -d metabase` (na primeira vez, leva de 1 a 2 minutos para iniciar).
 2. Abra **http://127.0.0.1:3003**. Quem sobe o Metabase no próprio computador cria a conta de administrador; ela fica só nesse computador.
-3. Conecte ao Postgres (host `postgres`, banco `revgas`, usuário `metabase_leitura`, senha `METABASE_DB_SENHA` do `.env`) e monte o painel com as consultas de [docs/metabase.md](docs/metabase.md), que traz o passo a passo e o SQL de cada gráfico.
+3. Crie uma chave de API no Metabase (Admin → Configurações → Autenticação → Chaves de API, grupo Administradores), coloque-a em `METABASE_API_KEY` no `.env` e rode `npm run metabase:painel`: ele conecta ao banco `revgas` com o usuário `metabase_leitura` e monta o painel com as consultas de [docs/metabase.md](docs/metabase.md), que também traz o passo a passo manual e o SQL de cada gráfico.
 
-O Metabase usa até ~1 GB de memória (Java limitado a 768 MB). Em computadores com pouca RAM para o Docker, suba-o só quando for usar e pare com `docker compose stop metabase`.
+O Metabase usa cerca de 1,4 GB de memória, mesmo com o Java limitado a 768 MB. Em computadores com pouca RAM para o Docker, suba-o só quando for usar e pare com `docker compose stop metabase`.
 
 **IA:** coloque `GEMINI_API_KEY` (cota grátis do [Google AI Studio](https://aistudio.google.com/)) e, em `NUMEROS_IA`, os números que usam a IA (separados por vírgula) ou `*` para todos, como no cenário da demo. Os números fora da lista são atendidos pelos menus, e os menus também são o caminho de reserva quando a IA demora ou falha. Na cota grátis o Google pode usar as mensagens: avise quem for testar.
 

@@ -20,8 +20,19 @@ Nenhuma das duas tabelas guarda nome, telefone, endereço ou texto de mensagem. 
 ## Subir e configurar (uma vez por computador)
 
 1. Suba o serviço: `docker compose up -d metabase`. Na primeira vez, o Metabase leva de 1 a 2 minutos para iniciar.
-2. Abra **http://127.0.0.1:3003** e crie a conta de administrador. Quem sobe o Metabase no próprio computador é o administrador dele; a conta fica só nesse computador.
-3. Na etapa "Adicionar seus dados" (ou depois, em **Admin → Bancos de dados → Adicionar banco de dados**), escolha **PostgreSQL** e preencha:
+2. Abra **http://127.0.0.1:3003** e crie a conta de administrador. Quem sobe o Metabase no próprio computador é o administrador dele; a conta fica só nesse computador. Na etapa "Adicionar seus dados", escolha **"Vou adicionar meus dados mais tarde"**.
+
+### Jeito automático (recomendado)
+
+3. Crie uma chave de API: **Admin → Configurações → Autenticação → Chaves de API → Criar chave**, com o nome `painel` e o grupo **Administradores**. Copie a chave (ela só aparece uma vez).
+4. Coloque a chave no `.env`: `METABASE_API_KEY=<a chave>`. Ela dá acesso de administrador ao Metabase: trate como as outras chaves e nunca a cole em chat, issue ou commit.
+5. Rode `npm run metabase:painel`. O script (`scripts/metabase-painel.ts`) lê este arquivo e cria ou atualiza a conexão com o `metabase_leitura`, a coleção, as oito perguntas e o painel. Pode rodar de novo sem duplicar nada: depois de mudar um SQL aqui, rode outra vez para atualizar.
+6. Abra o link que o script mostra. Ele termina em `#refresh=60`, que atualiza o painel a cada 1 minuto.
+7. Confira em **Admin → Tabelas** que só aparecem `chamadas_api` e `eventos`.
+
+### Jeito manual
+
+3. Em **Admin → Bancos de dados → Adicionar banco de dados**, escolha **PostgreSQL** e preencha:
 
    | Campo | Valor |
    |---|---|
@@ -34,7 +45,7 @@ Nenhuma das duas tabelas guarda nome, telefone, endereço ou texto de mensagem. 
    | Schemas | "Somente estes…": `revgas` |
 
 4. Confira em **Admin → Tabelas** que só aparecem `chamadas_api` e `eventos`. Se aparecer qualquer tabela do Chatwoot, a conexão está com o banco ou o usuário errado: corrija antes de seguir.
-5. Para cada consulta abaixo: **Novo → Consulta SQL**, escolha o banco "RevGás (integração)", cole o SQL, escolha a visualização indicada e salve com o nome do título.
+5. Para cada consulta abaixo: **Novo → Consulta SQL**, escolha o banco "RevGás (integração)", cole o SQL, escolha a visualização indicada e salve com o nome do título. (O comentário `<!-- metabase: ... -->` de cada consulta é o que o script usa para escolher o gráfico; ele não aparece no GitHub.)
 6. Crie o painel **Novo → Painel → "Integração RevGás"**, adicione as oito perguntas e, no ícone de relógio do painel, ligue a **atualização automática a cada 1 minuto**.
 
 Os gráficos por hora olham as últimas 24 horas, no fuso da revenda (`America/Fortaleza`). Para a demonstração, isso mostra o dia inteiro de testes; para outro período, troque o `interval '24 hours'`.
@@ -42,6 +53,8 @@ Os gráficos por hora olham as últimas 24 horas, no fuso da revenda (`America/F
 ## Consultas
 
 ### 1. Requisições recentes (tabela)
+
+<!-- metabase: {"display":"table"} -->
 
 Mostra cada requisição, a mais recente primeiro. É o gráfico que acompanha a demonstração ao vivo.
 
@@ -54,11 +67,13 @@ select to_char(em at time zone 'America/Fortaleza', 'HH24:MI:SS') as hora,
        fila,
        venda_id
 from revgas.chamadas_api
-order by id desc
+order by em desc, id desc
 limit 30;
 ```
 
 ### 2. Requisições por rota e status (barras empilhadas)
+
+<!-- metabase: {"display":"bar","dimensoes":["rota","status"],"metricas":["requisicoes"],"empilhado":true} -->
 
 Eixo X: `rota`; série: `status`; valor: `requisicoes`.
 
@@ -74,6 +89,8 @@ order by 1, 2;
 
 ### 3. Taxa de sucesso por hora (linha)
 
+<!-- metabase: {"display":"line","dimensoes":["hora"],"metricas":["sucesso_pct"]} -->
+
 Sucesso é qualquer resposta HTTP de 200 a 299.
 
 ```sql
@@ -88,6 +105,8 @@ order by 1;
 
 ### 4. Tempo de resposta p50 e p95 por rota (barras agrupadas)
 
+<!-- metabase: {"display":"bar","dimensoes":["rota"],"metricas":["p50_ms","p95_ms"]} -->
+
 ```sql
 select metodo || ' ' || rota as rota,
        round(percentile_cont(0.5)  within group (order by ms)::numeric) as p50_ms,
@@ -101,6 +120,8 @@ order by p95_ms desc;
 ```
 
 ### 5. Vendas criadas por hora (barras)
+
+<!-- metabase: {"display":"bar","dimensoes":["hora"],"metricas":["vendas"]} -->
 
 Conta só as vendas que a API confirmou (`POST /sales` com HTTP 201).
 
@@ -118,6 +139,8 @@ order by 1;
 
 ### 6. Cancelamentos por origem (pizza ou barras)
 
+<!-- metabase: {"display":"pie","dimensoes":["origem"],"metricas":["cancelamentos"]} -->
+
 A origem (cliente pelo WhatsApp ou atendente pelo painel) fica em `resultado`.
 
 ```sql
@@ -132,6 +155,8 @@ order by 2 desc;
 
 ### 7. Clientes reconhecidos por dia (barras)
 
+<!-- metabase: {"display":"bar","dimensoes":["dia"],"metricas":["conversas_com_cliente_reconhecido"]} -->
+
 Conversas em que o bot achou uma venda anterior do mesmo telefone e reaproveitou nome e endereço.
 
 ```sql
@@ -144,6 +169,8 @@ order by 1;
 ```
 
 ### 8. Transferências para atendente por motivo (barras)
+
+<!-- metabase: {"display":"bar","dimensoes":["motivo"],"metricas":["transferencias"]} -->
 
 ```sql
 select coalesce(motivo, '(sem motivo)') as motivo,

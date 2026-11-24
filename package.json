@@ -18,7 +18,8 @@
     "eval:rag": "tsx eval/avaliar-rag.ts",
     "eval:experimento": "tsx eval/experimento.ts",
     "eval:metricas": "tsx eval/resumir-metricas.ts",
-    "cancelar-venda": "tsx scripts/cancelar-venda.ts"
+    "cancelar-venda": "tsx scripts/cancelar-venda.ts",
+    "metabase:painel": "tsx scripts/metabase-painel.ts"
   },
   "keywords": [],
   "author": "",
