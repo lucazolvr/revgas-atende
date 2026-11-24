@@ -35,6 +35,7 @@ comm -23 /tmp/ex.txt /tmp/env.txt
 ```
 
 - **Obrigatórias novas (WAHA):** `WAHA_API_KEY` e `WAHA_DASHBOARD_PASSWORD`, com valores aleatórios. Sem elas o `docker compose` **recusa subir**. `WAHA_DASHBOARD_USERNAME` é opcional.
+- **Obrigatórias novas (banco `revgas`, desde a #34):** `REVGAS_DB_SENHA` e `METABASE_DB_SENHA`, com valores aleatórios **só em hexadecimal** (vão numa URL de conexão). Sem elas o `docker compose` **recusa subir**. O serviço `revgas-db` cria o banco, as tabelas `revgas.chamadas_api` e `revgas.eventos` e os papéis `revgas_bot` (o bot grava) e `metabase_leitura` (só lê, sem acesso ao banco do Chatwoot).
 - `BOT_WEBHOOK_TOKEN` e `PAINEL_TOKEN`: **32+ caracteres** aleatórios. Com `PAINEL_TOKEN` curto, a aba "Pedido RevGás" fica desligada.
 - Variáveis da Evolution (`EVOLUTION_*`), se ainda existirem: podem ser apagadas, não são mais usadas.
 - `NUMEROS_IA=*`: a IA atende todos os números (cenário da demo, desde 22/11). Uma lista de números (com DDI e DDD) limita a IA a eles; vazio = só menus.
