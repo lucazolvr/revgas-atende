@@ -51,7 +51,12 @@ export function criarServidor(deps: DepsServidor) {
     if (!msg.texto) return deps.chatwoot.responder(msg.conversaId, M.SO_TEXTO);
     const inicio = Date.now();
     const interpretador = deps.interpretadorPara(msg.telefone);
-    const sessao = (await deps.sessoes.obter(msg.conversaId)) ?? novaSessao(msg.telefone, (await clienteAnterior(msg.telefone)) ?? {});
+    let sessao = await deps.sessoes.obter(msg.conversaId);
+    if (!sessao) {
+      const anterior = await clienteAnterior(msg.telefone);
+      if (anterior) registrarEvento({ conversaId: msg.conversaId, tipo: 'cliente_reconhecido' });
+      sessao = novaSessao(msg.telefone, anterior ?? {});
+    }
     const { sessao: nova, acoes } = await processar(sessao, msg.texto, {
       catalogo: deps.catalogo,
       interpretador,

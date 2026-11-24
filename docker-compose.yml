@@ -132,6 +132,22 @@ services:
       redis: { condition: service_started }
     restart: unless-stopped
 
+  # Banco "revgas" (chamadas à API e eventos, sem dados pessoais) e os papéis revgas_bot e
+  # metabase_leitura. Idempotente: roda a cada subida e sai (scripts/revgas-db.sql).
+  revgas-db:
+    image: pgvector/pgvector:pg16
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      SENHA_BOT: ${REVGAS_DB_SENHA:?defina REVGAS_DB_SENHA no .env}
+      SENHA_METABASE: ${METABASE_DB_SENHA:?defina METABASE_DB_SENHA no .env}
+    command: ["sh", "-c", 'psql -h postgres -U postgres -d postgres -q -v senha_bot="$$SENHA_BOT" -v senha_metabase="$$SENHA_METABASE" -f /revgas/revgas-db.sql']
+    volumes:
+      - ./scripts:/revgas:ro
+    depends_on:
+      postgres: { condition: service_healthy }
+      chatwoot-migrar: { condition: service_completed_successfully } # o banco "chatwoot" já existe
+    restart: "no"
+
   bot:
     build: .
     image: revgas-atende-bot
@@ -140,6 +156,8 @@ services:
       CHATWOOT_URL: http://chatwoot:3000
       REDIS_URL: redis://redis:6379/2
       PORTA: "3000"
+      # Só INSERT/SELECT no banco revgas (sem acesso ao banco do Chatwoot).
+      DATABASE_URL: postgres://revgas_bot:${REVGAS_DB_SENHA}@postgres:5432/revgas
     ports:
       # Painel "Pedido RevGás" (aba na conversa e lista "Pedidos de hoje" do menu do Chatwoot).
       # Só no 127.0.0.1: os dados do pedido
@@ -147,7 +165,10 @@ services:
       - "127.0.0.1:3001:3000"
     volumes:
       - ./dados:/app/dados
-    depends_on: [redis, chatwoot]
+    depends_on:
+      redis: { condition: service_started }
+      chatwoot: { condition: service_started }
+      revgas-db: { condition: service_completed_successfully }
     restart: unless-stopped
 
 volumes:

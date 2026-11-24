@@ -6,6 +6,7 @@ import { InterpretadorGemini } from './ia/gemini.js';
 import { ConhecimentoGemini } from './conhecimento/gemini.js';
 import { criarServidor } from './servidor.js';
 import { configurarMetricas } from './metricas.js';
+import { criarRegistroPostgres } from './dados/postgres.js';
 import { RegistroPedidosMemoria, RegistroPedidosRedis } from './painel/pedidos.js';
 import { registrarPainel } from './painel/rotas.js';
 import { ApiRevGasFalsa, ApiRevGasHttp, type ApiRevGas, type BuscaCliente, type ConsultaVendas } from './vendas/api-revgas.js';
@@ -15,12 +16,18 @@ import { registrarVenda } from './vendas/registrar.js';
 
 const config = carregarConfig();
 for (const aviso of config.avisos) console.warn(`⚠  ${aviso}`);
-configurarMetricas(config.METRICAS_RETENCAO_DIAS);
+// Chamadas à API e eventos também no Postgres, para o Metabase (sem dados pessoais).
+const registro = config.DATABASE_URL ? criarRegistroPostgres(config.DATABASE_URL) : null;
+configurarMetricas(config.METRICAS_RETENCAO_DIAS, registro?.evento);
+if (registro) console.log('Registro das chamadas à API e dos eventos no Postgres (banco revgas) ligado.');
 const catalogo = carregarCatalogo();
 
 let api: ApiRevGas & ConsultaVendas & BuscaCliente;
 if (config.VENDA_REAL) {
-  api = new ApiRevGasHttp(config.REVGAS_API_URL, config.REVGAS_API_KEY!, { estabelecimentoId: config.REVGAS_ESTABELECIMENTO });
+  api = new ApiRevGasHttp(config.REVGAS_API_URL, config.REVGAS_API_KEY!, {
+    estabelecimentoId: config.REVGAS_ESTABELECIMENTO,
+    aoChamar: registro?.chamada,
+  });
   console.warn('\n⚠  VENDA REAL LIGADA: cada pedido confirmado cria uma venda de verdade no ERP RevGás.\n');
 } else {
   api = new ApiRevGasFalsa();
@@ -81,6 +88,7 @@ for (const sinal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(sinal, async () => {
     await app.close();
     await ocioso();
+    await registro?.fechar();
     process.exit(0);
   });
 }
