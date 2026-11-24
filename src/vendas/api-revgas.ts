@@ -1,4 +1,4 @@
-import type { CorpoVenda } from './pedido.js';
+import { clienteDaVenda, type CorpoVenda, type Pedido, type VendaListada } from './pedido.js';
 
 export type Resposta = { status: number; dados: unknown };
 
@@ -15,9 +15,25 @@ export interface ConsultaVendas {
   cancelarVenda(id: number): Promise<Resposta>;
 }
 
+/**
+ * Cliente que volta: nome e endereço da venda mais recente desse telefone. A chave não acessa
+ * /customers, então o histórico de vendas do ERP faz o papel do cadastro.
+ */
+export interface BuscaCliente {
+  ultimoCliente(telefone: string): Promise<Pick<Pedido, 'nome' | 'endereco'> | null>;
+}
+
 /** Imita o ERP em memória. Padrão nos testes e na demo sem VENDA_REAL. */
-export class ApiRevGasFalsa implements ApiRevGas, ConsultaVendas {
+export class ApiRevGasFalsa implements ApiRevGas, ConsultaVendas, BuscaCliente {
   vendas: CorpoVenda[] = [];
+
+  async ultimoCliente(telefone: string) {
+    for (const v of [...this.vendas].reverse()) {
+      const c = clienteDaVenda(v, telefone);
+      if (c) return c;
+    }
+    return null;
+  }
   canceladas = new Set<number>();
   proximaResposta?: Resposta | 'timeout';
 
@@ -48,7 +64,7 @@ export class ApiRevGasFalsa implements ApiRevGas, ConsultaVendas {
   }
 }
 
-export class ApiRevGasHttp implements ApiRevGas, ConsultaVendas {
+export class ApiRevGasHttp implements ApiRevGas, ConsultaVendas, BuscaCliente {
   private readonly base: string;
   private readonly fetch: typeof fetch;
   private readonly intervaloMs: number;
@@ -57,12 +73,14 @@ export class ApiRevGasHttp implements ApiRevGas, ConsultaVendas {
   private readonly filas: Record<'venda' | 'painel', (() => Promise<void>)[]> = { venda: [], painel: [] };
   private processando = false;
   private ultima = 0;
+  private readonly estabelecimentoId?: number;
 
   constructor(
     url: string,
     private readonly chave: string,
-    opts: { fetch?: typeof fetch; intervaloMs?: number; timeoutMs?: number } = {},
+    opts: { fetch?: typeof fetch; intervaloMs?: number; timeoutMs?: number; estabelecimentoId?: number } = {},
   ) {
+    this.estabelecimentoId = opts.estabelecimentoId;
     if (!url.trim() || !chave.trim()) throw new Error('REVGAS_API_URL e REVGAS_API_KEY são obrigatórias');
     this.base = url.trim().replace(/\/+$/, '');
     this.fetch = opts.fetch ?? fetch;
@@ -78,6 +96,24 @@ export class ApiRevGasHttp implements ApiRevGas, ConsultaVendas {
   detalharVenda(id: number): Promise<Resposta> {
     const v = idValido(id);
     return this.enfileirar('painel', () => this.enviar('GET', `/sales/${v}`, undefined));
+  }
+
+  // shortcut: varre só as 100 vendas mais recentes (2 páginas, 1 req/s); trocar por GET /customers
+  // quando a RevGás liberar esse acesso para a chave.
+  async ultimoCliente(telefone: string) {
+    for (let pagina = 1; pagina <= 2; pagina++) {
+      const r = await this.enfileirar('painel', () => this.enviar('GET', `/sales?page_size=50&page=${pagina}`, undefined));
+      const corpo = r.dados as { data?: VendaListada[]; pagination?: { has_next?: boolean } } | null;
+      if (r.status !== 200 || !Array.isArray(corpo?.data)) return null;
+      for (const v of corpo.data) {
+        // O estabelecimento de teste é compartilhado: só vale venda do nosso.
+        if (this.estabelecimentoId && v.establishment_id !== this.estabelecimentoId) continue;
+        const c = clienteDaVenda(v, telefone);
+        if (c) return c;
+      }
+      if (!corpo.pagination?.has_next) return null;
+    }
+    return null;
   }
 
   cancelarVenda(id: number): Promise<Resposta> {

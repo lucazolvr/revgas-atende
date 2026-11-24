@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { FORMAS_PAGAMENTO, type Produto } from '../vendas/catalogo.js';
-import { formatarReais, produtoDo, totalCentavos, type Pedido } from '../vendas/pedido.js';
+import { CAMPOS_ENDERECO, formatarReais, produtoDo, totalCentavos, type Pedido } from '../vendas/pedido.js';
 import type { ChaveAtributo } from '../canal/painel.js';
 import { HORARIO_REVENDA } from './horario.js';
 
@@ -51,6 +51,13 @@ function rotuloPagamento(p: Pedido): string {
   const f = FORMAS_PAGAMENTO.find((x) => x.codigo === p.pagamento);
   if (!f) return '?';
   return p.pagamento === 'MONEY' && p.trocoParaCentavos ? `${f.rotulo} (troco para ${formatarReais(p.trocoParaCentavos)})` : f.rotulo;
+}
+
+/** Cliente que já pediu antes: avisa que vai reaproveitar o endereço (e como trocar). */
+export function boasVindasDeVolta(p: Pedido): string {
+  const completo = CAMPOS_ENDERECO.every((c) => p.endereco?.[c]);
+  return `Olá de novo, ${p.nome}! 👋 Vou anotar seu pedido de gás rapidinho.` +
+    (completo ? `\nVou entregar no mesmo endereço do último pedido: ${linhaEndereco(p)}. Se mudou, é só corrigir no resumo.` : '');
 }
 
 export function resumo(p: Pedido, cat: Produto[]): string {
