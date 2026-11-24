@@ -197,14 +197,23 @@ export function registrarPainel(app: FastifyInstance, deps: DepsPainel) {
 
   // --- Pedidos de hoje e estoque ---------------------------------------------------------------
 
-  app.get('/painel/api/pedidos', async (req, reply) => {
+  /** Hoje e os 6 dias anteriores, no fuso da revenda (do mais recente ao mais antigo). */
+  function ultimosDias(): string[] {
+    const agora = (deps.agora?.() ?? new Date()).getTime();
+    return [...new Set(Array.from({ length: 7 }, (_, i) => diaDaRevenda(new Date(agora - i * 86_400_000))))];
+  }
+
+  app.get<{ Querystring: { dia?: string } }>('/painel/api/pedidos', async (req, reply) => {
     if (!autorizado(req, reply)) return reply;
-    const dia = diaDaRevenda(deps.agora?.() ?? new Date());
+    const dias = ultimosDias();
+    // Só os últimos 7 dias: a busca varre poucas páginas da listagem (1 req/s na API real).
+    const dia = req.query.dia ?? dias[0]!;
+    if (!dias.includes(dia)) return seguro(reply).code(400).send({ erro: 'dia fora dos últimos 7 dias' });
     try {
       // Uma varredura da listagem traz status, total, itens e endereço: sem uma consulta por pedido.
       const pedidos = await deps.vendas.vendasDoBot(dia);
       // Sem link pronto: "Abrir conversa" pede ao menu.js que abra a conversa no próprio Chatwoot.
-      return seguro(reply).send({ dia, modo: deps.modo, pedidos: pedidos.map((v) => ({ ...v, podeCancelar: podeCancelar(v) })) });
+      return seguro(reply).send({ dia, dias, modo: deps.modo, pedidos: pedidos.map((v) => ({ ...v, podeCancelar: podeCancelar(v) })) });
     } catch (e) {
       return seguro(reply).code(502).send({ erro: e instanceof TempoEsgotado ? 'o ERP não respondeu' : 'falha ao consultar o ERP' });
     }

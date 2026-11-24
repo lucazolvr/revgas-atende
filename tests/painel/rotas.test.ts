@@ -173,6 +173,16 @@ describe('painel Pedido RevGás', () => {
       expect(conferir).not.toHaveBeenCalled(); // uma listagem só, sem consulta por pedido
     });
 
+    it('escolhe o dia: só os últimos 7, com a lista de dias para o seletor', async () => {
+      const { pedir } = await montar();
+      const ontem = (await pedir('/painel/api/pedidos?dia=2026-11-20')).json();
+      expect(ontem.dias).toEqual(['2026-11-21', '2026-11-20', '2026-11-19', '2026-11-18', '2026-11-17', '2026-11-16', '2026-11-15']);
+      expect(ontem.pedidos.map((p: { id: number }) => p.id)).toEqual([3]); // 23h do dia 20 em Teresina
+      expect((await pedir('/painel/api/pedidos?dia=2026-11-14')).statusCode).toBe(400);
+      expect((await pedir('/painel/api/pedidos?dia=2026-11-22')).statusCode).toBe(400);
+      expect((await pedir('/painel/api/pedidos?dia=ontem')).statusCode).toBe(400);
+    });
+
     it('lista mostra as canceladas, sem oferecer cancelar de novo', async () => {
       const { pedir, vendas } = await montar();
       await vendas.cancelarVenda(1);
