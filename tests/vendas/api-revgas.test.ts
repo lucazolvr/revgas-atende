@@ -249,6 +249,13 @@ describe('ApiRevGasHttp v2', () => {
     ]);
   });
 
+  it('aoChamar: id da venda criada também sem o envelope data (formato da API real)', async () => {
+    const chamadas: { vendaId: number | null }[] = [];
+    const { f } = roteador({ '/sales': [201, { id: 30992181 }] });
+    await http(f, { aoChamar: (c: { vendaId: number | null }) => chamadas.push(c) }).criarVenda(corpo);
+    expect(chamadas[0]).toMatchObject({ rota: '/sales', status: 201, vendaId: 30992181 });
+  });
+
   it('aoChamar com falha de rede: status null', async () => {
     const chamadas: { status: number | null }[] = [];
     const f = vi.fn(async () => { throw new TypeError('fetch failed'); });
