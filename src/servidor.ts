@@ -7,6 +7,7 @@ import { novaSessao, processar, type Acao, type Sessao } from './conversa/motor.
 import type { Sessoes } from './conversa/sessoes.js';
 import type { Interpretador } from './ia/interpretacao.js';
 import { registrarEvento } from './metricas.js';
+import type { BuscaCliente, ConsultaErp, ConsultaVendas } from './vendas/api-revgas.js';
 import type { Produto } from './vendas/catalogo.js';
 import type { Pedido } from './vendas/pedido.js';
 import type { ResultadoRegistro } from './vendas/registrar.js';
@@ -22,6 +23,8 @@ export type DepsServidor = {
   /** Nome e endereço do último pedido desse telefone (cliente que volta não repete tudo). */
   clienteAnterior?: (telefone: string) => Promise<Pick<Pedido, 'nome' | 'endereco'> | null>;
   responderDuvida?: (texto: string) => Promise<string | null>;
+  /** Consultas à API RevGás para o cliente acompanhar e cancelar pedidos pelo WhatsApp. */
+  consultas?: Pick<BuscaCliente, 'vendasDoCliente'> & Pick<ConsultaVendas, 'historico' | 'cancelarVenda'> & Partial<Pick<ConsultaErp, 'situacao'>>;
   /** Proteções contra rajadas; os padrões atendem uma conversa humana normal. */
   limites?: { porConversa?: number; global?: number; janelaMs?: number; filasMaximas?: number };
 };
@@ -66,6 +69,7 @@ export function criarServidor(deps: DepsServidor) {
       // A mesma regra de privacidade da interpretação vale para o RAG: fora de
       // NUMEROS_IA não enviamos a pergunta ao Gemini e o motor usa o fallback.
       responderDuvida: interpretador ? deps.responderDuvida : undefined,
+      ...consultasDoCliente(msg),
     });
     // Depois de passar para um humano, se a conversa voltar ao bot começa um pedido novo
     // (mantendo nome e endereço), em vez de retomar do meio.
@@ -83,6 +87,42 @@ export function criarServidor(deps: DepsServidor) {
       ms: Date.now() - inicio,
       ia: interpretador !== null,
     });
+  }
+
+  /**
+   * Acompanhar e cancelar, presos ao telefone de quem escreveu: a lista só traz vendas desse telefone,
+   * e o motor só pede histórico ou cancelamento de ids dessa lista (guardados na sessão).
+   */
+  function consultasDoCliente(msg: MensagemRecebida) {
+    const c = deps.consultas;
+    if (!c) return {};
+    return {
+      vendasDoCliente: () => c.vendasDoCliente(msg.telefone),
+      historico: async (id: number, para: 'acompanhar' | 'cancelar') => {
+        const h = await c.historico(id);
+        if (para === 'acompanhar') registrarEvento({ conversaId: msg.conversaId, tipo: 'acompanhar' });
+        return h;
+      },
+      cancelar: async (id: number): Promise<'ok' | 'ja_cancelada' | 'falha'> => {
+        try {
+          // Cancelado pelo atendente entre a lista e o "sim": avisa em vez de tentar de novo.
+          const h = await c.historico(id);
+          if (!h) return 'falha';
+          if (h.status === 'CANCEL') return 'ja_cancelada';
+          const r = await c.cancelarVenda(id);
+          if (r.status !== 200 && r.status !== 204) {
+            app.log.warn({ conversa: msg.conversaId, venda: id, status: r.status }, 'a API recusou o cancelamento');
+            return 'falha';
+          }
+          registrarEvento({ conversaId: msg.conversaId, tipo: 'cancelamento', resultado: 'cliente' });
+          return 'ok';
+        } catch (e) {
+          app.log.warn({ conversa: msg.conversaId, venda: id, erro: e instanceof Error ? e.message : 'desconhecido' }, 'falha ao cancelar');
+          return 'falha'; // inclusive TempoEsgotado: sem confirmação, nunca "cancelado"
+        }
+      },
+      situacao: c.situacao ? () => c.situacao!() : undefined,
+    };
   }
 
   /** Melhor esforço: sem o histórico (API fora do ar), o pedido só começa do zero. */

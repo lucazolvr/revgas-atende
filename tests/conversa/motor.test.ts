@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { InterpretadorFalso } from '../../src/ia/interpretacao.js';
 import { ehEmergencia } from '../../src/conversa/emergencia.js';
 import { novaSessao, processar, separarCidadeUf, type Deps, type Sessao } from '../../src/conversa/motor.js';
+import * as M from '../../src/conversa/mensagens.js';
+import type { HistoricoVenda, VendaResumo } from '../../src/vendas/api-revgas.js';
 import { carregarCatalogo } from '../../src/vendas/catalogo.js';
 import type { ResultadoRegistro } from '../../src/vendas/registrar.js';
 
@@ -28,7 +30,7 @@ describe('motor da conversa (menus, sem IA)', () => {
   it('faz um pedido completo e registra uma vez', async () => {
     const d = deps();
     const { sessao, acoes } = await conversa(d, [
-      'oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1', '1',
+      'oi', '1', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1', '1',
     ]);
     expect(sessao.estado).toBe('REGISTRADO');
     expect(sessao.vendaId).toBe(77);
@@ -41,20 +43,20 @@ describe('motor da conversa (menus, sem IA)', () => {
   });
 
   it('mostra o resumo com o total do catálogo', async () => {
-    const { sessao, acoes } = await conversa(deps(), ['oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1']);
+    const { sessao, acoes } = await conversa(deps(), ['oi', '1', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1']);
     expect(sessao.estado).toBe('RESUMO');
     expect(textoDe(acoes)).toContain('R$ 220,00');
   });
 
   it('"1" repetido depois de registrado não cria outra venda', async () => {
     const d = deps();
-    const { acoes } = await conversa(d, ['oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1', '1', '1']);
+    const { acoes } = await conversa(d, ['oi', '1', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1', '1', '1']);
     expect(d.registrar).toHaveBeenCalledTimes(1);
     expect(textoDe(acoes)).toContain('já está registrado');
   });
 
   it('dinheiro pede troco e valida contra o total', async () => {
-    const { sessao, acoes } = await conversa(deps(), ['oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '2', '100']);
+    const { sessao, acoes } = await conversa(deps(), ['oi', '1', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '2', '100']);
     expect(sessao.estado).toBe('TROCO');
     expect(textoDe(acoes)).toContain('maior que o total');
     const r = await processar(sessao, 'R$ 250', deps());
@@ -64,7 +66,7 @@ describe('motor da conversa (menus, sem IA)', () => {
 
   it('corrige só o endereço', async () => {
     const { sessao } = await conversa(deps(), [
-      'oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1', '2', '3',
+      'oi', '1', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1', '2', '3',
       'Av. Frei Serafim', '200', 'Centro', 'Teresina',
     ]);
     expect(sessao.estado).toBe('RESUMO');
@@ -73,14 +75,14 @@ describe('motor da conversa (menus, sem IA)', () => {
   });
 
   it('cancela no resumo', async () => {
-    const { sessao, acoes } = await conversa(deps(), ['oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1', '3']);
+    const { sessao, acoes } = await conversa(deps(), ['oi', '1', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1', '3']);
     expect(sessao.estado).toBe('INICIO');
     expect(textoDe(acoes)).toContain('cancelado');
   });
 
   it('cancela no meio do pedido, pelos menus', async () => {
     for (const pedido of ['cancelar', 'Quero desistir']) {
-      const { sessao, acoes } = await conversa(deps(), ['oi', 'Maria', '1', pedido]);
+      const { sessao, acoes } = await conversa(deps(), ['oi', '1', 'Maria', '1', pedido]);
       expect(sessao.estado).toBe('INICIO');
       expect(sessao.pedido.nome).toBeUndefined();
       expect(textoDe(acoes)).toContain('cancelado');
@@ -93,18 +95,18 @@ describe('motor da conversa (menus, sem IA)', () => {
   });
 
   it('duas respostas inválidas seguidas transferem para humano', async () => {
-    const { acoes } = await conversa(deps(), ['oi', 'Maria', '1', 'muitos', 'sei lá']);
+    const { acoes } = await conversa(deps(), ['oi', '1', 'Maria', '1', 'muitos', 'sei lá']);
     expect(acoes).toContainEqual(expect.objectContaining({ tipo: 'transferir', motivo: 'nao_entendi' }));
   });
 
   it('cheiro de gás em qualquer etapa → segurança + transferência urgente', async () => {
-    const { acoes } = await conversa(deps(), ['oi', 'Maria', '1', '2', 'tô sentindo um cheiro de gás aqui']);
+    const { acoes } = await conversa(deps(), ['oi', '1', 'Maria', '1', '2', 'tô sentindo um cheiro de gás aqui']);
     expect(textoDe(acoes)).toContain('193');
     expect(acoes).toContainEqual(expect.objectContaining({ tipo: 'transferir', motivo: 'vazamento' }));
   });
 
   it('pedir atendente transfere com o resumo do que já foi coletado', async () => {
-    const { acoes } = await conversa(deps(), ['oi', 'Maria', 'quero falar com um atendente']);
+    const { acoes } = await conversa(deps(), ['oi', '1', 'Maria', 'quero falar com um atendente']);
     const t = acoes.find((a) => a.tipo === 'transferir');
     expect(t).toMatchObject({ motivo: 'humano' });
     expect(t && 'resumo' in t && t.resumo).toContain('Maria');
@@ -112,13 +114,13 @@ describe('motor da conversa (menus, sem IA)', () => {
 
   it('venda incerta (timeout) transfere para verificar', async () => {
     const d = deps({ registrar: vi.fn(async (): Promise<ResultadoRegistro> => ({ tipo: 'incerta' })) });
-    const { acoes } = await conversa(d, ['oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1', '1']);
+    const { acoes } = await conversa(d, ['oi', '1', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1', '1']);
     expect(acoes).toContainEqual(expect.objectContaining({ tipo: 'transferir', motivo: 'verificar_venda' }));
   });
 
   it('sem IA entende "meu nome é Ana", "pode confirmar" e "quero corrigir"', async () => {
     const d = deps();
-    const base = ['oi', 'meu nome é Ana', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1'];
+    const base = ['oi', '1', 'meu nome é Ana', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1'];
     const resumo = await conversa(d, base);
     expect(resumo.sessao.pedido.nome).toBe('Ana');
     expect((await processar(resumo.sessao, 'quero corrigir', d)).sessao.estado).toBe('CORRIGIR');
@@ -126,7 +128,7 @@ describe('motor da conversa (menus, sem IA)', () => {
   });
 
   it('nova mensagem depois de registrado começa outro pedido', async () => {
-    const { sessao } = await conversa(deps(), ['oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1', '1', 'boa noite']);
+    const { sessao } = await conversa(deps(), ['oi', '1', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1', '1', 'boa noite']);
     expect(sessao.vendaId).toBeUndefined();
     expect(sessao.estado).not.toBe('REGISTRADO');
   });
@@ -157,12 +159,12 @@ describe('motor da conversa (com IA)', () => {
   it('diz à IA qual parte do endereço foi perguntada', async () => {
     const etapas: string[] = [];
     const espiao = { interpretar: async (_t: string, etapa: string) => (etapas.push(etapa), null) };
-    await conversa(deps({ interpretador: espiao }), ['oi', 'Maria', '1', '2', 'Quadra 12', '5', 'Dirceu']);
+    await conversa(deps({ interpretador: espiao }), ['oi', '1', 'Maria', '1', '2', 'Quadra 12', '5', 'Dirceu']);
     expect(etapas).toContain('ENDERECO (pergunta atual: bairro)');
   });
 
   it('IA fora do ar (null) cai nos menus', async () => {
-    const { sessao } = await conversa(deps({ interpretador: new InterpretadorFalso({}) }), ['oi', 'Maria', '1']);
+    const { sessao } = await conversa(deps({ interpretador: new InterpretadorFalso({}) }), ['oi', '1', 'Maria', '1']);
     expect(sessao.estado).toBe('QUANTIDADE');
   });
 
@@ -190,7 +192,7 @@ describe('motor da conversa (com IA)', () => {
 });
 
 describe('recomendações da avaliação (issue #2)', () => {
-  const atePagamento = ['oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina'];
+  const atePagamento = ['oi', '1', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina'];
 
   it('"cartão" sem tipo: pergunta débito ou crédito, sem contar como "não entendi"', async () => {
     const d = deps();
@@ -230,7 +232,7 @@ describe('recomendações da avaliação (issue #2)', () => {
 });
 
 describe('cidade e estado', () => {
-  const ateCidade = ['oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro'];
+  const ateCidade = ['oi', '1', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro'];
 
   it('pergunta cidade e estado juntos, numa mensagem só', async () => {
     const { sessao, acoes } = await conversa(deps(), ateCidade);
@@ -287,5 +289,177 @@ describe('ehEmergencia', () => {
     expect(ehEmergencia('CHEIRO DE GÁS')).toBe(true);
     expect(ehEmergencia('o botijão está vazando')).toBe(true);
     expect(ehEmergencia('quero gás')).toBe(false);
+  });
+});
+
+describe('menu principal, acompanhar e cancelar (Tarefa 3)', () => {
+  const venda = (id: number, extra: Partial<VendaResumo> = {}): VendaResumo => ({
+    id, data: '2026-11-24T13:30:00.000Z', status: 'ACTIVE', total: 220, endereco: 'Rua Nova, 10', pago: false,
+    doBot: true, cliente: 'Maria', conversaId: 7, itens: '2x GLP 13KG', pagamento: 'PIX', ...extra,
+  });
+  const historicoDe = (v: VendaResumo): HistoricoVenda => ({ ...v, logs: [{ status: 'OPEN', quando: v.data }, { status: 'ACTIVE', quando: v.data }] });
+
+  function comVendas(vendas: VendaResumo[], resultado: 'ok' | 'ja_cancelada' | 'falha' = 'ok', extra: Partial<Deps> = {}) {
+    return deps({
+      vendasDoCliente: vi.fn(async () => vendas),
+      historico: vi.fn(async (id: number) => {
+        const v = vendas.find((x) => x.id === id);
+        return v ? historicoDe(v) : null;
+      }),
+      cancelar: vi.fn(async () => resultado),
+      ...extra,
+    });
+  }
+
+  it('"oi" sem histórico → menu principal, sem perguntar o nome', async () => {
+    const { sessao, acoes } = await conversa(deps(), ['oi']);
+    expect(sessao.estado).toBe('MENU');
+    expect(textoDe(acoes)).toContain(M.MENU_PRINCIPAL);
+    expect(textoDe(acoes)).not.toContain(M.PERGUNTA_NOME);
+  });
+
+  it('cliente reconhecido: saudação de volta com o nome, e o menu', async () => {
+    const s = novaSessao('5586999990000', { nome: 'Maria' });
+    const { acoes } = await conversa(deps(), ['boa tarde'], s);
+    expect(textoDe(acoes)).toContain('Maria');
+    expect(textoDe(acoes)).toContain(M.MENU_PRINCIPAL);
+  });
+
+  it('"1" no menu começa o pedido pela pergunta que falta', async () => {
+    const { sessao, acoes } = await conversa(deps(), ['oi', '1']);
+    expect(sessao.estado).toBe('NOME');
+    expect(textoDe(acoes)).toContain(M.PERGUNTA_NOME);
+  });
+
+  it('"quero 2 botijão" no início pula o menu e segue o pedido', async () => {
+    const { sessao, acoes } = await conversa(deps(), ['quero 2 botijão']);
+    expect(sessao.estado).toBe('NOME');
+    expect(textoDe(acoes)).not.toContain(M.MENU_PRINCIPAL);
+  });
+
+  it('"2" com uma venda → detalhe com o status em português e o histórico', async () => {
+    const d = comVendas([venda(12)]);
+    const { acoes } = await conversa(d, ['oi', '2']);
+    const texto = textoDe(acoes);
+    expect(texto).toContain('nº 12');
+    expect(texto).toContain('Recebido');
+    expect(texto).toContain('Em andamento');
+    expect(d.historico).toHaveBeenCalledWith(12, 'acompanhar');
+  });
+
+  it('"cadê meu pedido" no início vai direto para acompanhar', async () => {
+    const d = comVendas([venda(12)]);
+    const { acoes } = await conversa(d, ['cadê meu pedido?']);
+    expect(textoDe(acoes)).toContain('nº 12');
+  });
+
+  it('acompanhar com várias vendas: lista e mostra a escolhida', async () => {
+    const d = comVendas([venda(12), venda(15, { total: 110 })]);
+    const r1 = await conversa(d, ['oi', '2']);
+    expect(r1.sessao.estado).toBe('ACOMPANHAR');
+    expect(textoDe(r1.acoes)).toContain('Seus pedidos em aberto:');
+    expect(textoDe(r1.acoes)).toContain('2 - nº 15');
+    const r2 = await conversa(d, ['2'], r1.sessao);
+    expect(textoDe(r2.acoes)).toContain('nº 15');
+    expect(d.historico).toHaveBeenLastCalledWith(15, 'acompanhar');
+  });
+
+  it('"3", "1", "1" → cancela pela API uma vez e só então diz "cancelado"', async () => {
+    const d = comVendas([venda(12)]);
+    const r1 = await conversa(d, ['oi', '3', '1']);
+    expect(textoDe(r1.acoes)).toContain('Cancelar o pedido nº 12 (R$ 220,00)?');
+    expect(d.cancelar).not.toHaveBeenCalled();
+    const r2 = await conversa(d, ['1'], r1.sessao);
+    expect(d.cancelar).toHaveBeenCalledTimes(1);
+    expect(d.cancelar).toHaveBeenCalledWith(12);
+    expect(textoDe(r2.acoes)).toContain(M.pedidoCancelado(12));
+    expect(r2.sessao.estado).toBe('MENU');
+  });
+
+  it('"2" na confirmação não cancela', async () => {
+    const d = comVendas([venda(12)]);
+    const { sessao } = await conversa(d, ['oi', '3', '1', '2']);
+    expect(d.cancelar).not.toHaveBeenCalled();
+    expect(sessao.estado).toBe('MENU');
+  });
+
+  it('venda cancelada pelo atendente antes do "sim" → JA_CANCELADO', async () => {
+    const { acoes } = await conversa(comVendas([venda(12)], 'ja_cancelada'), ['oi', '3', '1', '1']);
+    expect(textoDe(acoes)).toContain(M.JA_CANCELADO);
+    expect(textoDe(acoes)).not.toContain('cancelado. ✅');
+  });
+
+  it('falha da API ao cancelar → transfere com erro_cancelamento e nunca diz "cancelado"', async () => {
+    const { acoes } = await conversa(comVendas([venda(12)], 'falha'), ['oi', '3', '1', '1']);
+    expect(acoes).toContainEqual(expect.objectContaining({ tipo: 'transferir', motivo: 'erro_cancelamento' }));
+    expect(textoDe(acoes).toLowerCase()).not.toContain('cancelado');
+  });
+
+  it('API fora do ar ao listar → aviso e transferência, sem chamar cancelar', async () => {
+    const d = comVendas([], 'ok', { vendasDoCliente: vi.fn(async () => Promise.reject(new Error('timeout'))) });
+    const { acoes } = await conversa(d, ['oi', '3']);
+    expect(acoes).toContainEqual(expect.objectContaining({ tipo: 'transferir', motivo: 'erro_consulta' }));
+    expect(d.cancelar).not.toHaveBeenCalled();
+  });
+
+  it('"3" sem vendas → SEM_PEDIDO_ATIVO e volta ao menu, sem chamar cancelar', async () => {
+    const d = comVendas([]);
+    const { sessao, acoes } = await conversa(d, ['oi', '3']);
+    expect(textoDe(acoes)).toContain(M.SEM_PEDIDO_ATIVO);
+    expect(sessao.estado).toBe('MENU');
+    expect(d.cancelar).not.toHaveBeenCalled();
+  });
+
+  it('"9" com 2 vendas listadas → não entendi e volta ao menu, sem chamar cancelar', async () => {
+    const d = comVendas([venda(12), venda(15)]);
+    const { sessao, acoes } = await conversa(d, ['oi', '3', '9']);
+    expect(textoDe(acoes)).toContain(M.NAO_ENTENDI);
+    expect(sessao.estado).toBe('MENU');
+    expect(d.cancelar).not.toHaveBeenCalled();
+  });
+
+  it('revenda sem permitir cancelamento → transfere para atendente', async () => {
+    const d = comVendas([venda(12)], 'ok', { situacao: vi.fn(async () => ({ aceitaPedido: true, permiteCancelar: false })) });
+    const { acoes } = await conversa(d, ['oi', '3']);
+    expect(acoes).toContainEqual(expect.objectContaining({ tipo: 'transferir', motivo: 'humano' }));
+    expect(d.cancelar).not.toHaveBeenCalled();
+  });
+
+  it('"menu" no meio do pedido → menu principal, e o pedido continua de onde parou', async () => {
+    const r1 = await conversa(deps(), ['oi', '1', 'Maria', '1', 'menu']);
+    expect(r1.sessao.estado).toBe('MENU');
+    expect(textoDe(r1.acoes)).toContain(M.MENU_PRINCIPAL);
+    expect(r1.sessao.pedido).toMatchObject({ nome: 'Maria', produto: 'P13' });
+    const r2 = await conversa(deps(), ['1'], r1.sessao);
+    expect(r2.sessao.estado).toBe('QUANTIDADE');
+  });
+
+  it('"cancelar" depois de registrar cancela a venda de verdade, pela API', async () => {
+    const d = comVendas([venda(77)]);
+    const r = await conversa(d, ['oi', '1', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1', '1', 'cancelar']);
+    expect(textoDe(r.acoes)).toContain('nº 77');
+    expect(textoDe(r.acoes)).not.toContain(M.CANCELADO);
+    const fim = await conversa(d, ['1', '1'], r.sessao);
+    expect(d.cancelar).toHaveBeenCalledWith(77);
+    expect(textoDe(fim.acoes)).toContain(M.pedidoCancelado(77));
+  });
+
+  it('"oi" de novo com o menu aberto só repete o menu (não conta como "não entendi")', async () => {
+    const { sessao, acoes } = await conversa(deps(), ['oi', 'oi', 'boa tarde']);
+    expect(sessao).toMatchObject({ estado: 'MENU', falhas: 0 });
+    expect(acoes).toEqual([{ tipo: 'responder', texto: M.MENU_PRINCIPAL }]);
+  });
+
+  it('texto que não é opção no menu: não entendi e repete o menu', async () => {
+    const { sessao, acoes } = await conversa(deps(), ['oi', 'xyz']);
+    expect(sessao.falhas).toBe(1);
+    expect(textoDe(acoes)).toContain(M.NAO_ENTENDI);
+  });
+
+  it('"4" abre a dúvida e "5" chama o atendente', async () => {
+    const r = await conversa(deps(), ['oi', '4']);
+    expect(r.sessao.estado).toBe('DUVIDA');
+    const { acoes } = await conversa(deps(), ['oi', '5']);
+    expect(acoes).toContainEqual(expect.objectContaining({ tipo: 'transferir', motivo: 'humano' }));
   });
 });

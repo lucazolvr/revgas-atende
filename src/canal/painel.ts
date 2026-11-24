@@ -18,6 +18,12 @@ const E = {
   incompleto: { title: 'pedido-incompleto', description: 'O bot não entendeu o cliente duas vezes', color: '#EAB308' },
   correcoes: { title: 'muitas-correcoes', description: 'O cliente corrigiu o mesmo pedido 3 vezes', color: '#CA8A04' },
   erroVenda: { title: 'erro-venda', description: 'A API RevGás recusou a venda', color: '#EA580C' },
+  erroCancelamento: {
+    title: 'erro-cancelamento',
+    description: 'O cliente pediu para cancelar e a API não confirmou: conferir no ERP',
+    color: '#B45309',
+  },
+  erroConsulta: { title: 'erro-consulta', description: 'A API não respondeu ao consultar os pedidos do cliente', color: '#9333EA' },
   verificar: {
     title: 'verificar-venda',
     description: 'A API não respondeu: conferir no ERP se a venda existe antes de refazer',
@@ -33,6 +39,8 @@ export const ETIQUETAS: Record<MotivoTransferencia, Etiqueta[]> = {
   verificar_venda: [E.verificar],
   erro_venda: [E.erroVenda],
   correcoes: [E.correcoes],
+  erro_cancelamento: [E.erroCancelamento],
+  erro_consulta: [E.erroConsulta],
 };
 
 export const TODAS_ETIQUETAS: Etiqueta[] = Object.values(E);

@@ -35,6 +35,7 @@ function montar(
     limites,
     registrar: (p, conversaId) => registrarVenda(api, corpoDaVenda(p, catalogo, { clienteId: 1, estabelecimentoId: 1, conversaId })),
     clienteAnterior: comHistorico ? (t) => api.ultimoCliente(t) : undefined,
+    consultas: api,
   });
   const enviar = (texto: string, conversa: Record<string, unknown> = {}) =>
     app.inject({ method: 'POST', url: `/webhook/${TOKEN}`, payload: webhook(texto, {}, conversa) });
@@ -55,7 +56,7 @@ describe('servidor', () => {
 
   it('dois "1" ao mesmo tempo no resumo criam uma venda só', async () => {
     const { ocioso, api, enviar } = montar();
-    for (const m of ['oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1']) await enviar(m);
+    for (const m of ['oi', '1', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1']) await enviar(m);
     await ocioso();
     await Promise.all([enviar('1'), enviar('1')]);
     await ocioso();
@@ -109,12 +110,12 @@ describe('servidor', () => {
     const { ocioso, chatwoot, enviar } = montar([], { porConversa: 1 });
     await Promise.all([enviar('oi'), enviar('oi')]);
     await ocioso();
-    // Uma saudação válida gera boas-vindas e a pergunta de nome; a segunda foi descartada.
+    // Uma saudação gera a apresentação e o menu principal; a segunda foi descartada.
     expect(chatwoot.responder).toHaveBeenCalledTimes(2);
   });
 
   describe('dados do pedido na lateral do Chatwoot', () => {
-    const PEDIDO = ['oi', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1'];
+    const PEDIDO = ['oi', '1', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1'];
 
     it('venda registrada grava número, total, pagamento, endereço e quantidade', async () => {
       const { ocioso, chatwoot, enviar } = montar();
@@ -146,11 +147,12 @@ describe('servidor', () => {
       const { ocioso, chatwoot, enviar } = montar([], undefined, true);
       for (const m of [...PEDIDO, '1']) await enviar(m);
       await ocioso();
-      for (const m of ['oi', '1', '1', '1']) await enviar(m, { id: 9 }); // P13, 1 unidade, PIX
+      for (const m of ['oi', '1', '1', '1', '1']) await enviar(m, { id: 9 }); // menu "fazer pedido", P13, 1 unidade, PIX
       await ocioso();
       const respostas = (chatwoot.responder.mock.calls as unknown as [number, string][]).filter(([id]) => id === 9).map(([, t]) => t);
       expect(respostas[0]).toContain('Olá de novo, Maria');
-      expect(respostas[0]).toContain('Rua Nova, 10 - Centro, Teresina/PI');
+      expect(respostas.join('\n')).toContain('Rua Nova, 10 - Centro, Teresina/PI');
+      expect(respostas.join('\n')).not.toContain('Qual é o seu nome');
       expect(respostas.at(-1)).toContain('Confira seu pedido');
     });
 
@@ -158,13 +160,14 @@ describe('servidor', () => {
       const { ocioso, api, chatwoot, enviar } = montar([], undefined, true);
       api.ultimoCliente = async () => { throw new Error('API fora'); };
       await enviar('oi');
+      await enviar('1');
       await ocioso();
       expect(chatwoot.responder).toHaveBeenCalledWith(7, expect.stringContaining('Qual é o seu nome'));
     });
 
     it('transferência grava o que já foi coletado', async () => {
       const { ocioso, chatwoot, enviar } = montar();
-      for (const m of ['oi', 'Maria', '1', '3', 'quero um atendente']) await enviar(m);
+      for (const m of ['oi', '1', 'Maria', '1', '3', 'quero um atendente']) await enviar(m);
       await ocioso();
       expect(chatwoot.atributos).toHaveBeenCalledExactlyOnceWith(7, { total: 'R$ 330,00', quantidade: 3 });
     });
@@ -187,6 +190,60 @@ describe('servidor', () => {
       await enviar('1');
       await ocioso();
       expect(chatwoot.responder).toHaveBeenCalledWith(7, expect.stringContaining('já está registrado'));
+    });
+  });
+
+  describe('acompanhar e cancelar pelo WhatsApp (Tarefa 3)', () => {
+    const PEDIDO = ['oi', '1', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina', '1', '1'];
+    const respostasDa = (chatwoot: ReturnType<typeof montar>['chatwoot'], id: number) =>
+      (chatwoot.responder.mock.calls as unknown as [number, string][]).filter(([c]) => c === id).map(([, t]) => t).join('\n');
+
+    it('cancela numa conversa nova do mesmo telefone, só depois de a API confirmar', async () => {
+      const { ocioso, api, chatwoot, enviar } = montar();
+      for (const m of PEDIDO) await enviar(m); // venda 1, na conversa 7
+      await ocioso();
+      expect(api.vendas).toHaveLength(1);
+      for (const m of ['cancelar', '1', '1']) await enviar(m, { id: 9 });
+      await ocioso();
+      expect([...api.canceladas]).toEqual([1]);
+      expect(respostasDa(chatwoot, 9)).toContain('Pedido nº 1 cancelado.');
+    });
+
+    it('outro telefone não vê nem cancela a venda', async () => {
+      const { ocioso, api, chatwoot, app } = montar();
+      for (const m of PEDIDO) await app.inject({ method: 'POST', url: `/webhook/${TOKEN}`, payload: webhook(m) });
+      await ocioso();
+      const outro = (texto: string) =>
+        app.inject({ method: 'POST', url: `/webhook/${TOKEN}`, payload: webhook(texto, {}, { id: 20, meta: { sender: { phone_number: '+5586911112222' } } }) });
+      for (const m of ['cancelar', '1', '1']) await outro(m);
+      await ocioso();
+      expect(api.canceladas.size).toBe(0);
+      expect(respostasDa(chatwoot, 20)).toContain('Não encontrei pedido em aberto');
+    });
+
+    it('venda cancelada pelo atendente entre a lista e o "sim": avisa e não cancela de novo', async () => {
+      const { ocioso, api, chatwoot, enviar } = montar();
+      for (const m of PEDIDO) await enviar(m);
+      await ocioso();
+      for (const m of ['cancelar', '1']) await enviar(m, { id: 9 });
+      await ocioso();
+      api.canceladas.add(1); // o atendente cancelou pelo painel
+      const cancelar = vi.spyOn(api, 'cancelarVenda');
+      await enviar('1', { id: 9 });
+      await ocioso();
+      expect(cancelar).not.toHaveBeenCalled();
+      expect(respostasDa(chatwoot, 9)).toContain('Esse pedido já estava cancelado.');
+    });
+
+    it('API recusa o cancelamento: transfere com erro_cancelamento e nunca diz "cancelado"', async () => {
+      const { ocioso, api, chatwoot, enviar } = montar();
+      for (const m of PEDIDO) await enviar(m);
+      await ocioso();
+      api.cancelarVenda = async () => ({ status: 500, dados: null });
+      for (const m of ['cancelar', '1', '1']) await enviar(m, { id: 9 });
+      await ocioso();
+      expect(chatwoot.etiquetar).toHaveBeenCalledWith(9, ['erro-cancelamento']);
+      expect(respostasDa(chatwoot, 9)).not.toMatch(/cancelado\./);
     });
   });
 });
