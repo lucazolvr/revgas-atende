@@ -220,7 +220,11 @@ describe('painel Pedido RevGás', () => {
 
     it('estoque: catálogo do bot com o estoque do ERP (inativo = 0; ausente = desconhecido)', async () => {
       const { pedir, vendas } = await montar();
-      expect((await pedir('/painel/api/estoque')).json()).toEqual({ estoque: [{ codigo: 'P13', nome: 'Botijão de gás P13', estoque: null }] });
+      expect((await pedir('/painel/api/estoque')).json().estoque).toEqual([
+        { codigo: 'P13', nome: 'Botijão P13 (13kg)', estoque: null },
+        { codigo: 'P45', nome: 'Botijão P45 (45kg)', estoque: null },
+        { codigo: 'AGUA20', nome: 'Água mineral 20L', estoque: null },
+      ]);
       vendas.produtosErp = [{ id: 26717, descricao: 'GLP 13KG', estoque: 933, ativo: true }];
       expect((await pedir('/painel/api/estoque')).json().estoque[0].estoque).toBe(933);
       vendas.produtosErp = [{ id: 26717, descricao: 'GLP 13KG', estoque: 933, ativo: false }];

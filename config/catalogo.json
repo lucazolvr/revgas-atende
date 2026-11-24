@@ -1,3 +1,5 @@
 [
-  { "codigo": "P13", "productId": 26717, "nome": "Botijão de gás P13", "precoCentavos": 11000 }
+  { "codigo": "P13", "productId": 26717, "nome": "Botijão P13 (13kg)", "precoCentavos": 11000 },
+  { "codigo": "P45", "productId": 23974, "nome": "Botijão P45 (45kg)", "precoCentavos": 42000 },
+  { "codigo": "AGUA20", "productId": 26255, "nome": "Água mineral 20L", "precoCentavos": 1200 }
 ]

@@ -463,3 +463,103 @@ describe('menu principal, acompanhar e cancelar (Tarefa 3)', () => {
     expect(acoes).toContainEqual(expect.objectContaining({ tipo: 'transferir', motivo: 'humano' }));
   });
 });
+
+describe('produtos, estoque e revenda aberta (Tarefa 4)', () => {
+  const comEstoque = (estoque: Record<string, number>, extra: Partial<Deps> = {}) => deps({ estoque: vi.fn(async () => estoque), ...extra });
+  const ateEndereco = ['Rua Nova', '10', 'Centro', 'Teresina', '1']; // ... até o resumo, no PIX
+
+  it('estoque { P13: 0, P45: 3 } → o menu não mostra o P13, e o "1" é o P45', async () => {
+    const d = comEstoque({ P13: 0, P45: 3 });
+    const r = await conversa(d, ['oi', '1', 'Maria']);
+    expect(textoDe(r.acoes)).not.toContain('P13');
+    expect(textoDe(r.acoes)).toContain('1 - Botijão P45 (45kg)');
+    const r2 = await conversa(d, ['1'], r.sessao);
+    expect(r2.sessao.pedido.produto).toBe('P45');
+  });
+
+  it('quantidade 5 com estoque 3 → "Só temos 3", sem contar como "não entendi"', async () => {
+    const d = comEstoque({ P13: 3 });
+    const { sessao, acoes } = await conversa(d, ['oi', '1', 'Maria', '1', '5']);
+    expect(textoDe(acoes)).toContain(M.semEstoque(3));
+    expect(sessao).toMatchObject({ estado: 'QUANTIDADE', falhas: 0 });
+    const r = await conversa(d, ['3'], sessao);
+    expect(r.sessao.pedido.quantidade).toBe(3);
+  });
+
+  it('P13 esgota antes do resumo → avisa e volta a "Qual produto?"', async () => {
+    const estoque: Record<string, number> = { P13: 10, P45: 5 };
+    const d = deps({ estoque: vi.fn(async () => ({ ...estoque })) });
+    const r = await conversa(d, ['oi', '1', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina']);
+    expect(r.sessao.estado).toBe('PAGAMENTO');
+    estoque.P13 = 0;
+    const { sessao, acoes } = await conversa(d, ['1'], r.sessao);
+    expect(sessao.estado).toBe('PRODUTO');
+    expect(sessao.pedido.produto).toBeUndefined();
+    expect(textoDe(acoes)).toContain('Qual produto?');
+    expect(textoDe(acoes)).toContain('Botijão P13 (13kg)'); // no aviso de que esgotou
+    expect(textoDe(acoes)).not.toContain('Confira seu pedido');
+  });
+
+  it('estoque cai abaixo da quantidade no "confirmar" → não registra e pergunta a quantidade de novo', async () => {
+    const estoque: Record<string, number> = { P13: 10 };
+    const d = deps({ estoque: vi.fn(async () => ({ ...estoque })) });
+    const r = await conversa(d, ['oi', '1', 'Maria', '1', '5', ...ateEndereco]);
+    expect(r.sessao.estado).toBe('RESUMO');
+    estoque.P13 = 2;
+    const { sessao, acoes } = await conversa(d, ['1'], r.sessao);
+    expect(d.registrar).not.toHaveBeenCalled();
+    expect(sessao.estado).toBe('QUANTIDADE');
+    expect(textoDe(acoes)).toContain(M.semEstoque(2));
+  });
+
+  it('aceitaPedido: false → REVENDA_FECHADA e menu, sem começar o pedido', async () => {
+    const d = deps({ situacao: vi.fn(async () => ({ aceitaPedido: false, permiteCancelar: true })) });
+    const r1 = await conversa(d, ['oi', '1']);
+    expect(textoDe(r1.acoes)).toContain(M.REVENDA_FECHADA);
+    expect(r1.sessao.estado).toBe('MENU');
+    const r2 = await conversa(d, ['quero 2 botijão']);
+    expect(textoDe(r2.acoes)).toContain(M.REVENDA_FECHADA);
+    expect(r2.sessao.estado).toBe('MENU');
+  });
+
+  it('revenda fecha no meio do pedido → o "confirmar" não registra', async () => {
+    let aceita = true;
+    const d = deps({ situacao: vi.fn(async () => ({ aceitaPedido: aceita, permiteCancelar: true })) });
+    const r = await conversa(d, ['oi', '1', 'Maria', '1', '2', ...ateEndereco]);
+    aceita = false;
+    const { acoes } = await conversa(d, ['1'], r.sessao);
+    expect(d.registrar).not.toHaveBeenCalled();
+    expect(textoDe(acoes)).toContain(M.REVENDA_FECHADA);
+  });
+
+  it('todos com estoque 0 → SEM_PRODUTOS e transfere', async () => {
+    const { acoes } = await conversa(comEstoque({ P13: 0, P45: 0, AGUA20: 0 }), ['oi', '1', 'Maria']);
+    expect(textoDe(acoes)).toContain(M.SEM_PRODUTOS);
+    expect(acoes).toContainEqual(expect.objectContaining({ tipo: 'transferir', motivo: 'humano' }));
+  });
+
+  it('estoque fora do ar → segue sem limite (melhor esforço)', async () => {
+    const d = deps({ estoque: vi.fn(async () => Promise.reject(new Error('ERP fora'))) });
+    const { sessao } = await conversa(d, ['oi', '1', 'Maria', '1', '15']);
+    expect(sessao.pedido.quantidade).toBe(15);
+  });
+
+  it('"botijão" sem tamanho pergunta qual; "13kg", "45" e "água" escolhem sem perguntar', async () => {
+    const naEtapa = ['oi', '1', 'Maria'];
+    expect((await conversa(deps(), [...naEtapa, 'botijão'])).sessao.estado).toBe('PRODUTO');
+    expect((await conversa(deps(), [...naEtapa, 'botijão de 13kg'])).sessao.pedido.produto).toBe('P13');
+    expect((await conversa(deps(), [...naEtapa, 'o de 45'])).sessao.pedido.produto).toBe('P45');
+    expect((await conversa(deps(), [...naEtapa, 'água'])).sessao.pedido.produto).toBe('AGUA20');
+  });
+
+  it('"botijão" com só um tamanho em estoque escolhe esse', async () => {
+    const { sessao } = await conversa(comEstoque({ P13: 0 }), ['oi', '1', 'Maria', 'botijão']);
+    expect(sessao.pedido.produto).toBe('P45');
+  });
+
+  it('produto em falta pedido pelo nome → avisa e mostra o menu', async () => {
+    const { sessao, acoes } = await conversa(comEstoque({ P13: 0 }), ['oi', '1', 'Maria', 'p13']);
+    expect(sessao.estado).toBe('PRODUTO');
+    expect(textoDe(acoes)).toContain(M.produtoEmFalta('Botijão P13 (13kg)'));
+  });
+});
