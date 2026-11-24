@@ -197,5 +197,6 @@ docker compose exec postgres psql -U postgres -d revgas -c "select rota, status,
 | `http://127.0.0.1:3003` não abre | O Metabase ainda está iniciando | Aguarde 1 a 2 minutos; `docker compose logs -f metabase` mostra "Metabase Initialization COMPLETE" |
 | Conexão recusada: "password authentication failed for user metabase_leitura" | Senha diferente da do `.env`, ou o usuário ainda não foi criado | Confira `METABASE_DB_SENHA` e rode `docker compose up -d revgas-db`, que cria o usuário e reaplica a senha |
 | "database revgas does not exist" ou "relation revgas.chamadas_api does not exist" | O banco da Tarefa 2 ainda não foi criado neste computador | Rode `docker compose up -d revgas-db` |
+| Script ou tela de conexão: "Timed out after 10.0 s" | Pouca RAM livre no computador; o Metabase fica lento | O compose já sobe o tempo de conexão para 30 s (`MB_DB_CONNECTION_TIMEOUT_MS`). Feche outros programas e rode o script de novo |
 | Gráficos vazios | Nenhum pedido de teste nas últimas 24 horas | Faça um pedido pelo WhatsApp e espere a atualização de 1 minuto |
 | O painel não se atualiza sozinho | A atualização automática não foi ligada | Ícone de relógio no painel → 1 minuto |

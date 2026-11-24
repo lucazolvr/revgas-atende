@@ -182,7 +182,10 @@ services:
       MB_SITE_LOCALE: pt_BR
       MB_ANON_TRACKING_ENABLED: "false"
       # Java com teto de memória: o Docker deste projeto costuma ter só ~4 GB para tudo.
-      JAVA_OPTS: "-Xmx768m"
+      # Com 768 MB, a v0.65 ficou lenta a ponto de estourar o tempo de conexão (24/11).
+      JAVA_OPTS: "-Xmx1g"
+      # Em computador com pouca RAM livre, o teste de conexão passa dos 10 s padrão.
+      MB_DB_CONNECTION_TIMEOUT_MS: "30000"
     volumes:
       - metabase_dados:/metabase-data
     ports:
