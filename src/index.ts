@@ -7,9 +7,8 @@ import { ConhecimentoGemini } from './conhecimento/gemini.js';
 import { criarServidor } from './servidor.js';
 import { configurarMetricas } from './metricas.js';
 import { criarRegistroPostgres } from './dados/postgres.js';
-import { RegistroPedidosMemoria, RegistroPedidosRedis } from './painel/pedidos.js';
 import { registrarPainel } from './painel/rotas.js';
-import { ApiRevGasFalsa, ApiRevGasHttp, type ApiRevGas, type BuscaCliente, type ConsultaVendas } from './vendas/api-revgas.js';
+import { ApiRevGasFalsa, ApiRevGasHttp, type ApiRevGas, type BuscaCliente, type ConsultaErp, type ConsultaVendas } from './vendas/api-revgas.js';
 import { carregarCatalogo } from './vendas/catalogo.js';
 import { corpoDaVenda } from './vendas/pedido.js';
 import { registrarVenda } from './vendas/registrar.js';
@@ -22,7 +21,7 @@ configurarMetricas(config.METRICAS_RETENCAO_DIAS, registro?.evento);
 if (registro) console.log('Registro das chamadas à API e dos eventos no Postgres (banco revgas) ligado.');
 const catalogo = carregarCatalogo();
 
-let api: ApiRevGas & ConsultaVendas & BuscaCliente;
+let api: ApiRevGas & ConsultaVendas & BuscaCliente & ConsultaErp;
 if (config.VENDA_REAL) {
   api = new ApiRevGasHttp(config.REVGAS_API_URL, config.REVGAS_API_KEY!, {
     estabelecimentoId: config.REVGAS_ESTABELECIMENTO,
@@ -46,17 +45,9 @@ if (!gemini) console.log('Sem GEMINI_API_KEY: o bot atende só pelos menus.');
 const iaParaTodos = config.NUMEROS_IA.includes('*');
 if (gemini && iaParaTodos) console.warn('⚠  IA PARA TODOS OS NÚMEROS (NUMEROS_IA=*): na cota grátis, o Google pode usar as mensagens.');
 
-// Uma conexão só com o Redis, dividida entre as sessões e o registro de pedidos do painel.
+// Redis: só as sessões de conversa. Os pedidos ficam na API da RevGás (o painel lê de lá).
 const redis = config.REDIS_URL ? new Redis(config.REDIS_URL) : null;
 const chatwoot = new ClienteChatwoot(config.CHATWOOT_URL, config.CHATWOOT_ACCOUNT_ID, config.CHATWOOT_BOT_TOKEN);
-// Pedidos do dia (nome e endereço): só guardados se o painel que os mostra estiver ligado.
-// Com o ERP de demonstração (em memória), o registro também fica em memória: os dois zeram juntos
-// quando o bot reinicia. No Redis, a "venda 1" de antes do reinício se misturava com a nova venda 1.
-const pedidos = config.PAINEL_TOKEN
-  ? config.VENDA_REAL && redis
-    ? new RegistroPedidosRedis(redis)
-    : new RegistroPedidosMemoria()
-  : undefined;
 const { app, ocioso } = criarServidor({
   webhookToken: config.BOT_WEBHOOK_TOKEN,
   chatwoot,
@@ -66,19 +57,18 @@ const { app, ocioso } = criarServidor({
   interpretadorPara: (telefone) =>
     gemini && (iaParaTodos || config.NUMEROS_IA.includes(chaveTelefone(telefone))) ? gemini : null,
   responderDuvida: (texto) => conhecimento?.responder(texto) ?? Promise.resolve(null),
-  registrar: (p) => registrarVenda(api, corpoDaVenda(p, catalogo, ids)),
+  registrar: (p, conversaId) => registrarVenda(api, corpoDaVenda(p, catalogo, { ...ids, conversaId })),
   clienteAnterior: (telefone) => api.ultimoCliente(telefone),
-  pedidos,
 });
 
-if (config.PAINEL_TOKEN && pedidos) {
+if (config.PAINEL_TOKEN) {
   registrarPainel(app, {
     token: config.PAINEL_TOKEN,
     origensChatwoot: config.PAINEL_ORIGENS,
     chatwoot,
-    pedidos,
     vendas: api,
-    estabelecimentoId: ids.estabelecimentoId,
+    erp: api,
+    catalogo,
     modo: config.VENDA_REAL ? 'teste' : 'memoria',
   });
   console.log('Painel "Pedido RevGás" ligado: aba nas conversas e "Pedidos de hoje" no menu do Chatwoot.');

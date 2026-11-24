@@ -17,6 +17,12 @@
         <button id="atualizar" type="button" class="secundario">Atualizar</button>
       </header>
 
+      <section id="secao-estoque" class="estoque">
+        <h2>Estoque no ERP</h2>
+        <ul id="estoque"></ul>
+        <p id="erro-estoque" class="erro" hidden></p>
+      </section>
+
       <p id="aviso" role="status">Carregando…</p>
       <ol id="lista" class="lista"></ol>
 
@@ -24,24 +30,25 @@
         <li class="cartao">
           <div class="topo">
             <strong class="titulo"></strong>
-            <span class="selo">Consultando…</span>
+            <span class="selo"></span>
           </div>
           <dl>
             <dt>Cliente</dt><dd data-campo="nome"></dd>
             <dt>Pedido</dt><dd data-campo="itens"></dd>
-            <dt>Total</dt><dd data-campo="total"></dd>
             <dt>Pagamento</dt><dd data-campo="pagamento"></dd>
             <dt>Endereço</dt><dd data-campo="endereco"></dd>
           </dl>
-          <p class="erro" hidden></p>
+          <ol class="historico" hidden></ol>
           <div class="acoes">
             <button type="button" class="link abrir">Abrir conversa</button>
+            <button type="button" class="link ver-historico">Ver histórico</button>
             <button type="button" class="perigo cancelar" hidden>Cancelar venda de teste</button>
           </div>
           <p class="resultado sutil" role="status"></p>
         </li>
       </template>
     </main>
+    <script src="/painel/status.js"></script>
     <script src="/painel/pedidos.js"></script>
   </body>
 </html>
