@@ -64,7 +64,7 @@ function mostrar(d) {
   if ('erro' in v) {
     selo.className = 'selo';
     selo.textContent = `Venda nº ${v.id}`;
-    $('erro-venda').textContent = `Não deu para consultar: ${v.erro}.`;
+    $('erro-venda').textContent = `${v.erro.charAt(0).toUpperCase()}${v.erro.slice(1)}.`; // o motivo já diz o que houve
     $('erro-venda').hidden = false;
     return;
   }

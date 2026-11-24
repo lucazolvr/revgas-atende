@@ -365,7 +365,9 @@ export class ApiRevGasHttp implements ApiRevGas, ConsultaVendas, BuscaCliente, C
     const registrar = (status: number | null, dados: unknown) => {
       if (!this.aoChamar) return;
       const doCaminho = caminho.match(/^\/sales\/(\d+)/)?.[1];
-      const criada = (dados as { data?: { id?: unknown } } | null)?.data?.id;
+      // A criação devolve { data: { id } } ou { id }, como em registrarVenda.
+      const d = dados as { id?: unknown; data?: { id?: unknown } } | null;
+      const criada = d?.data?.id ?? d?.id;
       try {
         this.aoChamar({
           metodo,

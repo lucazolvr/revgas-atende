@@ -123,3 +123,4 @@ h3 { font-size: 12px; margin: 12px 0 6px; color: var(--sutil); font-weight: 600;
 .estoque ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 16px; }
 .estoque li { display: flex; gap: 8px; align-items: baseline; }
 .estoque li.esgotado strong { color: var(--perigo); }
+#historico { margin-bottom: 12px; }
