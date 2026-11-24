@@ -246,4 +246,17 @@ describe('servidor', () => {
       expect(respostasDa(chatwoot, 9)).not.toMatch(/cancelado\./);
     });
   });
+
+  it('menu de produtos com o estoque do ERP: produto inativo não aparece (Tarefa 4)', async () => {
+    const { ocioso, api, chatwoot, enviar } = montar();
+    api.produtosErp = [
+      { id: 26717, descricao: 'GLP 13KG', estoque: 50, ativo: false }, // P13 inativo
+      { id: 23974, descricao: 'GLP 45KG', estoque: 4, ativo: true },
+    ];
+    for (const m of ['oi', '1', 'Maria']) await enviar(m);
+    await ocioso();
+    const ultima = (chatwoot.responder.mock.calls.at(-1) as unknown as [number, string])[1];
+    expect(ultima).toContain('1 - Botijão P45 (45kg)');
+    expect(ultima).not.toContain('P13');
+  });
 });

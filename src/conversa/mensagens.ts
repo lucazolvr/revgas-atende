@@ -85,6 +85,18 @@ export function pedidoCancelado(id: number): string {
   return `Pedido nº ${id} cancelado. ✅`;
 }
 
+// --- Produtos, estoque e revenda aberta (v2, Tarefa 4) ---
+export const SEM_PRODUTOS = 'No momento estamos sem produtos disponíveis.';
+export const REVENDA_FECHADA = 'No momento a revenda não está recebendo pedidos pelo WhatsApp.';
+
+export function semEstoque(n: number): string {
+  return `Só temos ${n} em estoque. Quantas você quer?`;
+}
+
+export function produtoEmFalta(nome: string): string {
+  return `No momento estamos sem ${nome} em estoque. 😕`;
+}
+
 export function menuProdutos(cat: Produto[]): string {
   return 'Qual produto?\n' + cat.map((p, i) => `${i + 1} - ${p.nome} (${formatarReais(p.precoCentavos)})`).join('\n');
 }

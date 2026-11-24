@@ -8,7 +8,7 @@ import type { Sessoes } from './conversa/sessoes.js';
 import type { Interpretador } from './ia/interpretacao.js';
 import { registrarEvento } from './metricas.js';
 import type { BuscaCliente, ConsultaErp, ConsultaVendas } from './vendas/api-revgas.js';
-import type { Produto } from './vendas/catalogo.js';
+import { estoqueDoCatalogo, type Produto } from './vendas/catalogo.js';
 import type { Pedido } from './vendas/pedido.js';
 import type { ResultadoRegistro } from './vendas/registrar.js';
 
@@ -24,7 +24,7 @@ export type DepsServidor = {
   clienteAnterior?: (telefone: string) => Promise<Pick<Pedido, 'nome' | 'endereco'> | null>;
   responderDuvida?: (texto: string) => Promise<string | null>;
   /** Consultas à API RevGás para o cliente acompanhar e cancelar pedidos pelo WhatsApp. */
-  consultas?: Pick<BuscaCliente, 'vendasDoCliente'> & Pick<ConsultaVendas, 'historico' | 'cancelarVenda'> & Partial<Pick<ConsultaErp, 'situacao'>>;
+  consultas?: Pick<BuscaCliente, 'vendasDoCliente'> & Pick<ConsultaVendas, 'historico' | 'cancelarVenda'> & Partial<Pick<ConsultaErp, 'situacao' | 'produtos'>>;
   /** Proteções contra rajadas; os padrões atendem uma conversa humana normal. */
   limites?: { porConversa?: number; global?: number; janelaMs?: number; filasMaximas?: number };
 };
@@ -122,6 +122,8 @@ export function criarServidor(deps: DepsServidor) {
         }
       },
       situacao: c.situacao ? () => c.situacao!() : undefined,
+      // Estoque do ERP ligado ao catálogo pelo productId (cache de 5 minutos na API real).
+      estoque: c.produtos ? async () => estoqueDoCatalogo(deps.catalogo, await c.produtos!()) : undefined,
     };
   }
 

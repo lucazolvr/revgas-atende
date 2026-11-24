@@ -22,7 +22,7 @@ import { ATRIBUTOS, type ChaveAtributo } from '../canal/painel.js';
 import type { ClienteChatwoot } from '../canal/chatwoot.js';
 import { registrarEvento } from '../metricas.js';
 import { TempoEsgotado, type ConsultaErp, type ConsultaVendas, type HistoricoVenda, type VendaResumo } from '../vendas/api-revgas.js';
-import type { Produto } from '../vendas/catalogo.js';
+import { estoqueDoCatalogo, type Produto } from '../vendas/catalogo.js';
 import { diaDaRevenda } from '../vendas/pedido.js';
 
 export type DepsPainel = {
@@ -214,11 +214,8 @@ export function registrarPainel(app: FastifyInstance, deps: DepsPainel) {
   app.get('/painel/api/estoque', async (req, reply) => {
     if (!autorizado(req, reply)) return reply;
     try {
-      const doErp = await deps.erp.produtos();
-      const estoque = deps.catalogo.map((p) => {
-        const e = doErp.find((x) => x.id === p.productId);
-        return { codigo: p.codigo, nome: p.nome, estoque: e ? (e.ativo ? e.estoque : 0) : null };
-      });
+      const doErp = estoqueDoCatalogo(deps.catalogo, await deps.erp.produtos());
+      const estoque = deps.catalogo.map((p) => ({ codigo: p.codigo, nome: p.nome, estoque: doErp[p.codigo] ?? null }));
       return seguro(reply).send({ estoque });
     } catch {
       return seguro(reply).code(502).send({ erro: 'falha ao consultar o estoque no ERP' });

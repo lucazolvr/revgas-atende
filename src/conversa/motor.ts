@@ -54,6 +54,11 @@ export type Deps = {
   cancelar?: (id: number) => Promise<'ok' | 'ja_cancelada' | 'falha'>;
   /** Situação da revenda no ERP (consultada só quando precisa, com cache na API real). */
   situacao?: () => Promise<SituacaoRevenda>;
+  /**
+   * Estoque no ERP por código do catálogo (inativo = 0). Código ausente ou `null` = desconhecido, sem
+   * limite. Consultado só nas etapas de produto, quantidade e resumo; falha = segue sem limite.
+   */
+  estoque?: () => Promise<Record<string, number | null>>;
 };
 
 const DESCRICAO_MOTIVO: Record<MotivoTransferencia, string> = {
@@ -160,12 +165,69 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
     responder(M.listaPedidos(vendas));
     return fim();
   };
-  const comecarPedido = () => {
+  // --- Estoque e revenda aberta (Tarefa 4) ---
+  let estoqueLido: Record<string, number | null> | undefined;
+  /** Uma consulta por mensagem, no máximo. Falha = estoque desconhecido (melhor esforço). */
+  const estoque = async () => (estoqueLido ??= deps.estoque ? await deps.estoque().catch(() => ({})) : {});
+  const limite = (e: Record<string, number | null>, codigo: string) => e[codigo] ?? Infinity;
+  /** Produtos com estoque (ou estoque desconhecido), na ordem do catálogo: é a lista numerada do menu. */
+  const disponiveis = async () => {
+    const e = await estoque();
+    return cat.filter((p) => limite(e, p.codigo) > 0);
+  };
+  const revendaFechada = async () => (deps.situacao ? (await deps.situacao().catch(() => null))?.aceitaPedido === false : false);
+
+  /** Pergunta do próximo campo; no produto, o menu só com o que tem estoque. */
+  const perguntar = async (aviso?: string) => {
+    const antes = aviso ? `${aviso}\n` : '';
+    if (s.estado === 'PRODUTO') {
+      const lista = await disponiveis();
+      if (!lista.length) {
+        responder(M.SEM_PRODUTOS);
+        return transferir('humano');
+      }
+      responder(antes + M.menuProdutos(lista));
+    } else {
+      responder(antes + pergunta(s, cat));
+    }
+    return fim();
+  };
+
+  /**
+   * Confere o produto e a quantidade com o estoque atual: produto que esgotou sai do pedido e
+   * quantidade acima do estoque é perguntada de novo. Devolve o aviso para o cliente, se mudou algo.
+   */
+  const ajustarAoEstoque = async (): Promise<string | undefined> => {
+    const p = s.pedido;
+    if (!p.produto) return undefined;
+    const e = await estoque();
+    const max = limite(e, p.produto);
+    if (max <= 0) {
+      const nome = cat.find((x) => x.codigo === p.produto)?.nome ?? p.produto;
+      delete p.produto;
+      return M.produtoEmFalta(nome);
+    }
+    if (p.quantidade && p.quantidade > max) {
+      delete p.quantidade;
+      delete p.trocoParaCentavos; // o total mudou
+      return M.semEstoque(max);
+    }
+    return undefined;
+  };
+
+  /** Segue para o próximo campo que falta, conferindo o estoque antes do menu de produtos, da quantidade e do resumo. */
+  const comecarPedido = async () => {
     s.falhas = 0;
     completarUf(s.pedido);
+    let aviso: string | undefined;
+    if (['PRODUTO', 'QUANTIDADE', 'RESUMO'].includes(proximoEstado(s.pedido, cat))) aviso = await ajustarAoEstoque();
     s.estado = proximoEstado(s.pedido, cat);
-    responder(pergunta(s, cat));
-    return fim();
+    // "Só temos N" já é a pergunta da quantidade.
+    if (s.estado === 'QUANTIDADE' && aviso?.startsWith('Só temos')) {
+      responder(aviso);
+      return fim();
+    }
+    return perguntar(aviso);
   };
 
   // 1. Emergência antes de tudo, sem depender da IA.
@@ -258,6 +320,7 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
     if (n === 5) return transferir('humano');
     const extraiu = ia ? aplicarEntidades(s.pedido, ia.entidades) : false;
     if (n === 1 || extraiu || ia?.intencao === 'fazer_pedido' || (n === null && parecePedido(texto))) {
+      if (await revendaFechada()) return irMenu(M.REVENDA_FECHADA);
       if (!noMenu) responder(s.pedido.nome ? M.boasVindasDeVolta(s.pedido) : M.BOAS_VINDAS);
       else if (s.pedido.nome && M.avisoMesmoEndereco(s.pedido)) responder(M.avisoMesmoEndereco(s.pedido)!);
       return comecarPedido();
@@ -279,6 +342,17 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
       if (s.vendaId) {
         responder(M.jaRegistrado(s.vendaId));
         return fim();
+      }
+      // Antes de criar a venda: a revenda pode ter fechado, ou o produto esgotado, durante o pedido.
+      if (await revendaFechada()) return irMenu(M.REVENDA_FECHADA);
+      const aviso = await ajustarAoEstoque();
+      if (aviso) {
+        s.estado = proximoEstado(s.pedido, cat);
+        if (s.estado === 'QUANTIDADE') {
+          responder(aviso);
+          return fim();
+        }
+        return perguntar(aviso);
       }
       const r = await deps.registrar(s.pedido);
       if (r.tipo === 'ok') {
@@ -316,10 +390,7 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
     if (!n || !limpar[n]) return falhou(M.NAO_ENTENDI + M.MENU_CORRIGIR);
     for (const campo of limpar[n]) delete s.pedido[campo];
     if (n === 2) delete s.pedido.trocoParaCentavos; // o total mudou, o troco pode não servir mais
-    s.estado = proximoEstado(s.pedido, cat);
-    s.falhas = 0;
-    responder(pergunta(s, cat));
-    return fim();
+    return comecarPedido();
   }
 
   if (s.estado === 'PAGAMENTO' && cartaoSemTipo && !ia?.entidades.pagamento) {
@@ -328,20 +399,32 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
   }
 
   // Daqui em diante: as etapas do pedido (NOME ... TROCO).
+  const lista = s.estado === 'PRODUTO' ? await disponiveis() : cat;
   let avancou = ia ? aplicarEntidades(s.pedido, ia.entidades) : false;
   if (!avancou) {
-    const r = aplicarTexto(s, texto, cat);
-    if (typeof r === 'string') return falhou(r);
+    const r = aplicarTexto(s, texto, cat, lista);
+    if (typeof r === 'string') return s.estado === 'PRODUTO' ? falhou(r + '\n' + M.menuProdutos(lista)) : falhou(r);
     avancou = r;
   }
 
+  // Quantidade acima do estoque: não é "não entendi", só pergunta de novo.
+  if (s.estado === 'QUANTIDADE' && s.pedido.produto && s.pedido.quantidade) {
+    const max = limite(await estoque(), s.pedido.produto);
+    if (s.pedido.quantidade > max) {
+      delete s.pedido.quantidade;
+      responder(M.semEstoque(max));
+      return fim();
+    }
+  }
+
+  const perguntaAtual = () => (s.estado === 'PRODUTO' ? M.menuProdutos(lista) : pergunta(s, cat));
   if (!avancou && ia?.intencao === 'duvida') {
     responder((await deps.responderDuvida?.(texto)) ?? M.DUVIDA_SEM_RESPOSTA);
-    responder(pergunta(s, cat));
+    responder(perguntaAtual());
     return fim();
   }
 
-  if (!avancou) return falhou(M.NAO_ENTENDI + pergunta(s, cat));
+  if (!avancou) return falhou(M.NAO_ENTENDI + perguntaAtual());
   return comecarPedido();
 }
 
@@ -420,7 +503,7 @@ function aplicarEntidades(p: Pedido, e: Interpretacao['entidades']): boolean {
 }
 
 /** Usa a resposta crua como valor do campo perguntado. String = mensagem de erro específica. */
-function aplicarTexto(s: Sessao, texto: string, cat: Produto[]): boolean | string {
+function aplicarTexto(s: Sessao, texto: string, cat: Produto[], disponiveis: Produto[] = cat): boolean | string {
   const p = s.pedido;
   const t = texto.trim();
   const n = normalizar(t);
@@ -433,11 +516,10 @@ function aplicarTexto(s: Sessao, texto: string, cat: Produto[]): boolean | strin
       return true;
     }
     case 'PRODUTO': {
+      // O número é a posição no menu mostrado, que só tem os produtos com estoque.
       const i = numero(t);
-      const produto =
-        (i ? cat[i - 1] : undefined) ??
-        cat.find((x) => n.includes(normalizar(x.nome)) || n.split(' ').includes(x.codigo.toLowerCase())) ??
-        (cat.length === 1 && /botij|bujao|\bgas\b/.test(n) ? cat[0] : undefined);
+      const produto = (i ? disponiveis[i - 1] : undefined) ?? produtoPorTexto(n, cat, disponiveis);
+      if (typeof produto === 'string') return produto;
       if (!produto) return false;
       p.produto = produto.codigo;
       return true;
@@ -495,6 +577,33 @@ function aplicarTexto(s: Sessao, texto: string, cat: Produto[]): boolean | strin
     default:
       return false;
   }
+}
+
+/** Gás: os botijões do catálogo (P13, P45). */
+const ehBotijao = (p: Produto) => /^P\d+$/.test(p.codigo);
+
+/**
+ * Produto pelo que o cliente escreveu: código ("p45"), tamanho ("13kg", "o de 45") ou "água".
+ * "botijão"/"gás" sem tamanho só vale se houver um botijão só em estoque (senão o bot pergunta).
+ * Produto que existe mas está em falta devolve o aviso (string).
+ */
+function produtoPorTexto(n: string, cat: Produto[], disponiveis: Produto[]): Produto | string | undefined {
+  const palavras = n.split(/[^a-z0-9]+/);
+  const citado = cat.find((x) => {
+    const tamanho = x.codigo.match(/^P(\d+)$/)?.[1];
+    return (
+      palavras.includes(x.codigo.toLowerCase()) ||
+      n.includes(normalizar(x.nome)) ||
+      (tamanho !== undefined && new RegExp(`\\b${tamanho} ?(kg|quilos?)?\\b`).test(n)) ||
+      (x.codigo.startsWith('AGUA') && /agua|galao/.test(n))
+    );
+  });
+  if (citado) return disponiveis.includes(citado) ? citado : M.produtoEmFalta(citado.nome);
+  if (/botij|bujao|\bgas\b/.test(n)) {
+    const botijoes = disponiveis.filter(ehBotijao);
+    if (botijoes.length === 1) return botijoes[0];
+  }
+  return undefined;
 }
 
 function numero(texto: string): number | null {

@@ -40,7 +40,7 @@ describe('validarInterpretacao', () => {
 
   it('descarta pagamento e produto fora do catálogo', () => {
     const r = validarInterpretacao(
-      { intencao: 'informar_dados', entidades: { pagamento: 'BITCOIN', produto: 'P45', nome: 'Ana' } },
+      { intencao: 'informar_dados', entidades: { pagamento: 'BITCOIN', produto: 'P99', nome: 'Ana' } },
       cat,
     );
     expect(r).toEqual({ intencao: 'informar_dados', entidades: { nome: 'Ana' } });

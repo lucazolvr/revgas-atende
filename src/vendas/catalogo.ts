@@ -12,6 +12,19 @@ export const FORMAS_PAGAMENTO: { codigo: FormaPagamento; rotulo: string }[] = [
 
 export type Produto = { codigo: string; productId: number; nome: string; precoCentavos: number };
 
+/**
+ * Estoque de cada produto do catálogo no ERP, pelo `productId`: inativo conta como 0; produto que o
+ * ERP não informou fica `null` (estoque desconhecido: o bot não limita). Usado pelo bot e pelo painel.
+ */
+export function estoqueDoCatalogo(cat: Produto[], doErp: { id: number; estoque: number; ativo: boolean }[]): Record<string, number | null> {
+  return Object.fromEntries(
+    cat.map((p) => {
+      const e = doErp.find((x) => x.id === p.productId);
+      return [p.codigo, e ? (e.ativo ? e.estoque : 0) : null];
+    }),
+  );
+}
+
 export function carregarCatalogo(caminho = new URL('../../config/catalogo.json', import.meta.url)): Produto[] {
   const lista = JSON.parse(readFileSync(caminho, 'utf8')) as Produto[];
   for (const p of lista) {

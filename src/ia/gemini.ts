@@ -59,7 +59,7 @@ function instrucoes(cat: Produto[]): string {
 Responda só com o JSON pedido. Nunca invente dados: inclua uma entidade só se o cliente a disse.
 
 Intenções:
-- fazer_pedido: quer comprar gás.
+- fazer_pedido: quer comprar gás ou água.
 - informar_dados: está respondendo dados do pedido (nome, endereço, quantidade, pagamento).
 - duvida: pergunta sobre preço, horário, entrega, produtos.
 - falar_com_humano: pede atendente/pessoa.
@@ -69,7 +69,7 @@ Intenções:
 
 Produtos (use o código):
 ${produtos}
-"botijão", "gás", "bujão" sem tamanho = P13.
+"botijão", "gás", "bujão" sem tamanho: não preencha o produto (o bot pergunta qual). "água", "galão" = AGUA20.
 
 Pagamento: PIX, MONEY (dinheiro), CARTAO_DE_DEBITO, CARTAO_DE_CREDITO ("cartão" sem tipo: não preencha).
 trocoParaCentavos: "troco pra 200" = 20000.
