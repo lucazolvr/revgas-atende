@@ -1,40 +1,51 @@
-/* Painel "Pedido RevGás". Contrastes conferidos nos dois temas (texto ≥ 4,5:1). */
+/*
+ * Painel "Pedido RevGás" (aba da conversa e central "Pedidos de hoje").
+ * Ideia visual: cada pedido é uma comanda de entrega com canhoto (hora e status); o estoque aparece
+ * como botijões. O resto fica quieto. Só fontes do sistema (a CSP não deixa carregar de fora).
+ * Contrastes conferidos nos dois temas (texto ≥ 4,5:1).
+ */
 :root {
   --fundo: #ffffff;
-  --cartao: #f7f7f8;
-  --borda: #e3e3e8;
+  --superficie: #f6f6f7;
+  --borda: #e2e3e7;
   --texto: #1c2024;
-  --sutil: #60646c;
+  --sutil: #5f636b;
   --marca: #c84812; /* laranja RevGás escurecido: 5,0:1 sobre branco */
-  --marca-texto: #ffffff;
   --perigo: #b42318;
   --perigo-texto: #ffffff;
-  --ok-fundo: #e6f4ea;
-  --ok-texto: #1e6b34;
-  --cancel-fundo: #fde8e7;
-  --cancel-texto: #a11d14;
+  --ativa: #1e6b34;
+  --ativa-fundo: #e6f4ea;
+  --cancelada: #a11d14;
+  --cancelada-fundo: #fde8e7;
+  --andamento: #1d4f91;
+  --andamento-fundo: #e5eefb;
+  --alerta: #8a4b00;
+  --alerta-fundo: #fdf0d9;
+  --neutro: #3b4048;
   --neutro-fundo: #eef0f3;
-  --neutro-texto: #3b4048;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --fundo: #111113;
-    --cartao: #1b1b1e;
-    --borda: #2e3135;
+    --fundo: #151518;
+    --superficie: #1d1d21;
+    --borda: #2f3237;
     --texto: #edeef0;
     --sutil: #b0b4ba;
     --marca: #fc692b;
-    --marca-texto: #111113;
     --perigo: #ff8a80;
-    --perigo-texto: #111113;
-    --ok-fundo: #12321d;
-    --ok-texto: #8fe0a8;
-    --cancel-fundo: #3d1614;
-    --cancel-texto: #ffb4ab;
+    --perigo-texto: #151518;
+    --ativa: #8fe0a8;
+    --ativa-fundo: #12321d;
+    --cancelada: #ffb4ab;
+    --cancelada-fundo: #3d1614;
+    --andamento: #9cc2ff;
+    --andamento-fundo: #14284a;
+    --alerta: #ffcf87;
+    --alerta-fundo: #3b2a0c;
+    --neutro: #d4d7dc;
     --neutro-fundo: #26292d;
-    --neutro-texto: #d4d7dc;
     color-scheme: dark;
   }
 }
@@ -47,80 +58,149 @@ body {
   background: var(--fundo);
   color: var(--texto);
   font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 
-main { padding: 16px; max-width: 560px; }
+main { padding: 16px; }
 
-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-h1 { font-size: 16px; margin: 0; color: var(--marca); }
-h2 { font-size: 12px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: .04em; color: var(--sutil); }
+h1 { font-size: 17px; line-height: 1.2; margin: 0; color: var(--marca); font-weight: 700; }
+h2 { font-size: 13px; margin: 0 0 8px; color: var(--sutil); font-weight: 600; }
 .sutil { color: var(--sutil); margin: 0; font-size: 12px; }
-
-section {
-  background: var(--cartao);
-  border: 1px solid var(--borda);
-  border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 12px;
-}
-
-dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; margin: 0; }
-dt { color: var(--sutil); }
-dd { margin: 0; overflow-wrap: anywhere; }
-
-.linha { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
-
-.selo { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--neutro-fundo); color: var(--neutro-texto); }
-.selo.ok { background: var(--ok-fundo); color: var(--ok-texto); }
-.selo.cancelada { background: var(--cancel-fundo); color: var(--cancel-texto); }
-
-#aviso { margin: 0 0 12px; color: var(--sutil); }
+.erro { color: var(--perigo); margin: 0; }
+#aviso { margin: 0; color: var(--sutil); }
 #aviso:empty { display: none; }
-.erro { color: var(--perigo); margin: 0 0 10px; }
 
+button, select, input { font: inherit; color: inherit; }
 button {
-  font: inherit;
   font-weight: 600;
   border-radius: 8px;
-  padding: 7px 12px;
+  padding: 6px 12px;
   cursor: pointer;
-  border: 1px solid transparent;
+  border: 1px solid var(--borda);
+  background: transparent;
 }
 button:disabled { opacity: .6; cursor: wait; }
-button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
-.secundario { background: transparent; color: var(--texto); border-color: var(--borda); }
-.perigo { background: var(--perigo); color: var(--perigo-texto); width: 100%; }
+:is(button, select, input, a):focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
+button.link { border: 0; padding: 0; color: var(--marca); text-decoration: underline; text-underline-offset: 2px; font-weight: 600; }
+button.perigo { background: var(--perigo); color: var(--perigo-texto); border-color: var(--perigo); }
+button.contorno-perigo { color: var(--perigo); border-color: var(--perigo); }
 
-/* Lista "Pedidos de hoje" (janela do menu do Chatwoot) */
-main.larga { max-width: 960px; margin: 0 auto; }
-.lista { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
-.cartao { background: var(--cartao); border: 1px solid var(--borda); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
-.cartao dl { font-size: 13px; }
-.cartao .erro, .cartao .resultado { margin: 0; }
-.cartao .resultado:empty { display: none; }
-.cartao.apagado { border-style: dashed; }
-.cartao.apagado .titulo { text-decoration: line-through; }
-.topo { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
-.acoes { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: auto; }
-/* No cartão, o cancelar segue o formato do "Atualizar": tamanho natural e contornado. */
-.acoes .cancelar { width: auto; padding: 5px 10px; font-size: 13px; white-space: nowrap; background: transparent; color: var(--perigo); border-color: var(--perigo); }
-button.link { background: none; border: 0; padding: 0; color: var(--marca); text-decoration: underline; text-underline-offset: 2px; }
+/* Selo de status: cor + texto (nunca só cor). */
+.selo { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--neutro-fundo); color: var(--neutro); white-space: nowrap; }
+.selo.ativa { background: var(--ativa-fundo); color: var(--ativa); }
+.selo.cancelada { background: var(--cancelada-fundo); color: var(--cancelada); }
+.selo.andamento { background: var(--andamento-fundo); color: var(--andamento); }
+.selo.alerta { background: var(--alerta-fundo); color: var(--alerta); }
 
-/* Histórico da venda no ERP (aba e cartões da lista) */
-h3 { font-size: 12px; margin: 12px 0 6px; color: var(--sutil); font-weight: 600; }
-.historico { margin: 0; padding-left: 18px; font-size: 12px; color: var(--sutil); display: grid; gap: 2px; }
-#venda-dados:empty { display: none; }
-#venda-dados { margin-bottom: 10px; }
+/* Linha do tempo do histórico no ERP (aba e comandas). */
+.timeline { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--borda); display: grid; gap: 8px; }
+.timeline li { position: relative; font-size: 13px; }
+.timeline li::before {
+  content: "";
+  position: absolute;
+  left: -22px; /* centro sobre o traço: 14px de recuo + 2px de borda, bolinha de 14px */
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--fundo);
+  border: 2px solid var(--sutil);
+}
+.timeline li:last-child::before { background: var(--marca); border-color: var(--marca); }
+.timeline .quando { color: var(--sutil); margin-right: 6px; }
 
-/* Estoque no ERP (lista "Pedidos de hoje") */
-.estoque ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 16px; }
-.estoque li { display: flex; gap: 8px; align-items: baseline; }
-.estoque li.esgotado strong { color: var(--perigo); }
-#historico { margin-bottom: 12px; }
+/* ---------------------------------------------------------------------------------------------
+ * Aba da conversa: ficha do pedido
+ * ------------------------------------------------------------------------------------------- */
+main.ficha { max-width: 560px; display: grid; gap: 14px; }
+.ficha > header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.ficha section { border-top: 1px solid var(--borda); padding-top: 12px; }
+
+.cabeca-venda { display: grid; gap: 6px; }
+.numero-venda { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.numero-venda .rotulo { color: var(--sutil); }
+.numero-venda strong { font-size: 26px; line-height: 1.1; letter-spacing: -.01em; }
+.numero-venda button { padding: 2px 8px; font-size: 12px; }
+.cabeca-venda .linha { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.valor { font-size: 18px; }
+
+.comparacao { width: 100%; border-collapse: collapse; font-size: 13px; }
+.comparacao th, .comparacao td { text-align: left; padding: 6px 8px 6px 0; vertical-align: top; border-bottom: 1px solid var(--borda); }
+.comparacao thead th { color: var(--sutil); font-weight: 600; font-size: 12px; }
+.comparacao tbody th { color: var(--sutil); font-weight: 400; white-space: nowrap; }
+.comparacao td { overflow-wrap: anywhere; }
+.confere { white-space: nowrap; font-size: 12px; font-weight: 600; }
+.confere.sim { color: var(--ativa); }
+.confere.nao { color: var(--alerta); }
+
+dl.dados { display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; margin: 0; }
+dl.dados dt { color: var(--sutil); }
+dl.dados dd { margin: 0; overflow-wrap: anywhere; }
+
+.ficha .perigo { width: 100%; }
+
+/* ---------------------------------------------------------------------------------------------
+ * Central "Pedidos de hoje"
+ * ------------------------------------------------------------------------------------------- */
+main.central { max-width: 1040px; margin: 0 auto; display: grid; gap: 16px; }
+.barra { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.controles { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.controles select { border: 1px solid var(--borda); border-radius: 8px; padding: 5px 8px; background: var(--fundo); }
+
+/* Números do dia: uma faixa, não cartões. */
+.numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0; margin: 0; border-block: 1px solid var(--borda); }
+.numeros > div { padding: 10px 14px 10px 0; }
+.numeros > div + div { padding-left: 14px; border-left: 1px solid var(--borda); }
+.numeros dt { color: var(--sutil); font-size: 12px; }
+.numeros dd { margin: 2px 0 0; font-size: 20px; font-weight: 700; line-height: 1.2; }
+.numeros dd small { display: block; font-size: 12px; font-weight: 400; color: var(--sutil); }
+
+/* Estoque: um botijão por produto, com a cor do nível. */
+.estoque ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 12px 24px; }
+.estoque li { display: flex; align-items: center; gap: 10px; }
+.botijao { position: relative; width: 22px; height: 30px; margin-top: 5px; border-radius: 9px 9px 5px 5px; background: var(--ativa); flex: none; }
+.botijao::before { content: ""; position: absolute; left: 6px; top: -5px; width: 10px; height: 6px; border-radius: 3px 3px 0 0; background: inherit; }
+.estoque li.baixo .botijao { background: var(--alerta); }
+.estoque li.esgotado .botijao { background: var(--cancelada); }
+.estoque li.desconhecido .botijao { background: var(--sutil); }
+.estoque .qtd { display: block; font-weight: 700; }
+.estoque .nivel { font-size: 12px; color: var(--sutil); }
+
+.filtros { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.filtros [role="group"] { display: flex; gap: 6px; flex-wrap: wrap; }
+.filtros [aria-pressed="true"] { background: var(--texto); color: var(--fundo); border-color: var(--texto); }
+.filtros input { border: 1px solid var(--borda); border-radius: 8px; padding: 6px 10px; min-width: 240px; background: var(--fundo); }
+
+/* Comandas: canhoto colorido pelo status + corpo. */
+.comandas { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.comanda { display: grid; grid-template-columns: 92px 1fr; border: 1px solid var(--borda); border-radius: 10px; overflow: hidden; background: var(--fundo); }
+.canhoto { padding: 12px 10px; background: var(--neutro-fundo); color: var(--neutro); border-right: 2px dashed var(--borda); display: grid; align-content: start; gap: 2px; }
+.canhoto strong { font-size: 18px; line-height: 1.1; }
+.canhoto span { font-size: 12px; }
+.comanda.ativa .canhoto { background: var(--ativa-fundo); color: var(--ativa); }
+.comanda.cancelada .canhoto { background: var(--cancelada-fundo); color: var(--cancelada); }
+.comanda.andamento .canhoto { background: var(--andamento-fundo); color: var(--andamento); }
+.comanda.alerta .canhoto { background: var(--alerta-fundo); color: var(--alerta); }
+.comanda .corpo { padding: 10px 14px; display: grid; gap: 4px; min-width: 0; }
+.comanda .topo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.comanda .numero { font-weight: 700; }
+.comanda .valor { margin-left: auto; font-size: 16px; }
+.comanda.cancelada .valor { text-decoration: line-through; color: var(--sutil); }
+.comanda p { margin: 0; overflow-wrap: anywhere; }
+.comanda .cliente { font-weight: 600; }
+.comanda .timeline { margin: 6px 0 2px; }
+.comanda .acoes { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+.comanda .acoes .contorno-perigo { margin-left: auto; padding: 4px 10px; font-size: 13px; }
+.comanda .resultado:empty { display: none; }
+
+@media (max-width: 560px) {
+  .comanda { grid-template-columns: 1fr; }
+  .canhoto { border-right: 0; border-bottom: 2px dashed var(--borda); display: flex; gap: 8px; align-items: baseline; }
+  .filtros input { min-width: 0; width: 100%; }
+  .numeros > div + div { border-left: 0; padding-left: 0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .comanda.nova { animation: chegou 1.2s ease-out; }
+  @keyframes chegou { from { box-shadow: 0 0 0 3px var(--marca); } to { box-shadow: 0 0 0 0 transparent; } }
+}

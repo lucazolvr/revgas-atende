@@ -8,32 +8,56 @@
     <link rel="stylesheet" href="/painel/painel.css">
   </head>
   <body>
-    <main>
+    <main class="ficha">
       <header>
         <div>
           <h1>Pedido RevGás</h1>
           <p id="conversa" class="sutil"></p>
         </div>
-        <button id="atualizar" type="button" class="secundario" title="Buscar de novo">Atualizar</button>
+        <button id="atualizar" type="button" title="Buscar de novo no ERP">Atualizar</button>
       </header>
 
       <p id="aviso" role="status">Carregando…</p>
 
-      <section id="pedido" hidden>
-        <h2>Pedido</h2>
-        <dl id="dados"></dl>
+      <section id="venda" class="cabeca-venda" hidden>
+        <div class="numero-venda">
+          <span class="rotulo">Venda nº</span>
+          <strong id="numero"></strong>
+          <button id="copiar" type="button">Copiar</button>
+        </div>
+        <div class="linha">
+          <span id="selo" class="selo"></span>
+          <strong id="total" class="valor"></strong>
+        </div>
+        <p id="quando" class="sutil"></p>
+        <p id="erro-venda" class="erro" hidden></p>
       </section>
 
-      <section id="venda" hidden>
-        <h2>Venda no ERP</h2>
-        <p class="linha"><span id="selo" class="selo"></span><span id="modo" class="sutil"></span></p>
-        <p id="erro-venda" class="erro" hidden></p>
-        <dl id="venda-dados"></dl>
-        <h3 id="titulo-historico" hidden>Histórico no ERP</h3>
-        <ol id="historico" class="historico" hidden></ol>
-        <button id="cancelar" type="button" class="perigo" hidden>Cancelar venda de teste</button>
-        <p id="resultado" role="status" class="sutil"></p>
+      <section id="secao-comparacao" hidden>
+        <h2>O que o bot coletou e o que o ERP registrou</h2>
+        <table class="comparacao">
+          <thead>
+            <tr><th scope="col"><span hidden>Campo</span></th><th scope="col">Bot</th><th scope="col">ERP</th><th scope="col"><span hidden>Confere</span></th></tr>
+          </thead>
+          <tbody id="comparacao"></tbody>
+        </table>
+        <p id="modo" class="sutil"></p>
       </section>
+
+      <section id="pedido" hidden>
+        <h2>Pedido coletado pelo bot</h2>
+        <dl id="dados" class="dados"></dl>
+      </section>
+
+      <section id="secao-historico" hidden>
+        <h2>Histórico no ERP</h2>
+        <ol id="historico" class="timeline"></ol>
+      </section>
+
+      <div id="acoes" hidden>
+        <button id="cancelar" type="button" class="perigo">Cancelar venda</button>
+        <p id="resultado" role="status" class="sutil"></p>
+      </div>
     </main>
     <script src="/painel/status.js"></script>
     <script src="/painel/painel.js"></script>

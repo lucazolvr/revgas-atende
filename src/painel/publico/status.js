@@ -1,17 +1,17 @@
-// Rótulos comuns à aba e à lista "Pedidos de hoje".
+// Rótulos e utilitários comuns à aba e à central "Pedidos de hoje".
 'use strict';
 
 // Status de venda vistos na API de teste da RevGás (24/11/2026). A tradução é literal: o significado
 // exato de cada um não foi confirmado com a RevGás, por isso o código original aparece junto.
-const NOMES_STATUS = {
-  OPEN: 'Aberta',
-  ACTIVE: 'Ativa',
-  CONFIRM: 'Confirmada',
-  RECEIVED: 'Recebida',
-  CHECK: 'Em conferência',
-  WARNING: 'Alerta',
-  IGNORED: 'Ignorada',
-  CANCEL: 'Cancelada',
+const STATUS = {
+  OPEN: ['Aberta', 'ativa'],
+  ACTIVE: ['Ativa', 'ativa'],
+  CONFIRM: ['Confirmada', 'andamento'],
+  RECEIVED: ['Recebida', 'andamento'],
+  CHECK: ['Em conferência', 'andamento'],
+  WARNING: ['Alerta', 'alerta'],
+  IGNORED: ['Ignorada', 'alerta'],
+  CANCEL: ['Cancelada', 'cancelada'],
 };
 
 const NOMES_PAGAMENTO = {
@@ -21,7 +21,11 @@ const NOMES_PAGAMENTO = {
   CARTAO_DE_CREDITO: 'Cartão de crédito',
 };
 
-window.statusVenda = (codigo) => (NOMES_STATUS[codigo] ? `${NOMES_STATUS[codigo]} (${codigo})` : String(codigo));
+const FUSO = 'America/Fortaleza';
+
+window.statusVenda = (codigo) => (STATUS[codigo] ? `${STATUS[codigo][0]} (${codigo})` : String(codigo));
+/** Classe de cor do status: ativa, andamento, alerta, cancelada ou '' (desconhecido). */
+window.classeStatus = (codigo) => (STATUS[codigo] ? STATUS[codigo][1] : '');
 window.nomePagamento = (codigo) => NOMES_PAGAMENTO[codigo] || codigo || '—';
 window.reais = (valor) => (valor == null ? '' : valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
 window.horaRevenda = (iso, comDia = false) =>
@@ -29,15 +33,29 @@ window.horaRevenda = (iso, comDia = false) =>
     ...(comDia && { day: '2-digit', month: '2-digit' }),
     hour: '2-digit',
     minute: '2-digit',
-    timeZone: 'America/Fortaleza',
+    timeZone: FUSO,
   });
 
-/** Preenche uma <ol> com o histórico da venda (status e hora), sempre como texto. */
+/** "agora", "há 12 min", "há 3 h", "há 2 dias". */
+window.haQuanto = (iso) => {
+  const min = Math.round((Date.now() - Date.parse(iso)) / 60_000);
+  if (min < 1) return 'agora';
+  if (min < 60) return `há ${min} min`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `há ${h} h`;
+  const d = Math.round(h / 24);
+  return `há ${d} ${d === 1 ? 'dia' : 'dias'}`;
+};
+
+/** Preenche uma <ol class="timeline"> com o histórico da venda, sempre como texto. */
 window.mostrarHistorico = (ol, logs) => {
   ol.replaceChildren(
     ...logs.map((l) => {
       const li = document.createElement('li');
-      li.textContent = `${window.horaRevenda(l.quando, true)} · ${window.statusVenda(l.status)}`;
+      const quando = document.createElement('span');
+      quando.className = 'quando';
+      quando.textContent = window.horaRevenda(l.quando, true);
+      li.append(quando, window.statusVenda(l.status));
       return li;
     }),
   );

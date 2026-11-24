@@ -8,14 +8,20 @@
     <link rel="stylesheet" href="/painel/painel.css">
   </head>
   <body>
-    <main class="larga">
-      <header>
+    <main class="central">
+      <header class="barra">
         <div>
-          <h1>Pedidos de hoje</h1>
+          <h1>Pedidos do WhatsApp</h1>
           <p id="resumo" class="sutil"></p>
         </div>
-        <button id="atualizar" type="button" class="secundario">Atualizar</button>
+        <div class="controles">
+          <label for="dia" class="sutil">Dia</label>
+          <select id="dia"></select>
+          <button id="atualizar" type="button">Atualizar</button>
+        </div>
       </header>
+
+      <dl id="numeros" class="numeros" aria-label="Números do dia" hidden></dl>
 
       <section id="secao-estoque" class="estoque">
         <h2>Estoque no ERP</h2>
@@ -23,28 +29,41 @@
         <p id="erro-estoque" class="erro" hidden></p>
       </section>
 
+      <div class="filtros">
+        <div role="group" aria-label="Mostrar">
+          <button type="button" data-filtro="todas" aria-pressed="true">Todas</button>
+          <button type="button" data-filtro="abertas" aria-pressed="false">Em aberto</button>
+          <button type="button" data-filtro="canceladas" aria-pressed="false">Canceladas</button>
+        </div>
+        <input id="busca" type="search" placeholder="Buscar cliente ou nº da venda" aria-label="Buscar cliente ou número da venda">
+      </div>
+
       <p id="aviso" role="status">Carregando…</p>
-      <ol id="lista" class="lista"></ol>
+      <ol id="lista" class="comandas"></ol>
 
       <template id="modelo">
-        <li class="cartao">
-          <div class="topo">
-            <strong class="titulo"></strong>
-            <span class="selo"></span>
+        <li class="comanda">
+          <div class="canhoto">
+            <strong class="hora"></strong>
+            <span class="ha"></span>
           </div>
-          <dl>
-            <dt>Cliente</dt><dd data-campo="nome"></dd>
-            <dt>Pedido</dt><dd data-campo="itens"></dd>
-            <dt>Pagamento</dt><dd data-campo="pagamento"></dd>
-            <dt>Endereço</dt><dd data-campo="endereco"></dd>
-          </dl>
-          <ol class="historico" hidden></ol>
-          <div class="acoes">
-            <button type="button" class="link abrir">Abrir conversa</button>
-            <button type="button" class="link ver-historico">Ver histórico</button>
-            <button type="button" class="perigo cancelar" hidden>Cancelar venda de teste</button>
+          <div class="corpo">
+            <div class="topo">
+              <span class="numero"></span>
+              <span class="selo"></span>
+              <strong class="valor"></strong>
+            </div>
+            <p class="cliente"></p>
+            <p class="itens"></p>
+            <p class="endereco sutil"></p>
+            <ol class="timeline" hidden></ol>
+            <div class="acoes">
+              <button type="button" class="link abrir">Abrir conversa</button>
+              <button type="button" class="link ver-historico">Ver histórico</button>
+              <button type="button" class="contorno-perigo cancelar" hidden>Cancelar venda</button>
+            </div>
+            <p class="resultado sutil" role="status"></p>
           </div>
-          <p class="resultado sutil" role="status"></p>
         </li>
       </template>
     </main>
