@@ -74,6 +74,8 @@ export function responder(s: Sessao, perfil: Perfil, modo: Modo): string {
     }
     case 'CORRIGIR':
       return String(divergencia(s.pedido, perfil) ?? 1);
+    case 'MENU':
+      return '1'; // menu principal (v2): "1 - Fazer pedido"
     default:
       return ia ? perfil.primeiraMensagem : 'oi';
   }

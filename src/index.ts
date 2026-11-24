@@ -59,6 +59,7 @@ const { app, ocioso } = criarServidor({
   responderDuvida: (texto) => conhecimento?.responder(texto) ?? Promise.resolve(null),
   registrar: (p, conversaId) => registrarVenda(api, corpoDaVenda(p, catalogo, { ...ids, conversaId })),
   clienteAnterior: (telefone) => api.ultimoCliente(telefone),
+  consultas: api,
 });
 
 if (config.PAINEL_TOKEN) {

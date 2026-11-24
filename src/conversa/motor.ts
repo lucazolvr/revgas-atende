@@ -1,20 +1,40 @@
 import type { Interpretacao, Interpretador } from '../ia/interpretacao.js';
 import { FORMAS_PAGAMENTO, type Produto } from '../vendas/catalogo.js';
 import { CAMPOS_ENDERECO, UFS, totalCentavos, type Pedido } from '../vendas/pedido.js';
+import type { HistoricoVenda, SituacaoRevenda, VendaResumo } from '../vendas/api-revgas.js';
 import type { ResultadoRegistro } from '../vendas/registrar.js';
 import { ehEmergencia, normalizar, pedeCancelar, pedeHumano } from './emergencia.js';
 import * as M from './mensagens.js';
 
 export type Estado =
-  | 'INICIO' | 'NOME' | 'PRODUTO' | 'QUANTIDADE' | 'ENDERECO' | 'PAGAMENTO' | 'TROCO' | 'RESUMO' | 'CORRIGIR' | 'REGISTRADO';
+  | 'INICIO' | 'NOME' | 'PRODUTO' | 'QUANTIDADE' | 'ENDERECO' | 'PAGAMENTO' | 'TROCO' | 'RESUMO' | 'CORRIGIR' | 'REGISTRADO'
+  | 'MENU' | 'ACOMPANHAR' | 'CANCELAR' | 'CONFIRMA_CANCELAR' | 'DUVIDA';
 
-/** `trocoParaCentavos === 0` significa "não precisa de troco". */
-export type Sessao = { estado: Estado; pedido: Pedido; falhas: number; vendaId?: number; correcoes?: number };
+/** Etapas de montar um pedido: aqui "cancelar" só descarta o pedido em andamento (ainda não existe venda). */
+const ETAPAS_DO_PEDIDO: Estado[] = ['NOME', 'PRODUTO', 'QUANTIDADE', 'ENDERECO', 'PAGAMENTO', 'TROCO', 'RESUMO', 'CORRIGIR'];
+/** Etapas em que a resposta é um número de lista ou "sim/não": não gastam chamada de IA. */
+const SEM_IA: Estado[] = ['ACOMPANHAR', 'CANCELAR', 'CONFIRMA_CANCELAR', 'DUVIDA'];
+
+/**
+ * `trocoParaCentavos === 0` significa "não precisa de troco".
+ * `opcoes`: ids das vendas listadas para o cliente escolher (vêm da API, filtradas pelo telefone dele).
+ * `cancelarId`: venda escolhida, esperando o "sim".
+ */
+export type Sessao = {
+  estado: Estado;
+  pedido: Pedido;
+  falhas: number;
+  vendaId?: number;
+  correcoes?: number;
+  opcoes?: number[];
+  cancelarId?: number;
+};
 
 /** Pedidos de "corrigir" no resumo até transferir para humano (evita ciclos de correção). */
 export const LIMITE_CORRECOES = 3;
 
-export type MotivoTransferencia = 'humano' | 'vazamento' | 'nao_entendi' | 'verificar_venda' | 'erro_venda' | 'correcoes';
+export type MotivoTransferencia =
+  | 'humano' | 'vazamento' | 'nao_entendi' | 'verificar_venda' | 'erro_venda' | 'correcoes' | 'erro_cancelamento' | 'erro_consulta';
 export type Acao =
   | { tipo: 'responder'; texto: string }
   | { tipo: 'transferir'; motivo: MotivoTransferencia; resumo: string };
@@ -25,6 +45,15 @@ export type Deps = {
   registrar: (p: Pedido) => Promise<ResultadoRegistro>;
   /** Gancho para a base de conhecimento (RAG). `null` = não sabe responder. */
   responderDuvida?: (texto: string) => Promise<string | null>;
+  // Consultas à API RevGás, já presas ao telefone de quem escreveu (o servidor amarra).
+  /** Vendas em aberto do cliente, mais recentes primeiro. */
+  vendasDoCliente?: () => Promise<VendaResumo[]>;
+  /** Status e histórico de uma venda. `null` = não existe ou não é do bot. `para` só serve às métricas. */
+  historico?: (id: number, para: 'acompanhar' | 'cancelar') => Promise<HistoricoVenda | null>;
+  /** Cancela na API. `'ok'` só depois de a API confirmar (200/204). */
+  cancelar?: (id: number) => Promise<'ok' | 'ja_cancelada' | 'falha'>;
+  /** Situação da revenda no ERP (consultada só quando precisa, com cache na API real). */
+  situacao?: () => Promise<SituacaoRevenda>;
 };
 
 const DESCRICAO_MOTIVO: Record<MotivoTransferencia, string> = {
@@ -34,7 +63,15 @@ const DESCRICAO_MOTIVO: Record<MotivoTransferencia, string> = {
   verificar_venda: 'a API não respondeu ao criar a venda — conferir no ERP se a venda existe antes de refazer',
   erro_venda: 'a API recusou a venda',
   correcoes: `o cliente pediu para corrigir o pedido ${LIMITE_CORRECOES} vezes`,
+  erro_cancelamento: 'cancelamento não confirmado pela API — conferir no ERP',
+  erro_consulta: 'a API não respondeu ao consultar os pedidos do cliente',
 };
+
+/** Mensagem que já é pedido: pula o menu. */
+const parecePedido = (t: string) => /gas|botij|bujao|p13|p45|agua|pedido|quero|manda/.test(normalizar(t));
+const querAcompanhar = (t: string) => /acompanh|status|cade|onde esta/.test(normalizar(t));
+const pedeMenu = (t: string) => /^(menu|voltar)$/.test(normalizar(t).trim());
+const ehCumprimento = (t: string) => /^(oi+|ola|opa|e ai|bom dia|boa tarde|boa noite)\b/.test(normalizar(t).trim());
 
 export function novaSessao(telefone: string, base: Partial<Pedido> = {}): Sessao {
   return { estado: 'INICIO', pedido: { ...base, telefone }, falhas: 0 };
@@ -56,6 +93,80 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
     responder(mensagem);
     return fim();
   };
+  /** Menu principal (o pedido em andamento fica guardado). `antes`: aviso na mesma mensagem. */
+  const irMenu = (antes?: string) => {
+    s.estado = 'MENU';
+    s.falhas = 0;
+    delete s.opcoes;
+    delete s.cancelarId;
+    responder(antes ? `${antes.trim()}\n\n${M.MENU_PRINCIPAL}` : M.MENU_PRINCIPAL);
+    return fim();
+  };
+  /** Depois de uma resposta completa (detalhe, cancelado): fica no menu sem repetir as 5 opções. */
+  const voltarAoMenu = (texto: string) => {
+    s.estado = 'MENU';
+    s.falhas = 0;
+    delete s.opcoes;
+    delete s.cancelarId;
+    responder(`${texto}\n\n${M.VOLTAR_MENU}`);
+    return fim();
+  };
+  const erroConsulta = () => {
+    responder(M.ERRO_CONSULTA);
+    return transferir('erro_consulta');
+  };
+  const historico = async (id: number, para: 'acompanhar' | 'cancelar') => {
+    try {
+      return { h: (await deps.historico?.(id, para)) ?? null };
+    } catch {
+      return null; // API fora do ar
+    }
+  };
+  const mostrarDetalhe = async (id: number) => {
+    const r = await historico(id, 'acompanhar');
+    if (!r) return erroConsulta();
+    return r.h ? voltarAoMenu(M.detalhePedido(r.h)) : irMenu(M.PEDIDO_NAO_ENCONTRADO);
+  };
+  const escolherParaCancelar = async (id: number) => {
+    const r = await historico(id, 'cancelar');
+    if (!r) return erroConsulta();
+    if (!r.h) return irMenu(M.PEDIDO_NAO_ENCONTRADO);
+    if (r.h.status === 'CANCEL') return irMenu(M.JA_CANCELADO);
+    s.estado = 'CONFIRMA_CANCELAR';
+    s.falhas = 0;
+    s.cancelarId = id;
+    delete s.opcoes;
+    responder(M.confirmaCancelar(r.h));
+    return fim();
+  };
+  /** Lista os pedidos em aberto do telefone, para acompanhar ou cancelar. */
+  const consultarPedidos = async (para: 'ACOMPANHAR' | 'CANCELAR') => {
+    if (!deps.vendasDoCliente) return transferir('humano'); // sem acesso à API: uma pessoa resolve
+    if (para === 'CANCELAR' && deps.situacao) {
+      const situacao = await deps.situacao().catch(() => null); // melhor esforço: sem resposta, tenta mesmo assim
+      if (situacao?.permiteCancelar === false) return transferir('humano');
+    }
+    let vendas: VendaResumo[];
+    try {
+      vendas = await deps.vendasDoCliente();
+    } catch {
+      return erroConsulta();
+    }
+    if (!vendas.length) return irMenu(M.SEM_PEDIDO_ATIVO);
+    if (para === 'ACOMPANHAR' && vendas.length === 1) return mostrarDetalhe(vendas[0]!.id);
+    s.estado = para;
+    s.falhas = 0;
+    s.opcoes = vendas.map((v) => v.id);
+    responder(M.listaPedidos(vendas));
+    return fim();
+  };
+  const comecarPedido = () => {
+    s.falhas = 0;
+    completarUf(s.pedido);
+    s.estado = proximoEstado(s.pedido, cat);
+    responder(pergunta(s, cat));
+    return fim();
+  };
 
   // 1. Emergência antes de tudo, sem depender da IA.
   if (ehEmergencia(texto)) {
@@ -73,10 +184,15 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
     s = novaSessao(s.pedido.telefone, { nome, endereco });
   }
 
+  // "menu" ou "voltar" em qualquer etapa: o pedido em andamento fica guardado.
+  if (pedeMenu(texto)) return irMenu();
+
   // Números de menu não gastam chamada de IA.
   // A IA precisa saber qual parte do endereço foi perguntada: sem isso, "Dirceu" (o bairro) virava a rua.
   const etapa = s.estado === 'ENDERECO' ? `ENDERECO (pergunta atual: ${CAMPOS_ENDERECO.find((c) => !s.pedido.endereco?.[c])})` : s.estado;
-  let ia = deps.interpretador && !/^\s*\d+\s*$/.test(texto) ? await deps.interpretador.interpretar(texto, etapa) : null;
+  let ia = deps.interpretador && !SEM_IA.includes(s.estado) && !/^\s*\d+\s*$/.test(texto)
+    ? await deps.interpretador.interpretar(texto, etapa)
+    : null;
 
   // "cartão" sem dizer o tipo: a IA chutava crédito (achado da avaliação da issue #2). O bot pergunta.
   const cartaoSemTipo = /\bcartao\b/.test(normalizar(texto)) && !/debito|credito/.test(normalizar(texto));
@@ -90,11 +206,71 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
   }
   if (ia?.intencao === 'falar_com_humano' || pedeHumano(texto)) return transferir('humano');
 
-  // "cancelar" em qualquer etapa do pedido (antes só valia no resumo, e o bot repetia a pergunta).
-  if (s.estado !== 'INICIO' && (pedeCancelar(texto) || ia?.intencao === 'cancelar')) {
+  // Confirmação do cancelamento. Vem antes do "cancelar" genérico: aqui "pode cancelar" é o "sim".
+  if (s.estado === 'CONFIRMA_CANCELAR') {
+    const n = normalizar(texto).trim();
+    if (/^(1|sim|s|pode|confirmo|confirma|isso|cancela|cancelar)\b/.test(n)) {
+      const id = s.cancelarId!;
+      const r = deps.cancelar ? await deps.cancelar(id).catch(() => 'falha' as const) : 'falha';
+      if (r === 'ok') return voltarAoMenu(M.pedidoCancelado(id));
+      if (r === 'ja_cancelada') return irMenu(M.JA_CANCELADO);
+      // Nunca diz "cancelado" sem a API confirmar: uma pessoa confere no ERP.
+      responder(M.ERRO_CANCELAMENTO);
+      return transferir('erro_cancelamento');
+    }
+    if (/^(2|nao|n|deixa|manter|mantem|mantenha)\b/.test(n)) return irMenu(M.PEDIDO_MANTIDO);
+    return falhou(M.NAO_ENTENDI + M.RESPONDA_SIM_NAO);
+  }
+
+  const querCancelar = pedeCancelar(texto) || ia?.intencao === 'cancelar';
+  // "cancelar" no meio do pedido descarta o rascunho (ainda não há venda; antes só valia no resumo).
+  if (ETAPAS_DO_PEDIDO.includes(s.estado) && querCancelar) {
     s = novaSessao(s.pedido.telefone);
     responder(M.CANCELADO);
     return fim();
+  }
+  // Fora do pedido, "cancelar" é cancelar uma venda que já existe: pela API.
+  if (querCancelar) return consultarPedidos('CANCELAR');
+
+  // Escolha na lista de pedidos (os ids vêm da sessão, nunca do texto do cliente).
+  if (s.estado === 'ACOMPANHAR' || s.estado === 'CANCELAR') {
+    const n = numero(texto);
+    const id = n ? s.opcoes?.[n - 1] : undefined;
+    if (!id) return irMenu(M.NAO_ENTENDI + (n ? M.FORA_DA_LISTA : ''));
+    return s.estado === 'ACOMPANHAR' ? mostrarDetalhe(id) : escolherParaCancelar(id);
+  }
+
+  if (s.estado === 'DUVIDA') {
+    return voltarAoMenu((await deps.responderDuvida?.(texto)) ?? M.DUVIDA_SEM_RESPOSTA);
+  }
+
+  if (s.estado === 'INICIO' || s.estado === 'MENU') {
+    const noMenu = s.estado === 'MENU';
+    const n = noMenu ? numero(texto) : null;
+    if (n === 2 || (n === null && querAcompanhar(texto))) return consultarPedidos('ACOMPANHAR');
+    if (n === 3) return consultarPedidos('CANCELAR');
+    if (n === 4) {
+      s.estado = 'DUVIDA';
+      s.falhas = 0;
+      responder(M.PODE_PERGUNTAR);
+      return fim();
+    }
+    if (n === 5) return transferir('humano');
+    const extraiu = ia ? aplicarEntidades(s.pedido, ia.entidades) : false;
+    if (n === 1 || extraiu || ia?.intencao === 'fazer_pedido' || (n === null && parecePedido(texto))) {
+      if (!noMenu) responder(s.pedido.nome ? M.boasVindasDeVolta(s.pedido) : M.BOAS_VINDAS);
+      else if (s.pedido.nome && M.avisoMesmoEndereco(s.pedido)) responder(M.avisoMesmoEndereco(s.pedido)!);
+      return comecarPedido();
+    }
+    if (ia?.intencao === 'duvida') {
+      responder((await deps.responderDuvida?.(texto)) ?? M.DUVIDA_SEM_RESPOSTA);
+      return irMenu();
+    }
+    // Cumprimento de novo com o menu aberto: só repete o menu, sem contar como "não entendi".
+    if (noMenu && (ia?.intencao === 'saudacao' || ehCumprimento(texto))) return irMenu();
+    if (noMenu) return falhou(M.NAO_ENTENDI + M.MENU_PRINCIPAL);
+    responder(s.pedido.nome ? M.saudacaoDeVolta(s.pedido) : M.SAUDACAO);
+    return irMenu();
   }
 
   if (s.estado === 'RESUMO') {
@@ -151,9 +327,9 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
     return fim();
   }
 
-  const inicio = s.estado === 'INICIO';
+  // Daqui em diante: as etapas do pedido (NOME ... TROCO).
   let avancou = ia ? aplicarEntidades(s.pedido, ia.entidades) : false;
-  if (!avancou && !inicio) {
+  if (!avancou) {
     const r = aplicarTexto(s, texto, cat);
     if (typeof r === 'string') return falhou(r);
     avancou = r;
@@ -161,23 +337,12 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
 
   if (!avancou && ia?.intencao === 'duvida') {
     responder((await deps.responderDuvida?.(texto)) ?? M.DUVIDA_SEM_RESPOSTA);
-    if (!inicio) {
-      responder(pergunta(s, cat));
-      return fim();
-    }
+    responder(pergunta(s, cat));
+    return fim();
   }
 
-  if (inicio) {
-    if (ia?.intencao !== 'duvida') responder(s.pedido.nome ? M.boasVindasDeVolta(s.pedido) : M.BOAS_VINDAS);
-  } else if (!avancou) {
-    return falhou(M.NAO_ENTENDI + pergunta(s, cat));
-  }
-
-  s.falhas = 0;
-  completarUf(s.pedido);
-  s.estado = proximoEstado(s.pedido, cat);
-  responder(pergunta(s, cat));
-  return fim();
+  if (!avancou) return falhou(M.NAO_ENTENDI + pergunta(s, cat));
+  return comecarPedido();
 }
 
 /** Cidades da área de entrega (config/faq/area-entrega.md): o estado sai da cidade, sem perguntar. */

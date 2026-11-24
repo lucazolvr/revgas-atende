@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import type { HistoricoVenda, VendaResumo } from '../vendas/api-revgas.js';
 import { FORMAS_PAGAMENTO, type Produto } from '../vendas/catalogo.js';
 import { CAMPOS_ENDERECO, formatarReais, produtoDo, totalCentavos, type Pedido } from '../vendas/pedido.js';
 import type { ChaveAtributo } from '../canal/painel.js';
@@ -29,6 +30,61 @@ export const NAO_ENTENDI = 'Desculpe, não entendi. ';
 export const DUVIDA_SEM_RESPOSTA =
   'Ainda não sei responder essa dúvida. Posso anotar seu pedido ou, se preferir, digite "atendente".';
 
+// --- Menu principal, acompanhar e cancelar (v2, Tarefa 3) ---
+
+export const SAUDACAO = 'Olá! 👋 Sou o atendente virtual da revenda.';
+export const MENU_PRINCIPAL =
+  'Como posso ajudar?\n1 - Fazer pedido\n2 - Acompanhar meu pedido\n3 - Cancelar um pedido\n4 - Tirar uma dúvida\n5 - Falar com um atendente';
+export const PODE_PERGUNTAR = 'Pode perguntar! 🙂';
+export const VOLTAR_MENU = 'Para ver as opções de novo, digite *menu*.';
+export const SEM_PEDIDO_ATIVO = 'Não encontrei pedido em aberto neste número.';
+export const PEDIDO_NAO_ENCONTRADO = 'Não encontrei esse pedido.';
+export const FORA_DA_LISTA = 'Esse número não está na lista.';
+export const JA_CANCELADO = 'Esse pedido já estava cancelado.';
+export const PEDIDO_MANTIDO = 'Tudo bem, o pedido continua de pé. 👍';
+export const RESPONDA_SIM_NAO = 'Responda 1 para cancelar ou 2 para manter o pedido.';
+export const ERRO_CONSULTA = 'Não consegui consultar seus pedidos agora.';
+export const ERRO_CANCELAMENTO = 'Não consegui confirmar o cancelamento agora.';
+
+/** Status da venda no ERP em português. Status desconhecido aparece como "Em andamento". */
+export const STATUS: Record<string, string> = { OPEN: 'Recebido', ACTIVE: 'Em andamento', CANCEL: 'Cancelado' };
+const statusPt = (s: string) => STATUS[s] ?? 'Em andamento';
+
+/** Datas no fuso da revenda (Teresina). */
+const DATA_CURTA = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Fortaleza', day: '2-digit', month: '2-digit' });
+const DATA_HORA = new Intl.DateTimeFormat('pt-BR', {
+  timeZone: 'America/Fortaleza', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+});
+const formatar = (f: Intl.DateTimeFormat, iso: string) => (Number.isNaN(Date.parse(iso)) ? '?' : f.format(new Date(iso)).replace(',', ''));
+/** A API devolve o total em reais. */
+const reais = (v: Pick<VendaResumo, 'total'>) => formatarReais(Math.round(v.total * 100));
+
+export function saudacaoDeVolta(p: Pedido): string {
+  return `Olá de novo, ${p.nome}! 👋`;
+}
+
+export function listaPedidos(v: VendaResumo[]): string {
+  return 'Seus pedidos em aberto:\n' +
+    v.map((x, i) => `${i + 1} - nº ${x.id} · ${formatar(DATA_CURTA, x.data)} · ${reais(x)} · ${x.endereco}`).join('\n') +
+    '\nQual deles?';
+}
+
+export function detalhePedido(h: HistoricoVenda): string {
+  const linhas = [`*Pedido nº ${h.id}* · ${formatar(DATA_HORA, h.data)}`, `Status: *${statusPt(h.status)}*`];
+  linhas.push(h.itens ? `🛢️ ${h.itens} · ${reais(h)}` : `💰 ${reais(h)}`);
+  if (h.endereco) linhas.push(`📍 ${h.endereco}`);
+  if (h.logs.length) linhas.push('', 'Histórico:', ...h.logs.map((l) => `• ${formatar(DATA_HORA, l.quando)} — ${statusPt(l.status)}`));
+  return linhas.join('\n');
+}
+
+export function confirmaCancelar(v: Pick<VendaResumo, 'id' | 'total'>): string {
+  return `Cancelar o pedido nº ${v.id} (${reais(v)})?\n1 - Sim\n2 - Não`;
+}
+
+export function pedidoCancelado(id: number): string {
+  return `Pedido nº ${id} cancelado. ✅`;
+}
+
 export function menuProdutos(cat: Produto[]): string {
   return 'Qual produto?\n' + cat.map((p, i) => `${i + 1} - ${p.nome} (${formatarReais(p.precoCentavos)})`).join('\n');
 }
@@ -55,9 +111,15 @@ function rotuloPagamento(p: Pedido): string {
 
 /** Cliente que já pediu antes: avisa que vai reaproveitar o endereço (e como trocar). */
 export function boasVindasDeVolta(p: Pedido): string {
-  const completo = CAMPOS_ENDERECO.every((c) => p.endereco?.[c]);
-  return `Olá de novo, ${p.nome}! 👋 Vou anotar seu pedido de gás rapidinho.` +
-    (completo ? `\nVou entregar no mesmo endereço do último pedido: ${linhaEndereco(p)}. Se mudou, é só corrigir no resumo.` : '');
+  const aviso = avisoMesmoEndereco(p);
+  return `Olá de novo, ${p.nome}! 👋 Vou anotar seu pedido de gás rapidinho.` + (aviso ? `\n${aviso}` : '');
+}
+
+/** Endereço completo do último pedido: avisa que vai reaproveitar (e como trocar). */
+export function avisoMesmoEndereco(p: Pedido): string | null {
+  return CAMPOS_ENDERECO.every((c) => p.endereco?.[c])
+    ? `Vou entregar no mesmo endereço do último pedido: ${linhaEndereco(p)}. Se mudou, é só corrigir no resumo.`
+    : null;
 }
 
 export function resumo(p: Pedido, cat: Produto[]): string {
