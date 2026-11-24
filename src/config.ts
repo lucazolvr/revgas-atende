@@ -26,6 +26,8 @@ const esquema = z
     CHATWOOT_BOT_TOKEN: z.string().min(1),
     BOT_WEBHOOK_TOKEN: z.string().min(32, 'BOT_WEBHOOK_TOKEN precisa de 32+ caracteres'),
     REDIS_URL: opcional,
+    // Banco "revgas" (chamadas à API e eventos para o Metabase). Vazio = não grava.
+    DATABASE_URL: opcional,
     GEMINI_API_KEY: opcional,
     // O Google aposenta modelos com frequência: troque aqui sem mexer no código.
     // Lista separada por vírgula = reservas: se o primeiro falhar (ex.: 503 de sobrecarga), tenta o próximo.
