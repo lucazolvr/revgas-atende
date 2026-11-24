@@ -1,26 +1,29 @@
 /**
- * Painel "Pedido RevGás":
- * - aba dentro da conversa no Chatwoot (Dashboard App, recurso nativo): o pedido daquela conversa;
- * - lista "Pedidos de hoje" (/painel/pedidos): todos os pedidos confirmados no dia, aberta pelo item
- *   "Pedidos de hoje" no menu lateral do Chatwoot (menu.js), numa janela por cima do painel.
- * As duas mostram a venda no ERP e têm o botão "Cancelar venda de teste".
+ * Painel "Pedido RevGás". **A fonte é a API da RevGás**: o bot não guarda pedidos.
+ * - aba dentro da conversa no Chatwoot (Dashboard App, recurso nativo): a venda daquela conversa,
+ *   com status e histórico vindos do ERP;
+ * - lista "Pedidos de hoje" (/painel/pedidos): as vendas do bot no dia (ativas e canceladas) e o
+ *   estoque do ERP, aberta pelo item "Pedidos de hoje" no menu lateral do Chatwoot (menu.js).
+ * As duas têm o botão "Cancelar venda de teste".
  *
  * Segurança (os dados do pedido são pessoais):
  * - a porta do bot é publicada só em 127.0.0.1 (docker-compose.yml);
  * - a API exige o PAINEL_TOKEN no cabeçalho Authorization. Na URL ele vai depois do `#`, que o
  *   navegador não envia ao servidor nem põe no Referer;
  * - as páginas só podem ser emolduradas pelo Chatwoot (CSP frame-ancestors) e só funcionam assim;
- * - na aba, o navegador só informa QUAL conversa está aberta: os dados e o número da venda vêm do
- *   Chatwoot (gravados pelo bot). Na lista, só vendas que o próprio bot registrou. Em nenhum caso
- *   a página escolhe uma venda arbitrária do ERP para consultar ou cancelar.
+ * - só vendas do bot (nosso estabelecimento + marca "RevGás Atende" na observação) são mostradas
+ *   ou canceladas. Na aba, a venda ainda precisa ter sido criada NAQUELA conversa ("Conversa N."
+ *   na observação): editar "Nº da venda" na lateral do Chatwoot não dá acesso a outra venda.
  */
 import { timingSafeEqual } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { ATRIBUTOS, type ChaveAtributo } from '../canal/painel.js';
 import type { ClienteChatwoot } from '../canal/chatwoot.js';
-import { TempoEsgotado, type ConsultaVendas } from '../vendas/api-revgas.js';
-import { diaDaRevenda, type PedidoRegistrado, type RegistroPedidos } from './pedidos.js';
+import { registrarEvento } from '../metricas.js';
+import { TempoEsgotado, type ConsultaErp, type ConsultaVendas, type HistoricoVenda, type VendaResumo } from '../vendas/api-revgas.js';
+import type { Produto } from '../vendas/catalogo.js';
+import { diaDaRevenda } from '../vendas/pedido.js';
 
 export type DepsPainel = {
   token: string;
@@ -28,17 +31,15 @@ export type DepsPainel = {
   origensChatwoot: string[];
   chatwoot: Pick<ClienteChatwoot, 'atributosDe' | 'nota'>;
   vendas: ConsultaVendas;
-  pedidos: Pick<RegistroPedidos, 'doDia' | 'daVenda'>;
-  estabelecimentoId: number;
+  erp: Pick<ConsultaErp, 'produtos'>;
+  catalogo: Produto[];
   /** `teste` = API de teste da RevGás (VENDA_REAL=true); `memoria` = ERP de mentira do bot. */
   modo: 'teste' | 'memoria';
   /** Para testes: o "agora" que define o dia de hoje. */
   agora?: () => Date;
 };
 
-type VendaNoPainel =
-  | { id: number; status: string; total: number | null; doEstabelecimento: boolean }
-  | { id: number; erro: string };
+type VendaNoPainel = HistoricoVenda | { id: number; erro: string };
 
 type RespostaPainel = {
   conversa: number;
@@ -50,10 +51,9 @@ type RespostaPainel = {
 
 type Falha = { codigo: number; erro: string };
 
-// Não afirma que a venda não existe: o registro do bot expira (2 dias) e, no modo demonstração,
-// zera quando o bot reinicia. O que se sabe é que o painel não consegue confirmá-la.
-const NAO_REGISTRADA =
-  'esta venda não está no registro do bot (número editado à mão, venda com mais de 2 dias ou bot reiniciado): confira no ERP';
+const NAO_E_DO_BOT = 'venda não encontrada entre as vendas do bot neste estabelecimento: confira no ERP';
+// Número editado à mão na lateral, ou venda de antes de o bot anotar a conversa na observação.
+const OUTRA_CONVERSA = 'esta venda não foi registrada pelo bot nesta conversa: confira no ERP';
 
 const ler = (nome: string) => readFileSync(new URL(`./publico/${nome}`, import.meta.url), 'utf8');
 
@@ -63,7 +63,7 @@ function mesmoToken(a: string, b: string) {
   return x.length === y.length && timingSafeEqual(x, y);
 }
 
-const podeCancelar = (v: VendaNoPainel | null) => !!v && 'status' in v && v.doEstabelecimento && v.status !== 'CANCEL';
+const podeCancelar = (v: VendaResumo | { erro: string } | null): boolean => !!v && !('erro' in v) && v.doBot && v.status !== 'CANCEL';
 
 export function registrarPainel(app: FastifyInstance, deps: DepsPainel) {
   const csp = [
@@ -87,6 +87,7 @@ export function registrarPainel(app: FastifyInstance, deps: DepsPainel) {
   const arquivos: [string, string, string][] = [
     ['/painel', ler('index.html'), 'text/html; charset=utf-8'],
     ['/painel/pedidos', ler('pedidos.html'), 'text/html; charset=utf-8'],
+    ['/painel/status.js', ler('status.js'), 'text/javascript; charset=utf-8'],
     ['/painel/painel.js', ler('painel.js'), 'text/javascript; charset=utf-8'],
     ['/painel/pedidos.js', ler('pedidos.js'), 'text/javascript; charset=utf-8'],
     // Carregado pelo Chatwoot (DASHBOARD_SCRIPTS) para pôr "Pedidos de hoje" no menu lateral.
@@ -112,56 +113,43 @@ export function registrarPainel(app: FastifyInstance, deps: DepsPainel) {
     return null;
   }
 
+  /** Venda do bot com status e histórico; erro legível se não for do bot ou o ERP falhar. */
   async function consultarVenda(id: number): Promise<VendaNoPainel> {
     try {
-      const r = await deps.vendas.detalharVenda(id);
-      // O detalhe da API real vem sem o envelope `data` (ao contrário da criação); aceita os dois.
-      const bruto = r.dados as ({ data?: Record<string, unknown> } & Record<string, unknown>) | null;
-      const v = bruto?.data ?? bruto;
-      if (r.status !== 200 || !v) return { id, erro: r.status === 404 ? 'venda não encontrada no ERP' : `ERP respondeu ${r.status}` };
-      const total = Number(v.total);
-      return {
-        id,
-        status: typeof v.status === 'string' ? v.status : 'DESCONHECIDO',
-        total: Number.isFinite(total) ? total : null,
-        doEstabelecimento: v.establishment_id === deps.estabelecimentoId,
-      };
+      return (await deps.vendas.historico(id)) ?? { id, erro: NAO_E_DO_BOT };
     } catch (e) {
       return { id, erro: e instanceof TempoEsgotado ? 'o ERP não respondeu' : 'falha ao consultar o ERP' };
     }
   }
 
   /**
-   * Confere a venda no ERP de novo, cancela e deixa uma nota na conversa do pedido. São duas
-   * chamadas (consulta e cancelamento): a venda devolvida é a consultada, já com CANCEL, sem uma
-   * terceira chamada só para mostrar o resultado (a API aceita 1 requisição por segundo).
+   * Cancela uma venda já consultada (do bot, não cancelada) e deixa uma nota na conversa dela.
+   * São duas chamadas ao todo (consulta e cancelamento): a venda devolvida é a consultada, já com
+   * CANCEL, sem uma terceira chamada só para mostrar o resultado (a API aceita 1 requisição por segundo).
    */
-  async function cancelar(vendaId: number, conversaId: number): Promise<{ falha: Falha } | { venda: VendaNoPainel }> {
-    const venda = await consultarVenda(vendaId);
-    if ('erro' in venda) return { falha: { codigo: 502, erro: venda.erro } };
-    if (!venda.doEstabelecimento) return { falha: { codigo: 403, erro: 'a venda é de outro estabelecimento' } };
+  async function cancelar(venda: HistoricoVenda): Promise<{ falha: Falha } | { venda: HistoricoVenda }> {
     if (venda.status === 'CANCEL') return { falha: { codigo: 409, erro: 'a venda já está cancelada' } };
     let r;
     try {
-      r = await deps.vendas.cancelarVenda(vendaId);
+      r = await deps.vendas.cancelarVenda(venda.id);
     } catch (e) {
       return { falha: { codigo: 502, erro: e instanceof TempoEsgotado ? 'o ERP não respondeu' : 'falha ao cancelar' } };
     }
     if (r.status !== 200 && r.status !== 204) return { falha: { codigo: 502, erro: `ERP respondeu ${r.status}` } };
+    registrarEvento({ conversaId: venda.conversaId ?? 0, tipo: 'cancelamento', resultado: 'atendente' });
     // Registro na conversa para a equipe saber o que aconteceu; melhor esforço (já foi cancelada).
-    await deps.chatwoot.nota(conversaId, `🧾 Venda nº ${vendaId} cancelada pelo painel Pedido RevGás.`).catch(() => {
-      app.log.warn({ conversa: conversaId }, 'falha ao registrar a nota de cancelamento');
-    });
-    return { venda: { ...venda, status: 'CANCEL' } };
+    if (venda.conversaId) {
+      await deps.chatwoot.nota(venda.conversaId, `🧾 Venda nº ${venda.id} cancelada pelo painel Pedido RevGás.`).catch(() => {
+        app.log.warn({ conversa: venda.conversaId }, 'falha ao registrar a nota de cancelamento');
+      });
+    }
+    const quando = new Date().toISOString();
+    return { venda: { ...venda, status: 'CANCEL', logs: [...venda.logs, { status: 'CANCEL', quando }] } };
   }
 
   // --- Aba da conversa -------------------------------------------------------------------------
 
-  /**
-   * Dados do pedido da conversa (atributos gravados pelo bot), sem chamar o ERP. O atendente pode
-   * editar "Nº da venda" na lateral do Chatwoot: só vale a venda que o bot registrou nesta
-   * conversa. Sem isso, dava para cancelar a venda de outro grupo do mesmo estabelecimento de teste.
-   */
+  /** Atributos gravados pelo bot na conversa (lateral do Chatwoot) e o número da venda, se houver. */
   async function lerConversa(conversa: number) {
     const atributos = await deps.chatwoot.atributosDe(conversa);
     if (!atributos) return null;
@@ -171,27 +159,25 @@ export function registrarPainel(app: FastifyInstance, deps: DepsPainel) {
       if (typeof v === 'string' || typeof v === 'number') pedido[chave] = v;
     }
     const numero = Number(pedido.numero_venda);
-    const vendaId = Number.isSafeInteger(numero) && numero > 0 ? numero : null;
-    const doBot = vendaId !== null && (await deps.pedidos.daVenda(vendaId))?.conversaId === conversa;
-    return { pedido, vendaId, doBot };
+    return { pedido, vendaId: Number.isSafeInteger(numero) && numero > 0 ? numero : null };
   }
 
-  async function montarConversa(conversa: number): Promise<RespostaPainel | null> {
-    const lida = await lerConversa(conversa);
-    if (!lida) return null;
-    const { pedido, vendaId, doBot } = lida;
-    // Fora do registro do bot, nem consulta o ERP.
-    const venda: VendaNoPainel | null = vendaId === null ? null : doBot ? await consultarVenda(vendaId) : { id: vendaId, erro: NAO_REGISTRADA };
-    return { conversa, modo: deps.modo, pedido, venda, podeCancelar: podeCancelar(venda) };
+  /** A venda da conversa, só se o ERP confirmar que foi criada pelo bot NESTA conversa. */
+  async function vendaDaConversa(conversa: number, vendaId: number): Promise<VendaNoPainel> {
+    const venda = await consultarVenda(vendaId);
+    if ('erro' in venda || venda.conversaId === conversa) return venda;
+    return { id: vendaId, erro: OUTRA_CONVERSA };
   }
 
   app.get<{ Params: { id: string } }>('/painel/api/conversas/:id', async (req, reply) => {
     if (!autorizado(req, reply)) return reply;
     const id = idDaUrl(req.params.id, reply);
     if (id === null) return reply;
-    const dados = await montarConversa(id);
-    if (!dados) return seguro(reply).code(404).send({ erro: 'conversa não encontrada' });
-    return seguro(reply).send(dados);
+    const lida = await lerConversa(id);
+    if (!lida) return seguro(reply).code(404).send({ erro: 'conversa não encontrada' });
+    const venda = lida.vendaId === null ? null : await vendaDaConversa(id, lida.vendaId);
+    const resposta: RespostaPainel = { conversa: id, modo: deps.modo, pedido: lida.pedido, venda, podeCancelar: podeCancelar(venda) };
+    return seguro(reply).send(resposta);
   });
 
   app.post<{ Params: { id: string } }>('/painel/api/conversas/:id/cancelar', async (req, reply) => {
@@ -201,48 +187,66 @@ export function registrarPainel(app: FastifyInstance, deps: DepsPainel) {
     const lida = await lerConversa(id);
     if (!lida) return seguro(reply).code(404).send({ erro: 'conversa não encontrada' });
     if (lida.vendaId === null) return seguro(reply).code(409).send({ erro: 'esta conversa não tem venda registrada' });
-    if (!lida.doBot) return seguro(reply).code(403).send({ erro: NAO_REGISTRADA });
-    const r = await cancelar(lida.vendaId, id);
+    const venda = await vendaDaConversa(id, lida.vendaId);
+    if ('erro' in venda) return seguro(reply).code(venda.erro === OUTRA_CONVERSA || venda.erro === NAO_E_DO_BOT ? 403 : 502).send({ erro: venda.erro });
+    const r = await cancelar(venda);
     if ('falha' in r) return seguro(reply).code(r.falha.codigo).send({ erro: r.falha.erro });
     const resposta: RespostaPainel = { conversa: id, modo: deps.modo, pedido: lida.pedido, venda: r.venda, podeCancelar: false };
     return seguro(reply).send(resposta);
   });
 
-  // --- Pedidos de hoje -------------------------------------------------------------------------
+  // --- Pedidos de hoje e estoque ---------------------------------------------------------------
 
   app.get('/painel/api/pedidos', async (req, reply) => {
     if (!autorizado(req, reply)) return reply;
     const dia = diaDaRevenda(deps.agora?.() ?? new Date());
-    const lista = (await deps.pedidos.doDia(dia))
-      .slice()
-      .sort((a: PedidoRegistrado, b: PedidoRegistrado) => b.quando.localeCompare(a.quando)); // mais recente primeiro
-    // Sem link pronto: "Abrir conversa" pede ao menu.js que abra a conversa no próprio Chatwoot, no
-    // endereço em uso (localhost ou 127.0.0.1), em vez de levar a outro endereço e perder o login.
-    return seguro(reply).send({ dia, modo: deps.modo, pedidos: lista });
+    try {
+      // Uma varredura da listagem traz status, total, itens e endereço: sem uma consulta por pedido.
+      const pedidos = await deps.vendas.vendasDoBot(dia);
+      // Sem link pronto: "Abrir conversa" pede ao menu.js que abra a conversa no próprio Chatwoot.
+      return seguro(reply).send({ dia, modo: deps.modo, pedidos: pedidos.map((v) => ({ ...v, podeCancelar: podeCancelar(v) })) });
+    } catch (e) {
+      return seguro(reply).code(502).send({ erro: e instanceof TempoEsgotado ? 'o ERP não respondeu' : 'falha ao consultar o ERP' });
+    }
   });
 
-  /** Só vendas que o bot registrou: a lista nunca consulta nem cancela outra venda do ERP. */
-  async function pedidoDaVenda(texto: string, reply: FastifyReply) {
+  /** Produtos do catálogo do bot com o estoque atual no ERP (`null` = o ERP não informou). */
+  app.get('/painel/api/estoque', async (req, reply) => {
+    if (!autorizado(req, reply)) return reply;
+    try {
+      const doErp = await deps.erp.produtos();
+      const estoque = deps.catalogo.map((p) => {
+        const e = doErp.find((x) => x.id === p.productId);
+        return { codigo: p.codigo, nome: p.nome, estoque: e ? (e.ativo ? e.estoque : 0) : null };
+      });
+      return seguro(reply).send({ estoque });
+    } catch {
+      return seguro(reply).code(502).send({ erro: 'falha ao consultar o estoque no ERP' });
+    }
+  });
+
+  /** Só vendas do bot: a lista nunca consulta nem cancela outra venda do ERP. */
+  async function vendaDoBot(texto: string, reply: FastifyReply): Promise<HistoricoVenda | null> {
     const id = idDaUrl(texto, reply);
     if (id === null) return null;
-    const pedido = await deps.pedidos.daVenda(id);
-    if (!pedido) void seguro(reply).code(404).send({ erro: 'venda não registrada pelo bot' });
-    return pedido;
+    const venda = await consultarVenda(id);
+    if (!('erro' in venda)) return venda;
+    void seguro(reply).code(venda.erro === NAO_E_DO_BOT ? 404 : 502).send({ erro: venda.erro });
+    return null;
   }
 
   app.get<{ Params: { id: string } }>('/painel/api/vendas/:id', async (req, reply) => {
     if (!autorizado(req, reply)) return reply;
-    const pedido = await pedidoDaVenda(req.params.id, reply);
-    if (!pedido) return reply;
-    const venda = await consultarVenda(pedido.vendaId);
+    const venda = await vendaDoBot(req.params.id, reply);
+    if (!venda) return reply;
     return seguro(reply).send({ venda, podeCancelar: podeCancelar(venda) });
   });
 
   app.post<{ Params: { id: string } }>('/painel/api/vendas/:id/cancelar', async (req, reply) => {
     if (!autorizado(req, reply)) return reply;
-    const pedido = await pedidoDaVenda(req.params.id, reply);
-    if (!pedido) return reply;
-    const r = await cancelar(pedido.vendaId, pedido.conversaId);
+    const venda = await vendaDoBot(req.params.id, reply);
+    if (!venda) return reply;
+    const r = await cancelar(venda);
     if ('falha' in r) return seguro(reply).code(r.falha.codigo).send({ erro: r.falha.erro });
     return seguro(reply).send({ venda: r.venda, podeCancelar: false });
   });

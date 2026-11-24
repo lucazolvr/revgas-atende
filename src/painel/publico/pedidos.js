@@ -1,4 +1,4 @@
-// Lista "Pedidos de hoje": todos os pedidos confirmados no dia, com a venda no ERP.
+// Lista "Pedidos de hoje": as vendas do bot no dia, direto da API da RevGás, e o estoque do ERP.
 // Só funciona na janela aberta pelo item "Pedidos de hoje" do menu do Chatwoot (menu.js), que passa
 // o token depois do # na URL. Dados do cliente entram sempre como texto (textContent).
 'use strict';
@@ -11,10 +11,6 @@ function aviso(texto) {
   $('aviso').textContent = texto;
 }
 
-function reais(valor) {
-  return valor == null ? '' : valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-
 async function chamar(caminho, metodo = 'GET') {
   const r = await fetch(caminho, { method: metodo, headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
   const corpo = await r.json().catch(() => ({}));
@@ -22,40 +18,47 @@ async function chamar(caminho, metodo = 'GET') {
   return corpo;
 }
 
-function mostrarVenda(cartao, { venda, podeCancelar }) {
+function mostrarVenda(cartao, venda, podeCancelar) {
   const selo = cartao.querySelector('.selo');
-  const erro = cartao.querySelector('.erro');
-  cartao.querySelector('.cancelar').hidden = !podeCancelar;
-  erro.hidden = true;
-  if ('erro' in venda) {
-    selo.className = 'selo';
-    selo.textContent = 'Sem resposta do ERP';
-    erro.textContent = `Não deu para consultar: ${venda.erro}.`;
-    erro.hidden = false;
-    return;
-  }
   const cancelada = venda.status === 'CANCEL';
   selo.className = `selo ${cancelada ? 'cancelada' : 'ok'}`;
-  selo.textContent = `${cancelada ? 'Cancelada' : 'Registrada'}${venda.total != null ? ` · ${reais(venda.total)}` : ''}`;
+  selo.textContent = `${statusVenda(venda.status)} · ${reais(venda.total)}`;
   cartao.classList.toggle('apagado', cancelada);
-  if (!venda.doEstabelecimento) {
-    erro.textContent = 'Venda de outro estabelecimento: o painel não pode cancelar.';
-    erro.hidden = false;
-  }
+  cartao.querySelector('.cancelar').hidden = !podeCancelar;
+  if (venda.logs) mostrarHistorico(cartao.querySelector('.historico'), venda.logs);
 }
 
-function montarCartao(p) {
+function montarCartao(v) {
   const cartao = $('modelo').content.firstElementChild.cloneNode(true);
-  const hora = new Date(p.quando).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Fortaleza' });
-  cartao.querySelector('.titulo').textContent = `${hora} · Venda nº ${p.vendaId}`;
-  const campos = { nome: p.nome, itens: `${p.quantidade}x ${p.produto}`, total: p.total, pagamento: p.pagamento, endereco: p.endereco };
+  cartao.querySelector('.titulo').textContent = `${horaRevenda(v.data)} · Venda nº ${v.id}`;
+  const campos = { nome: v.cliente, itens: v.itens, pagamento: nomePagamento(v.pagamento), endereco: v.endereco };
   for (const [campo, valor] of Object.entries(campos)) cartao.querySelector(`[data-campo="${campo}"]`).textContent = valor || '—';
+  mostrarVenda(cartao, v, v.podeCancelar);
+  const abrir = cartao.querySelector('.abrir');
+  // Vendas de antes de o bot anotar a conversa na observação não têm o número da conversa.
+  abrir.hidden = !v.conversaId;
   // O menu.js (na página do Chatwoot) abre a conversa no endereço em uso e fecha esta janela.
-  cartao.querySelector('.abrir').addEventListener('click', () => {
-    window.parent.postMessage({ tipo: 'revgas:abrir-conversa', conversa: p.conversaId }, '*'); // só o número
+  abrir.addEventListener('click', () => {
+    window.parent.postMessage({ tipo: 'revgas:abrir-conversa', conversa: v.conversaId }, '*'); // só o número
   });
-  cartao.querySelector('.cancelar').addEventListener('click', () => cancelar(cartao, p.vendaId));
+  cartao.querySelector('.ver-historico').addEventListener('click', (e) => verHistorico(cartao, v.id, e.currentTarget));
+  cartao.querySelector('.cancelar').addEventListener('click', () => cancelar(cartao, v.id));
   return cartao;
+}
+
+/** O histórico é uma consulta a mais na API (1 req/s): só quando o atendente pede. */
+async function verHistorico(cartao, vendaId, botao) {
+  const resultado = cartao.querySelector('.resultado');
+  botao.disabled = true;
+  try {
+    const { venda, podeCancelar } = await chamar(`/painel/api/vendas/${vendaId}`);
+    mostrarVenda(cartao, venda, podeCancelar);
+    botao.hidden = true;
+  } catch (e) {
+    resultado.textContent = `Não deu para ver o histórico: ${e.message}.`;
+  } finally {
+    botao.disabled = false;
+  }
 }
 
 async function cancelar(cartao, vendaId) {
@@ -65,12 +68,37 @@ async function cancelar(cartao, vendaId) {
   botao.disabled = true;
   resultado.textContent = 'Cancelando…';
   try {
-    mostrarVenda(cartao, await chamar(`/painel/api/vendas/${vendaId}/cancelar`, 'POST'));
-    resultado.textContent = 'Venda cancelada. Uma nota foi registrada na conversa.';
+    const { venda, podeCancelar } = await chamar(`/painel/api/vendas/${vendaId}/cancelar`, 'POST');
+    mostrarVenda(cartao, venda, podeCancelar);
+    cartao.querySelector('.ver-historico').hidden = true;
+    resultado.textContent = venda.conversaId ? 'Venda cancelada. Uma nota foi registrada na conversa.' : 'Venda cancelada.';
   } catch (e) {
     resultado.textContent = `Não cancelou: ${e.message}.`;
   } finally {
     botao.disabled = false;
+  }
+}
+
+async function carregarEstoque() {
+  try {
+    const { estoque } = await chamar('/painel/api/estoque');
+    $('estoque').replaceChildren(
+      ...estoque.map((p) => {
+        const li = document.createElement('li');
+        const nome = document.createElement('span');
+        const qtd = document.createElement('strong');
+        nome.textContent = p.nome;
+        qtd.textContent = p.estoque == null ? 'não informado' : `${p.estoque.toLocaleString('pt-BR')} un.`;
+        if (p.estoque === 0) li.className = 'esgotado';
+        li.append(nome, qtd);
+        return li;
+      }),
+    );
+    $('erro-estoque').hidden = true;
+  } catch (e) {
+    $('estoque').replaceChildren();
+    $('erro-estoque').textContent = `Não deu para consultar o estoque: ${e.message}.`;
+    $('erro-estoque').hidden = false;
   }
 }
 
@@ -82,22 +110,19 @@ async function carregar() {
     const { dia, modo, pedidos } = await chamar('/painel/api/pedidos');
     const [a, m, d] = dia.split('-');
     const origem = modo === 'teste' ? 'API de teste da RevGás' : 'ERP de demonstração (em memória)';
-    $('resumo').textContent = `${d}/${m}/${a} · ${pedidos.length} ${pedidos.length === 1 ? 'pedido' : 'pedidos'} · ${origem}`;
-    const cartoes = pedidos.map(montarCartao);
-    $('lista').replaceChildren(...cartoes);
-    aviso(pedidos.length ? '' : 'Nenhum pedido confirmado hoje ainda.');
-    // Uma consulta por vez: a API real da RevGás aceita 1 requisição por segundo.
-    for (let i = 0; i < pedidos.length; i++) {
-      try {
-        mostrarVenda(cartoes[i], await chamar(`/painel/api/vendas/${pedidos[i].vendaId}`));
-      } catch (e) {
-        mostrarVenda(cartoes[i], { venda: { id: pedidos[i].vendaId, erro: e.message }, podeCancelar: false });
-      }
-    }
+    const ativas = pedidos.filter((p) => p.status !== 'CANCEL');
+    const total = ativas.reduce((s, p) => s + p.total, 0);
+    $('resumo').textContent =
+      `${d}/${m}/${a} · ${pedidos.length} ${pedidos.length === 1 ? 'venda' : 'vendas'}` +
+      ` (${ativas.length} em aberto, ${reais(total)}) · ${origem}`;
+    $('lista').replaceChildren(...pedidos.map(montarCartao));
+    aviso(pedidos.length ? '' : 'Nenhuma venda do bot hoje ainda.');
   } catch (e) {
     $('lista').replaceChildren();
     aviso(`Não deu para carregar: ${e.message}.`);
   } finally {
+    // Uma chamada por vez: a API real da RevGás aceita 1 requisição por segundo.
+    await carregarEstoque();
     carregando = false;
     $('atualizar').disabled = false;
   }
@@ -109,6 +134,7 @@ if (window.parent === window || !token) {
   // Aberta direto no navegador: sem acesso. A lista só funciona dentro do Chatwoot.
   aviso('Abra esta lista pelo item "Pedidos de hoje" no menu lateral do Chatwoot.');
   $('atualizar').hidden = true;
+  $('secao-estoque').hidden = true;
 } else {
   carregar();
 }

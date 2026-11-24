@@ -180,7 +180,20 @@ describe('ApiRevGasHttp v2', () => {
     const vendas = await http(f).vendasDoCliente('558699990000');
     expect(urls[0]).toBe('GET /sales?status=ACTIVE&page_size=50&page=1');
     expect(vendas.map((v) => v.id)).toEqual([9, 5, 2, 4, 1]);
-    expect(vendas[0]).toEqual({ id: 9, data: '2026-11-23T20:00:00-03:00', status: 'ACTIVE', total: 110, endereco: 'Rua Nova, 10', pago: false, doBot: true });
+    expect(vendas[0]).toEqual({
+      id: 9, data: '2026-11-23T20:00:00-03:00', status: 'ACTIVE', total: 110, endereco: 'Rua Nova, 10', pago: false, doBot: true,
+      cliente: 'Maria', conversaId: null, itens: '', pagamento: '',
+    });
+  });
+
+  it('resumo: conversa, itens e pagamento vêm da venda (observação, products, payments)', async () => {
+    const v = venda(9, {
+      observation: `${MARCA} Maria 5586999990000. Conversa 12.`,
+      products: [{ quantity: 2, product_id: 26717, product_description: 'GLP 13KG' }],
+      payments: [{ payment_type: 'PIX' }],
+    });
+    const { f } = roteador({ '/sales/9': v });
+    expect(await http(f).historico(9)).toMatchObject({ cliente: 'Maria', conversaId: 12, itens: '2x GLP 13KG', pagamento: 'PIX' });
   });
 
   it('historico: logs como { status, quando }; venda que não é do bot → null', async () => {

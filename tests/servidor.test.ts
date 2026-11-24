@@ -14,7 +14,6 @@ const catalogo = carregarCatalogo();
 function montar(
   numerosIa: string[] = [],
   limites?: { porConversa?: number; global?: number; janelaMs?: number; filasMaximas?: number },
-  pedidos?: { adicionar: (p: never) => Promise<void> },
   comHistorico = false,
 ) {
   const api = new ApiRevGasFalsa();
@@ -34,8 +33,7 @@ function montar(
     catalogo,
     interpretadorPara,
     limites,
-    pedidos,
-    registrar: (p) => registrarVenda(api, corpoDaVenda(p, catalogo, { clienteId: 1, estabelecimentoId: 1 })),
+    registrar: (p, conversaId) => registrarVenda(api, corpoDaVenda(p, catalogo, { clienteId: 1, estabelecimentoId: 1, conversaId })),
     clienteAnterior: comHistorico ? (t) => api.ultimoCliente(t) : undefined,
   });
   const enviar = (texto: string, conversa: Record<string, unknown> = {}) =>
@@ -137,30 +135,15 @@ describe('servidor', () => {
       expect(chatwoot.atributos).toHaveBeenCalledOnce();
     });
 
-    it('venda registrada entra nos pedidos do dia (e falha ali não atrapalha)', async () => {
-      const adicionar = vi.fn(async (_p: unknown) => {});
-      const { ocioso, chatwoot, enviar } = montar([], undefined, { adicionar });
-      for (const m of [...PEDIDO, '1']) await enviar(m);
+    it('a venda leva o número da conversa na observação (o painel liga a venda à conversa)', async () => {
+      const { ocioso, api, enviar } = montar();
+      for (const m of [...PEDIDO, '1']) await enviar(m, { id: 12 });
       await ocioso();
-      expect(adicionar).toHaveBeenCalledExactlyOnceWith({
-        vendaId: 1,
-        conversaId: 7,
-        quando: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
-        nome: 'Maria',
-        produto: 'Botijão de gás P13',
-        quantidade: 2,
-        total: 'R$ 220,00',
-        pagamento: 'PIX',
-        endereco: 'Rua Nova, 10 - Centro, Teresina/PI',
-      });
-      adicionar.mockRejectedValue(new Error('Redis fora'));
-      for (const m of [...PEDIDO, '1']) await enviar(m, { id: 8 }); // outro cliente, outra conversa
-      await ocioso();
-      expect(chatwoot.responder).toHaveBeenLastCalledWith(8, expect.stringContaining('Pedido registrado'));
+      expect(api.vendas[0]!.observation).toMatch(/Conversa 12\.$/);
     });
 
     it('cliente que volta em outra conversa não repete nome e endereço', async () => {
-      const { ocioso, chatwoot, enviar } = montar([], undefined, undefined, true);
+      const { ocioso, chatwoot, enviar } = montar([], undefined, true);
       for (const m of [...PEDIDO, '1']) await enviar(m);
       await ocioso();
       for (const m of ['oi', '1', '1', '1']) await enviar(m, { id: 9 }); // P13, 1 unidade, PIX
@@ -172,7 +155,7 @@ describe('servidor', () => {
     });
 
     it('falha ao buscar o histórico só começa o pedido do zero', async () => {
-      const { ocioso, api, chatwoot, enviar } = montar([], undefined, undefined, true);
+      const { ocioso, api, chatwoot, enviar } = montar([], undefined, true);
       api.ultimoCliente = async () => { throw new Error('API fora'); };
       await enviar('oi');
       await ocioso();

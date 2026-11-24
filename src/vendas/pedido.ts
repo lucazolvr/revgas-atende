@@ -92,7 +92,7 @@ export function clienteDaVenda(v: VendaListada, telefone: string): Pick<Pedido, 
 export function corpoDaVenda(
   p: Pedido,
   cat: Produto[],
-  ids: { clienteId: number; estabelecimentoId: number },
+  ids: { clienteId: number; estabelecimentoId: number; conversaId?: number },
 ): CorpoVenda {
   const produto = produtoDo(p, cat);
   const e = p.endereco ?? {};
@@ -101,6 +101,8 @@ export function corpoDaVenda(
   }
   const total = produto.precoCentavos * p.quantidade;
   const obs = [`Pedido via WhatsApp (RevGás Atende). Cliente: ${p.nome} ${p.telefone}.`];
+  // O painel do Chatwoot liga a venda à conversa por aqui (a API é a fonte; o bot não guarda pedidos).
+  if (ids.conversaId) obs.push(`Conversa ${ids.conversaId}.`);
   if (p.pagamento === 'MONEY' && p.trocoParaCentavos) obs.push(`Troco para ${formatarReais(p.trocoParaCentavos)}.`);
   return {
     customer_id: ids.clienteId,

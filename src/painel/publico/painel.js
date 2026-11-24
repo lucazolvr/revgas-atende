@@ -24,10 +24,6 @@ function aviso(texto) {
   $('aviso').textContent = texto;
 }
 
-function reais(valor) {
-  return valor == null ? '' : valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-
 function pedirContexto() {
   window.parent.postMessage('chatwoot-dashboard-app:fetch-info', '*'); // só um pedido, sem dados
 }
@@ -59,23 +55,39 @@ function mostrar(d) {
   $('venda').hidden = !v;
   $('cancelar').hidden = !d.podeCancelar;
   $('erro-venda').hidden = true;
+  $('venda-dados').replaceChildren();
+  $('titulo-historico').hidden = true;
+  $('historico').hidden = true;
   if (!v) return;
   $('modo').textContent = d.modo === 'teste' ? 'API de teste da RevGás' : 'ERP de demonstração (em memória)';
   const selo = $('selo');
   if ('erro' in v) {
     selo.className = 'selo';
     selo.textContent = `Venda nº ${v.id}`;
-    $('erro-venda').textContent = `Não deu para consultar: ${v.erro}.`;
+    $('erro-venda').textContent = `${v.erro.charAt(0).toUpperCase()}${v.erro.slice(1)}.`; // o motivo já diz o que houve
     $('erro-venda').hidden = false;
     return;
   }
   const cancelada = v.status === 'CANCEL';
   selo.className = `selo ${cancelada ? 'cancelada' : 'ok'}`;
-  selo.textContent = `${cancelada ? 'Cancelada' : 'Registrada'} · nº ${v.id}${v.total != null ? ` · ${reais(v.total)}` : ''}`;
-  if (!v.doEstabelecimento) {
-    $('erro-venda').textContent = 'Esta venda é de outro estabelecimento: o painel não pode cancelar.';
-    $('erro-venda').hidden = false;
+  selo.textContent = `${statusVenda(v.status)} · nº ${v.id}${v.total != null ? ` · ${reais(v.total)}` : ''}`;
+  // Tudo abaixo vem do ERP (a API da RevGás é a fonte), não do que o bot coletou.
+  const dados = [
+    ['Itens', v.itens],
+    ['Pagamento', nomePagamento(v.pagamento)],
+    ['Pago', v.pago ? 'Sim' : 'Não'],
+    ['Endereço', v.endereco],
+  ];
+  for (const [rotulo, valor] of dados) {
+    if (!valor) continue;
+    const dt = document.createElement('dt');
+    const dd = document.createElement('dd');
+    dt.textContent = rotulo;
+    dd.textContent = valor;
+    $('venda-dados').append(dt, dd);
   }
+  mostrarHistorico($('historico'), v.logs || []);
+  $('titulo-historico').hidden = $('historico').hidden;
 }
 
 async function carregar() {

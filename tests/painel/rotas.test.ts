@@ -1,8 +1,7 @@
 import Fastify from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
-import { RegistroPedidosMemoria, type PedidoRegistrado } from '../../src/painel/pedidos.js';
 import { registrarPainel, type DepsPainel } from '../../src/painel/rotas.js';
-import { ApiRevGasFalsa } from '../../src/vendas/api-revgas.js';
+import { ApiRevGasFalsa, TempoEsgotado } from '../../src/vendas/api-revgas.js';
 import { carregarCatalogo } from '../../src/vendas/catalogo.js';
 import { corpoDaVenda } from '../../src/vendas/pedido.js';
 
@@ -18,26 +17,24 @@ const PEDIDO = {
 };
 
 const AGORA = new Date('2026-11-21T15:00:00Z'); // 12h em Teresina
-const registro = (vendaId: number, conversaId: number, quando: string): PedidoRegistrado => ({
-  vendaId, conversaId, quando, nome: `Cliente ${vendaId}`, produto: 'Botijão de gás P13', quantidade: 2,
-  total: 'R$ 220,00', pagamento: 'PIX', endereco: 'Rua Nova, 10 - Centro, Teresina/PI',
-});
 
 /**
- * Aba: conversa 7 com a venda 1 (estabelecimento 2580); conversa 8 sem venda; 9 não existe.
- * Conversas 12 e 13: "Nº da venda" editado à mão para a venda 2 (de outra conversa) e para a 4.
- * Lista: venda 1 hoje cedo (conversa 7), venda 2 hoje à tarde (conversa 10), venda 3 ontem.
- * A venda 4 existe no ERP mas não foi registrada pelo bot.
+ * ERP (estabelecimento 2580): venda 1 da conversa 7 (hoje cedo), venda 2 da conversa 10 (hoje à
+ * tarde), venda 3 da conversa 11 (ontem, 23h em Teresina) e venda 4, de outro estabelecimento.
+ * Aba: conversa 7 com a venda 1; 8 sem venda; 9 não existe; 12 com "Nº da venda" editado à mão
+ * para a venda 2 (de outra conversa); 13 editada para a venda 4.
  */
 async function montar(opcoes: { estabelecimentoDaVenda?: number } = {}) {
   const vendas = new ApiRevGasFalsa();
-  for (let i = 0; i < 4; i++) {
-    await vendas.criarVenda(corpoDaVenda(PEDIDO, catalogo, { clienteId: 1, estabelecimentoId: opcoes.estabelecimentoDaVenda ?? 2580 }));
-  }
-  const pedidos = new RegistroPedidosMemoria(() => AGORA.getTime()); // relógio fixo: datas do teste não "vencem"
-  await pedidos.adicionar(registro(1, 7, '2026-11-21T10:30:00Z'));
-  await pedidos.adicionar(registro(2, 10, '2026-11-21T14:00:00Z'));
-  await pedidos.adicionar(registro(3, 11, '2026-11-21T02:00:00Z')); // 23h do dia 20 em Teresina
+  vendas.estabelecimentoId = 2580;
+  const criar = async (conversaId: number, quando: string, estabelecimentoId = opcoes.estabelecimentoDaVenda ?? 2580) => {
+    await vendas.criarVenda(corpoDaVenda(PEDIDO, catalogo, { clienteId: 1, estabelecimentoId, conversaId }));
+    vendas.datas[vendas.datas.length - 1] = quando;
+  };
+  await criar(7, '2026-11-21T10:30:00Z');
+  await criar(10, '2026-11-21T14:00:00Z');
+  await criar(11, '2026-11-21T02:00:00Z');
+  await criar(13, '2026-11-21T14:30:00Z', 999);
   const atributos: Record<number, Record<string, unknown>> = {
     7: { numero_venda: 1, total: 'R$ 220,00', forma_pagamento: 'PIX', endereco: 'Rua Nova, 10 - Centro, Teresina/PI', quantidade: 2, outro: 'x' },
     8: { quantidade: 3 },
@@ -53,8 +50,8 @@ async function montar(opcoes: { estabelecimentoDaVenda?: number } = {}) {
     origensChatwoot: ['http://localhost:3000'],
     chatwoot,
     vendas,
-    pedidos,
-    estabelecimentoId: 2580,
+    erp: vendas,
+    catalogo,
     modo: 'memoria',
     agora: () => AGORA,
   };
@@ -68,7 +65,7 @@ async function montar(opcoes: { estabelecimentoDaVenda?: number } = {}) {
 describe('painel Pedido RevGás', () => {
   it('serve a página só para ser aberta dentro do Chatwoot', async () => {
     const { pedir } = await montar();
-    for (const url of ['/painel', '/painel/painel.js', '/painel/painel.css', '/painel/pedidos', '/painel/pedidos.js', '/painel/menu.js']) {
+    for (const url of ['/painel', '/painel/status.js', '/painel/painel.js', '/painel/painel.css', '/painel/pedidos', '/painel/pedidos.js', '/painel/menu.js']) {
       const r = await pedir(url, 'GET', null);
       expect(r.statusCode).toBe(200);
       expect(r.headers['content-security-policy']).toContain('frame-ancestors http://localhost:3000');
@@ -82,22 +79,24 @@ describe('painel Pedido RevGás', () => {
     expect((await pedir('/painel/api/conversas/7', 'GET', null)).statusCode).toBe(401);
     expect((await pedir('/painel/api/conversas/7', 'GET', 'errado')).statusCode).toBe(401);
     expect((await pedir('/painel/api/conversas/7/cancelar', 'POST', 'errado')).statusCode).toBe(401);
+    expect((await pedir('/painel/api/estoque', 'GET', null)).statusCode).toBe(401);
     expect((await pedir('/painel/api/conversas/abc')).statusCode).toBe(400);
     expect((await pedir('/painel/api/conversas/0')).statusCode).toBe(400);
     expect(chatwoot.atributosDe).not.toHaveBeenCalled();
   });
 
-  it('mostra o pedido gravado pelo bot e a venda no ERP', async () => {
+  it('mostra o pedido gravado pelo bot e a venda no ERP, com o histórico', async () => {
     const { pedir } = await montar();
     const r = await pedir('/painel/api/conversas/7');
     expect(r.headers['cache-control']).toBe('no-store');
-    expect(r.json()).toEqual({
+    expect(r.json()).toMatchObject({
       conversa: 7,
       modo: 'memoria',
       pedido: { numero_venda: 1, total: 'R$ 220,00', forma_pagamento: 'PIX', endereco: 'Rua Nova, 10 - Centro, Teresina/PI', quantidade: 2 },
-      venda: { id: 1, status: 'OPEN', total: 220, doEstabelecimento: true },
+      venda: { id: 1, status: 'ACTIVE', total: 220, doBot: true, conversaId: 7, cliente: 'Maria', pagamento: 'PIX', logs: [{ status: 'OPEN' }] },
       podeCancelar: true,
     });
+    expect(r.json().pedido).not.toHaveProperty('outro');
   });
 
   it('conversa sem venda não oferece cancelar; conversa inexistente é 404', async () => {
@@ -109,49 +108,47 @@ describe('painel Pedido RevGás', () => {
 
   it('cancelar faz só duas chamadas ao ERP (conferir e cancelar), pela aba e pela lista', async () => {
     const { pedir, vendas } = await montar();
-    const detalhar = vi.spyOn(vendas, 'detalharVenda');
+    const conferir = vi.spyOn(vendas, 'historico');
     const cancelarNoErp = vi.spyOn(vendas, 'cancelarVenda');
     expect((await pedir('/painel/api/conversas/7/cancelar', 'POST')).json()).toMatchObject({ venda: { id: 1, status: 'CANCEL', total: 220 } });
-    expect([detalhar.mock.calls.length, cancelarNoErp.mock.calls.length]).toEqual([1, 1]);
+    expect([conferir.mock.calls.length, cancelarNoErp.mock.calls.length]).toEqual([1, 1]);
     expect((await pedir('/painel/api/vendas/2/cancelar', 'POST')).json()).toMatchObject({ venda: { id: 2, status: 'CANCEL' } });
-    expect([detalhar.mock.calls.length, cancelarNoErp.mock.calls.length]).toEqual([2, 2]);
+    expect([conferir.mock.calls.length, cancelarNoErp.mock.calls.length]).toEqual([2, 2]);
   });
 
   it('cancela a venda da conversa, registra nota e não cancela duas vezes', async () => {
     const { pedir, vendas, chatwoot } = await montar();
     const r = await pedir('/painel/api/conversas/7/cancelar', 'POST');
     expect(r.statusCode).toBe(200);
-    expect(r.json()).toMatchObject({ venda: { id: 1, status: 'CANCEL' }, podeCancelar: false });
+    expect(r.json()).toMatchObject({ venda: { id: 1, status: 'CANCEL', logs: [{ status: 'OPEN' }, { status: 'CANCEL' }] }, podeCancelar: false });
     expect(vendas.canceladas.has(1)).toBe(true);
     expect(chatwoot.nota).toHaveBeenCalledWith(7, expect.stringContaining('Venda nº 1 cancelada'));
     expect((await pedir('/painel/api/conversas/7/cancelar', 'POST')).statusCode).toBe(409);
   });
 
-  it('não cancela venda de outro estabelecimento', async () => {
+  it('não mostra nem cancela venda de outro estabelecimento', async () => {
     const { pedir, vendas } = await montar({ estabelecimentoDaVenda: 999 });
-    expect((await pedir('/painel/api/conversas/7')).json()).toMatchObject({ venda: { doEstabelecimento: false }, podeCancelar: false });
+    expect((await pedir('/painel/api/conversas/7')).json()).toMatchObject({ venda: { id: 1, erro: expect.stringContaining('não encontrada') }, podeCancelar: false });
     expect((await pedir('/painel/api/conversas/7/cancelar', 'POST')).statusCode).toBe(403);
     expect(vendas.canceladas.size).toBe(0);
   });
 
-  it('número da venda editado à mão na lateral não consulta nem cancela no ERP', async () => {
+  it('número da venda editado à mão na lateral não mostra nem cancela outra venda', async () => {
     const { pedir, vendas } = await montar();
-    const detalhar = vi.spyOn(vendas, 'detalharVenda');
     for (const conversa of [12, 13]) {
-      expect((await pedir(`/painel/api/conversas/${conversa}`)).json()).toMatchObject({
-        venda: { erro: expect.stringContaining('não está no registro do bot') },
-        podeCancelar: false,
-      });
+      expect((await pedir(`/painel/api/conversas/${conversa}`)).json()).toMatchObject({ venda: { erro: expect.any(String) }, podeCancelar: false });
       expect((await pedir(`/painel/api/conversas/${conversa}/cancelar`, 'POST')).statusCode).toBe(403);
     }
-    expect(detalhar).not.toHaveBeenCalled();
+    expect((await pedir('/painel/api/conversas/12')).json().venda.erro).toContain('nesta conversa');
     expect(vendas.canceladas.size).toBe(0);
   });
 
   it('ERP fora do ar: mostra o erro e não cancela', async () => {
     const { pedir, vendas } = await montar();
-    vendas.detalharVenda = async () => ({ status: 500, dados: null });
-    expect((await pedir('/painel/api/conversas/7')).json()).toMatchObject({ venda: { id: 1, erro: 'ERP respondeu 500' }, podeCancelar: false });
+    vendas.historico = async () => {
+      throw new TempoEsgotado('sem resposta');
+    };
+    expect((await pedir('/painel/api/conversas/7')).json()).toMatchObject({ venda: { id: 1, erro: 'o ERP não respondeu' }, podeCancelar: false });
     expect((await pedir('/painel/api/conversas/7/cancelar', 'POST')).statusCode).toBe(502);
     expect(vendas.canceladas.size).toBe(0);
   });
@@ -163,38 +160,45 @@ describe('painel Pedido RevGás', () => {
     expect(vendas.canceladas.has(1)).toBe(true);
   });
 
-
-  describe('pedidos de hoje (menu do Chatwoot)', () => {
-    it('lista só os pedidos de hoje em Teresina, do mais recente, com o número da conversa', async () => {
-      const { pedir } = await montar();
+  describe('pedidos de hoje e estoque (menu do Chatwoot)', () => {
+    it('lista as vendas do bot de hoje em Teresina, da mais recente, direto do ERP', async () => {
+      const { pedir, vendas } = await montar();
+      const conferir = vi.spyOn(vendas, 'historico');
       expect((await pedir('/painel/api/pedidos', 'GET', null)).statusCode).toBe(401);
       const d = (await pedir('/painel/api/pedidos')).json();
       expect(d.dia).toBe('2026-11-21');
-      expect(d.pedidos.map((p: PedidoRegistrado) => p.vendaId)).toEqual([2, 1]);
-      expect(d.pedidos[0]).toMatchObject({ nome: 'Cliente 2', conversaId: 10 });
+      expect(d.pedidos.map((p: { id: number }) => p.id)).toEqual([2, 1]); // sem a de ontem e sem a de outro estabelecimento
+      expect(d.pedidos[0]).toMatchObject({ cliente: 'Maria', conversaId: 10, total: 220, status: 'ACTIVE', podeCancelar: true });
       expect(d.pedidos[0]).not.toHaveProperty('link'); // o menu.js abre a conversa no endereço em uso
+      expect(conferir).not.toHaveBeenCalled(); // uma listagem só, sem consulta por pedido
     });
 
-    it('consulta a venda de um pedido do bot', async () => {
+    it('lista mostra as canceladas, sem oferecer cancelar de novo', async () => {
+      const { pedir, vendas } = await montar();
+      await vendas.cancelarVenda(1);
+      const d = (await pedir('/painel/api/pedidos')).json();
+      expect(d.pedidos.find((p: { id: number }) => p.id === 1)).toMatchObject({ status: 'CANCEL', podeCancelar: false });
+    });
+
+    it('consulta o histórico de uma venda do bot', async () => {
       const { pedir } = await montar();
-      expect((await pedir('/painel/api/vendas/2')).json()).toEqual({
-        venda: { id: 2, status: 'OPEN', total: 220, doEstabelecimento: true },
+      expect((await pedir('/painel/api/vendas/2')).json()).toMatchObject({
+        venda: { id: 2, status: 'ACTIVE', total: 220, doBot: true, logs: [{ status: 'OPEN' }] },
         podeCancelar: true,
       });
     });
 
-    it('não consulta nem cancela venda que o bot não registrou', async () => {
+    it('não mostra nem cancela venda que não é do bot', async () => {
       const { pedir, vendas } = await montar();
-      const detalhar = vi.spyOn(vendas, 'detalharVenda');
       expect((await pedir('/painel/api/vendas/4')).statusCode).toBe(404);
       expect((await pedir('/painel/api/vendas/4/cancelar', 'POST')).statusCode).toBe(404);
+      expect((await pedir('/painel/api/vendas/99')).statusCode).toBe(404);
       expect((await pedir('/painel/api/vendas/x')).statusCode).toBe(400);
       expect((await pedir('/painel/api/vendas/2', 'GET', 'errado')).statusCode).toBe(401);
-      expect(detalhar).not.toHaveBeenCalled();
       expect(vendas.canceladas.size).toBe(0);
     });
 
-    it('cancela pela lista e registra a nota na conversa daquele pedido', async () => {
+    it('cancela pela lista e registra a nota na conversa daquela venda', async () => {
       const { pedir, vendas, chatwoot } = await montar();
       const r = await pedir('/painel/api/vendas/2/cancelar', 'POST');
       expect(r.statusCode).toBe(200);
@@ -204,10 +208,17 @@ describe('painel Pedido RevGás', () => {
       expect((await pedir('/painel/api/vendas/2/cancelar', 'POST')).statusCode).toBe(409);
     });
 
-    it('não cancela pela lista venda de outro estabelecimento', async () => {
-      const { pedir, vendas } = await montar({ estabelecimentoDaVenda: 999 });
-      expect((await pedir('/painel/api/vendas/2/cancelar', 'POST')).statusCode).toBe(403);
-      expect(vendas.canceladas.size).toBe(0);
+    it('estoque: catálogo do bot com o estoque do ERP (inativo = 0; ausente = desconhecido)', async () => {
+      const { pedir, vendas } = await montar();
+      expect((await pedir('/painel/api/estoque')).json()).toEqual({ estoque: [{ codigo: 'P13', nome: 'Botijão de gás P13', estoque: null }] });
+      vendas.produtosErp = [{ id: 26717, descricao: 'GLP 13KG', estoque: 933, ativo: true }];
+      expect((await pedir('/painel/api/estoque')).json().estoque[0].estoque).toBe(933);
+      vendas.produtosErp = [{ id: 26717, descricao: 'GLP 13KG', estoque: 933, ativo: false }];
+      expect((await pedir('/painel/api/estoque')).json().estoque[0].estoque).toBe(0);
+      vendas.produtos = async () => {
+        throw new Error('ERP fora');
+      };
+      expect((await pedir('/painel/api/estoque')).statusCode).toBe(502);
     });
   });
 });
