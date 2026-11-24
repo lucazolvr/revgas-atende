@@ -6,16 +6,16 @@ A configuração do Metabase (conta, conexão, perguntas e painel) fica no banco
 
 ## De onde vêm os dados
 
-O bot grava no Postgres, no schema `revgas` (Tarefa 2, issue #34):
+O bot grava no Postgres, no banco `revgas`, schema `revgas` (Tarefa 2, issue #34, `scripts/revgas-db.sql`):
 
 | Tabela | Uma linha por | Colunas |
 |---|---|---|
-| `revgas.chamadas_api` | requisição à API RevGás | `em`, `metodo`, `rota` (normalizada, ex.: `/sales/:id`), `status`, `ms`, `venda_id`, `fila` (`venda` ou `consulta`) |
+| `revgas.chamadas_api` | requisição à API RevGás | `em`, `metodo`, `rota` (normalizada, ex.: `/sales/:id`), `status` (vazio quando a API não respondeu), `ms`, `venda_id`, `fila` (`venda` ou `consulta`) |
 | `revgas.eventos` | evento de atendimento | `em`, `conversa_id`, `tipo`, `estado`, `motivo`, `resultado`, `ms`, `ia` |
 
 Tipos de evento: `mensagem`, `transferencia` (com `motivo`), `venda` (com `resultado`), `erro`, `acompanhar`, `cancelamento` (com a origem em `resultado`) e `cliente_reconhecido`.
 
-Nenhuma das duas tabelas guarda nome, telefone, endereço ou texto de mensagem. O Metabase entra com o usuário `metabase_leitura`, que só tem `SELECT` no schema `revgas` e não enxerga os bancos do Chatwoot.
+Nenhuma das duas tabelas guarda nome, telefone, endereço ou texto de mensagem. O Metabase entra com o usuário `metabase_leitura`, que só conecta no banco `revgas`, só tem `SELECT` nas tabelas dele e não enxerga o banco do Chatwoot.
 
 ## Subir e configurar (uma vez por computador)
 
@@ -28,12 +28,12 @@ Nenhuma das duas tabelas guarda nome, telefone, endereço ou texto de mensagem. 
    | Nome de exibição | `RevGás (integração)` |
    | Host | `postgres` |
    | Porta | `5432` |
-   | Nome do banco de dados | `postgres` |
+   | Nome do banco de dados | `revgas` |
    | Nome de usuário | `metabase_leitura` |
    | Senha | o valor de `METABASE_DB_SENHA` no `.env` |
    | Schemas | "Somente estes…": `revgas` |
 
-4. Confira em **Admin → Tabelas** que só aparecem `chamadas_api` e `eventos`. Se aparecer qualquer tabela do Chatwoot, a conexão está com o usuário errado: corrija antes de seguir.
+4. Confira em **Admin → Tabelas** que só aparecem `chamadas_api` e `eventos`. Se aparecer qualquer tabela do Chatwoot, a conexão está com o banco ou o usuário errado: corrija antes de seguir.
 5. Para cada consulta abaixo: **Novo → Consulta SQL**, escolha o banco "RevGás (integração)", cole o SQL, escolha a visualização indicada e salve com o nome do título.
 6. Crie o painel **Novo → Painel → "Integração RevGás"**, adicione as oito perguntas e, no ícone de relógio do painel, ligue a **atualização automática a cada 1 minuto**.
 
@@ -64,7 +64,7 @@ Eixo X: `rota`; série: `status`; valor: `requisicoes`.
 
 ```sql
 select metodo || ' ' || rota as rota,
-       status::text          as status,
+       coalesce(status::text, 'sem resposta') as status,
        count(*)              as requisicoes
 from revgas.chamadas_api
 where em >= now() - interval '24 hours'
@@ -160,7 +160,7 @@ order by 2 desc;
 Sem abrir o Metabase, dá para ver se o bot está gravando:
 
 ```bash
-docker compose exec postgres psql -U postgres -c "select rota, status, ms from revgas.chamadas_api order by id desc limit 5"
+docker compose exec postgres psql -U postgres -d revgas -c "select rota, status, ms from revgas.chamadas_api order by id desc limit 5"
 ```
 
 ## Problemas comuns
@@ -168,7 +168,7 @@ docker compose exec postgres psql -U postgres -c "select rota, status, ms from r
 | Sintoma | Causa provável | O que fazer |
 |---|---|---|
 | `http://127.0.0.1:3003` não abre | O Metabase ainda está iniciando | Aguarde 1 a 2 minutos; `docker compose logs -f metabase` mostra "Metabase Initialization COMPLETE" |
-| Conexão recusada: "password authentication failed for user metabase_leitura" | Senha diferente da do `.env`, ou o usuário ainda não foi criado | Confira `METABASE_DB_SENHA`; o usuário é criado pelo `scripts/revgas-db.sql` da Tarefa 2 |
-| "relation revgas.chamadas_api does not exist" | O schema da Tarefa 2 ainda não foi criado neste computador | Rode `docker compose up -d` com a Tarefa 2 na `main` |
+| Conexão recusada: "password authentication failed for user metabase_leitura" | Senha diferente da do `.env`, ou o usuário ainda não foi criado | Confira `METABASE_DB_SENHA` e rode `docker compose up -d revgas-db`, que cria o usuário e reaplica a senha |
+| "database revgas does not exist" ou "relation revgas.chamadas_api does not exist" | O banco da Tarefa 2 ainda não foi criado neste computador | Rode `docker compose up -d revgas-db` |
 | Gráficos vazios | Nenhum pedido de teste nas últimas 24 horas | Faça um pedido pelo WhatsApp e espere a atualização de 1 minuto |
 | O painel não se atualiza sozinho | A atualização automática não foi ligada | Ícone de relógio no painel → 1 minuto |

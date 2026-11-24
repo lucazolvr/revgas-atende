@@ -189,6 +189,7 @@ services:
       - "127.0.0.1:3003:3000"
     depends_on:
       postgres: { condition: service_healthy }
+      revgas-db: { condition: service_completed_successfully } # cria o usuário metabase_leitura
     restart: unless-stopped
 
 volumes:

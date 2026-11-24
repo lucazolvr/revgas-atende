@@ -109,11 +109,11 @@ Ao atualizar a versão do Chatwoot, rode `npm run marca` para gerar o `marca/tem
 
 ### Painel de análise (Metabase)
 
-O painel **"Integração RevGás"** mostra ao vivo as requisições do bot à API RevGás (rota, status e tempo), a taxa de sucesso, as vendas por hora, os cancelamentos, os clientes reconhecidos e as transferências para atendente. Ele lê só as tabelas do schema `revgas` no Postgres, com o usuário `metabase_leitura`, sem acesso aos dados do Chatwoot, e essas tabelas não guardam nome, telefone, endereço nem texto de mensagem.
+O painel **"Integração RevGás"** mostra ao vivo as requisições do bot à API RevGás (rota, status e tempo), a taxa de sucesso, as vendas por hora, os cancelamentos, os clientes reconhecidos e as transferências para atendente. Ele lê só as tabelas do banco `revgas` no Postgres, com o usuário `metabase_leitura`, sem acesso aos dados do Chatwoot, e essas tabelas não guardam nome, telefone, endereço nem texto de mensagem.
 
 1. `docker compose up -d metabase` (na primeira vez, leva de 1 a 2 minutos para iniciar).
 2. Abra **http://127.0.0.1:3003**. Quem sobe o Metabase no próprio computador cria a conta de administrador; ela fica só nesse computador.
-3. Conecte ao Postgres (host `postgres`, banco `postgres`, usuário `metabase_leitura`, senha `METABASE_DB_SENHA` do `.env`) e monte o painel com as consultas de [docs/metabase.md](docs/metabase.md), que traz o passo a passo e o SQL de cada gráfico.
+3. Conecte ao Postgres (host `postgres`, banco `revgas`, usuário `metabase_leitura`, senha `METABASE_DB_SENHA` do `.env`) e monte o painel com as consultas de [docs/metabase.md](docs/metabase.md), que traz o passo a passo e o SQL de cada gráfico.
 
 O Metabase usa até ~1 GB de memória (Java limitado a 768 MB). Em computadores com pouca RAM para o Docker, suba-o só quando for usar e pare com `docker compose stop metabase`.
 
