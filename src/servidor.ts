@@ -19,6 +19,8 @@ export type DepsServidor = {
   catalogo: Produto[];
   interpretadorPara: (telefone: string) => Interpretador | null;
   registrar: (p: Pedido) => Promise<ResultadoRegistro>;
+  /** Nome e endereço do último pedido desse telefone (cliente que volta não repete tudo). */
+  clienteAnterior?: (telefone: string) => Promise<Pick<Pedido, 'nome' | 'endereco'> | null>;
   responderDuvida?: (texto: string) => Promise<string | null>;
   /** Lista de pedidos do dia ("Pedidos de hoje" no menu do Chatwoot). */
   pedidos?: Pick<RegistroPedidos, 'adicionar'>;
@@ -49,7 +51,7 @@ export function criarServidor(deps: DepsServidor) {
     if (!msg.texto) return deps.chatwoot.responder(msg.conversaId, M.SO_TEXTO);
     const inicio = Date.now();
     const interpretador = deps.interpretadorPara(msg.telefone);
-    const sessao = (await deps.sessoes.obter(msg.conversaId)) ?? novaSessao(msg.telefone);
+    const sessao = (await deps.sessoes.obter(msg.conversaId)) ?? novaSessao(msg.telefone, (await clienteAnterior(msg.telefone)) ?? {});
     const { sessao: nova, acoes } = await processar(sessao, msg.texto, {
       catalogo: deps.catalogo,
       interpretador,
@@ -79,6 +81,16 @@ export function criarServidor(deps: DepsServidor) {
       ms: Date.now() - inicio,
       ia: interpretador !== null,
     });
+  }
+
+  /** Melhor esforço: sem o histórico (API fora do ar), o pedido só começa do zero. */
+  async function clienteAnterior(telefone: string) {
+    try {
+      return (await deps.clienteAnterior?.(telefone)) ?? null;
+    } catch (e) {
+      app.log.warn({ erro: e instanceof Error ? e.message : 'desconhecido' }, 'falha ao buscar o último pedido do cliente');
+      return null;
+    }
   }
 
   /** Melhor esforço: o cliente já recebeu a resposta; uma falha aqui não pode virar "falha ao atender". */

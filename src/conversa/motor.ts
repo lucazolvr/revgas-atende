@@ -168,7 +168,7 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
   }
 
   if (inicio) {
-    if (ia?.intencao !== 'duvida') responder(M.BOAS_VINDAS);
+    if (ia?.intencao !== 'duvida') responder(s.pedido.nome ? M.boasVindasDeVolta(s.pedido) : M.BOAS_VINDAS);
   } else if (!avancou) {
     return falhou(M.NAO_ENTENDI + pergunta(s, cat));
   }

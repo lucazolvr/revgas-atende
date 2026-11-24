@@ -15,6 +15,7 @@ function montar(
   numerosIa: string[] = [],
   limites?: { porConversa?: number; global?: number; janelaMs?: number; filasMaximas?: number },
   pedidos?: { adicionar: (p: never) => Promise<void> },
+  comHistorico = false,
 ) {
   const api = new ApiRevGasFalsa();
   const chatwoot = {
@@ -35,6 +36,7 @@ function montar(
     limites,
     pedidos,
     registrar: (p) => registrarVenda(api, corpoDaVenda(p, catalogo, { clienteId: 1, estabelecimentoId: 1 })),
+    clienteAnterior: comHistorico ? (t) => api.ultimoCliente(t) : undefined,
   });
   const enviar = (texto: string, conversa: Record<string, unknown> = {}) =>
     app.inject({ method: 'POST', url: `/webhook/${TOKEN}`, payload: webhook(texto, {}, conversa) });
@@ -155,6 +157,26 @@ describe('servidor', () => {
       for (const m of [...PEDIDO, '1']) await enviar(m, { id: 8 }); // outro cliente, outra conversa
       await ocioso();
       expect(chatwoot.responder).toHaveBeenLastCalledWith(8, expect.stringContaining('Pedido registrado'));
+    });
+
+    it('cliente que volta em outra conversa não repete nome e endereço', async () => {
+      const { ocioso, chatwoot, enviar } = montar([], undefined, undefined, true);
+      for (const m of [...PEDIDO, '1']) await enviar(m);
+      await ocioso();
+      for (const m of ['oi', '1', '1', '1']) await enviar(m, { id: 9 }); // P13, 1 unidade, PIX
+      await ocioso();
+      const respostas = (chatwoot.responder.mock.calls as unknown as [number, string][]).filter(([id]) => id === 9).map(([, t]) => t);
+      expect(respostas[0]).toContain('Olá de novo, Maria');
+      expect(respostas[0]).toContain('Rua Nova, 10 - Centro, Teresina/PI');
+      expect(respostas.at(-1)).toContain('Confira seu pedido');
+    });
+
+    it('falha ao buscar o histórico só começa o pedido do zero', async () => {
+      const { ocioso, api, chatwoot, enviar } = montar([], undefined, undefined, true);
+      api.ultimoCliente = async () => { throw new Error('API fora'); };
+      await enviar('oi');
+      await ocioso();
+      expect(chatwoot.responder).toHaveBeenCalledWith(7, expect.stringContaining('Qual é o seu nome'));
     });
 
     it('transferência grava o que já foi coletado', async () => {

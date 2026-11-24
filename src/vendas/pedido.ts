@@ -1,3 +1,4 @@
+import { chaveTelefone } from '../config.js';
 import type { FormaPagamento, Produto } from './catalogo.js';
 
 export type Endereco = {
@@ -56,6 +57,28 @@ export function totalCentavos(p: Pedido, cat: Produto[]): number {
   const produto = produtoDo(p, cat);
   if (!produto || !p.quantidade) throw new Error('pedido sem produto ou quantidade');
   return produto.precoCentavos * p.quantidade;
+}
+
+/** Venda como a API devolve na listagem (só o que serve para reconhecer o cliente). */
+export type VendaListada = {
+  establishment_id?: number;
+  observation?: string | null;
+  location?: string;
+  number?: string;
+  neighborhood?: string;
+  city?: string;
+  state_federation?: string;
+};
+
+/**
+ * Nome e endereço do cliente numa venda criada pelo bot. O nome e o telefone estão na observação
+ * (ver corpoDaVenda). `null` = a venda não é desse telefone.
+ */
+export function clienteDaVenda(v: VendaListada, telefone: string): Pick<Pedido, 'nome' | 'endereco'> | null {
+  const m = v.observation?.match(/Cliente: (.+?) \+?(\d{10,13})\./);
+  if (!m || chaveTelefone(m[2]!) !== chaveTelefone(telefone)) return null;
+  const endereco = { logradouro: v.location, numero: v.number, bairro: v.neighborhood, cidade: v.city, uf: v.state_federation };
+  return { nome: m[1]!.trim(), ...(CAMPOS_ENDERECO.every((c) => endereco[c]?.trim()) && { endereco: endereco as Endereco }) };
 }
 
 export function corpoDaVenda(

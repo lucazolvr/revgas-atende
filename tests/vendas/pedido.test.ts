@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { carregarCatalogo } from '../../src/vendas/catalogo.js';
-import { corpoDaVenda, formatarReais, totalCentavos, type Pedido } from '../../src/vendas/pedido.js';
+import { clienteDaVenda, corpoDaVenda, formatarReais, totalCentavos, type Pedido } from '../../src/vendas/pedido.js';
 
 const cat = carregarCatalogo();
 const ids = { clienteId: 99, estabelecimentoId: 2580 };
@@ -59,5 +59,33 @@ describe('pedido', () => {
 
   it('recusa pedido incompleto', () => {
     expect(() => corpoDaVenda({ telefone: '1' }, cat, ids)).toThrow();
+  });
+});
+
+describe('clienteDaVenda', () => {
+  const venda = {
+    observation: 'Pedido via WhatsApp (RevGás Atende). Cliente: Maria Silva 5586999990000. Troco para R$ 200,00.',
+    location: 'Rua Nova', number: '10', neighborhood: 'Centro', city: 'Teresina', state_federation: 'PI',
+  };
+
+  it('lê nome e endereço da venda do mesmo telefone (com ou sem o 9 extra)', () => {
+    expect(clienteDaVenda(venda, '558699990000')).toEqual({
+      nome: 'Maria Silva',
+      endereco: { logradouro: 'Rua Nova', numero: '10', bairro: 'Centro', cidade: 'Teresina', uf: 'PI' },
+    });
+  });
+
+  it('outro telefone ou venda que não é do bot → null', () => {
+    expect(clienteDaVenda(venda, '5586988887777')).toBeNull();
+    expect(clienteDaVenda({ ...venda, observation: 'venda no balcão' }, '5586999990000')).toBeNull();
+  });
+
+  it('endereço incompleto: só o nome', () => {
+    expect(clienteDaVenda({ ...venda, city: '' }, '5586999990000')).toEqual({ nome: 'Maria Silva' });
+  });
+
+  it('o corpo que o bot envia é lido de volta', () => {
+    const c = corpoDaVenda(pedido, cat, ids);
+    expect(clienteDaVenda({ ...c, establishment_id: c.establishment_id }, pedido.telefone)).toEqual({ nome: 'Maria', endereco: pedido.endereco });
   });
 });

@@ -8,7 +8,7 @@ import { criarServidor } from './servidor.js';
 import { configurarMetricas } from './metricas.js';
 import { RegistroPedidosMemoria, RegistroPedidosRedis } from './painel/pedidos.js';
 import { registrarPainel } from './painel/rotas.js';
-import { ApiRevGasFalsa, ApiRevGasHttp, type ApiRevGas, type ConsultaVendas } from './vendas/api-revgas.js';
+import { ApiRevGasFalsa, ApiRevGasHttp, type ApiRevGas, type BuscaCliente, type ConsultaVendas } from './vendas/api-revgas.js';
 import { carregarCatalogo } from './vendas/catalogo.js';
 import { corpoDaVenda } from './vendas/pedido.js';
 import { registrarVenda } from './vendas/registrar.js';
@@ -18,9 +18,9 @@ for (const aviso of config.avisos) console.warn(`⚠  ${aviso}`);
 configurarMetricas(config.METRICAS_RETENCAO_DIAS);
 const catalogo = carregarCatalogo();
 
-let api: ApiRevGas & ConsultaVendas;
+let api: ApiRevGas & ConsultaVendas & BuscaCliente;
 if (config.VENDA_REAL) {
-  api = new ApiRevGasHttp(config.REVGAS_API_URL, config.REVGAS_API_KEY!);
+  api = new ApiRevGasHttp(config.REVGAS_API_URL, config.REVGAS_API_KEY!, { estabelecimentoId: config.REVGAS_ESTABELECIMENTO });
   console.warn('\n⚠  VENDA REAL LIGADA: cada pedido confirmado cria uma venda de verdade no ERP RevGás.\n');
 } else {
   api = new ApiRevGasFalsa();
@@ -60,6 +60,7 @@ const { app, ocioso } = criarServidor({
     gemini && (iaParaTodos || config.NUMEROS_IA.includes(chaveTelefone(telefone))) ? gemini : null,
   responderDuvida: (texto) => conhecimento?.responder(texto) ?? Promise.resolve(null),
   registrar: (p) => registrarVenda(api, corpoDaVenda(p, catalogo, ids)),
+  clienteAnterior: (telefone) => api.ultimoCliente(telefone),
   pedidos,
 });
 

@@ -28,6 +28,7 @@ const esquema = z
     REDIS_URL: opcional,
     GEMINI_API_KEY: opcional,
     // O Google aposenta modelos com frequência: troque aqui sem mexer no código.
+    // Lista separada por vírgula = reservas: se o primeiro falhar (ex.: 503 de sobrecarga), tenta o próximo.
     GEMINI_MODELO: z.string().trim().min(1).default('gemini-3.1-flash-lite'),
     NUMEROS_IA: z
       .string()
