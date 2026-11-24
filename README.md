@@ -107,6 +107,16 @@ O Chatwoot é open source (MIT), e a marca personaliza o painel **sem fork e sem
 
 Ao atualizar a versão do Chatwoot, rode `npm run marca` para gerar o `marca/tema.css` de novo e faça commit dele.
 
+### Painel de análise (Metabase)
+
+O painel **"Integração RevGás"** mostra ao vivo as requisições do bot à API RevGás (rota, status e tempo), a taxa de sucesso, as vendas por hora, os cancelamentos, os clientes reconhecidos e as transferências para atendente. Ele lê só as tabelas do banco `revgas` no Postgres, com o usuário `metabase_leitura`, sem acesso aos dados do Chatwoot, e essas tabelas não guardam nome, telefone, endereço nem texto de mensagem.
+
+1. `docker compose up -d metabase` (na primeira vez, leva de 1 a 2 minutos para iniciar).
+2. Abra **http://127.0.0.1:3003**. Quem sobe o Metabase no próprio computador cria a conta de administrador; ela fica só nesse computador.
+3. Crie uma chave de API no Metabase (Admin → Configurações → Autenticação → Chaves de API, grupo Administradores), coloque-a em `METABASE_API_KEY` no `.env` e rode `npm run metabase:painel`: ele conecta ao banco `revgas` com o usuário `metabase_leitura` e monta o painel com as consultas de [docs/metabase.md](docs/metabase.md), que também traz o passo a passo manual e o SQL de cada gráfico.
+
+O Metabase usa cerca de 1,5 GB de memória, mesmo com o Java limitado a 1 GB. Em computadores com pouca RAM para o Docker, suba-o só quando for usar e pare com `docker compose stop metabase`.
+
 **IA:** coloque `GEMINI_API_KEY` (cota grátis do [Google AI Studio](https://aistudio.google.com/)) e, em `NUMEROS_IA`, os números que usam a IA (separados por vírgula) ou `*` para todos, como no cenário da demo. Os números fora da lista são atendidos pelos menus, e os menus também são o caminho de reserva quando a IA demora ou falha. Na cota grátis o Google pode usar as mensagens: avise quem for testar.
 
 **Segurança:** mantenha o bot apenas na rede interna do Docker, use um `BOT_WEBHOOK_TOKEN` aleatório com ao menos 32 caracteres e troque-o se ele aparecer em logs ou configurações expostas. O bot limita rajadas de mensagens e as métricas sem conteúdo de conversa expiram em 90 dias por padrão (`METRICAS_RETENCAO_DIAS`).
