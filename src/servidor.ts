@@ -7,6 +7,7 @@ import { novaSessao, processar, type Acao, type Sessao } from './conversa/motor.
 import type { Sessoes } from './conversa/sessoes.js';
 import type { Interpretador } from './ia/interpretacao.js';
 import { registrarEvento } from './metricas.js';
+import { responderFaq } from './conhecimento/palavras.js';
 import type { BuscaCliente, ConsultaErp, ConsultaVendas } from './vendas/api-revgas.js';
 import { estoqueDoCatalogo, type Produto } from './vendas/catalogo.js';
 import type { Pedido } from './vendas/pedido.js';
@@ -68,7 +69,8 @@ export function criarServidor(deps: DepsServidor) {
       },
       // A mesma regra de privacidade da interpretação vale para o RAG: fora de
       // NUMEROS_IA não enviamos a pergunta ao Gemini e o motor usa o fallback.
-      responderDuvida: interpretador ? deps.responderDuvida : undefined,
+      responderDuvida: async (texto) => responderFaq(texto, deps.catalogo) ??
+        (interpretador ? (await deps.responderDuvida?.(texto)) ?? null : null),
       ...consultasDoCliente(msg),
     });
     // Depois de passar para um humano, se a conversa voltar ao bot começa um pedido novo

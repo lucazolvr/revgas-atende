@@ -191,6 +191,21 @@ describe('motor da conversa (com IA)', () => {
   });
 });
 
+describe('IA como último recurso', () => {
+  it('não chama IA para pedido completo e chama uma vez para texto incompreensível', async () => {
+    const interpretar = vi.fn(async () => null);
+    const d = deps({ interpretador: { interpretar } });
+    const inicio = novaSessao('5586999990000', { nome: 'Maria' });
+    const pedido = await processar(inicio, '2 botijão no pix pra Rua Nova, 10, Centro, Teresina', d);
+    expect(pedido.sessao.estado).toBe('RESUMO');
+    expect(interpretar).toHaveBeenCalledTimes(0);
+
+    const incompreensivel = await processar({ ...pedido.sessao, estado: 'PRODUTO' }, 'hmm sei lá', d);
+    expect(interpretar).toHaveBeenCalledTimes(1);
+    expect(incompreensivel.sessao.estado).toBe('PRODUTO');
+  });
+});
+
 describe('recomendações da avaliação (issue #2)', () => {
   const atePagamento = ['oi', '1', 'Maria', '1', '2', 'Rua Nova', '10', 'Centro', 'Teresina'];
 

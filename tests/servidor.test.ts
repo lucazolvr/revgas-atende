@@ -15,6 +15,7 @@ function montar(
   numerosIa: string[] = [],
   limites?: { porConversa?: number; global?: number; janelaMs?: number; filasMaximas?: number },
   comHistorico = false,
+  responderDuvida?: (texto: string) => Promise<string | null>,
 ) {
   const api = new ApiRevGasFalsa();
   const chatwoot = {
@@ -32,6 +33,7 @@ function montar(
     sessoes: new SessoesMemoria(),
     catalogo,
     interpretadorPara,
+    responderDuvida,
     limites,
     registrar: (p, conversaId) => registrarVenda(api, corpoDaVenda(p, catalogo, { clienteId: 1, estabelecimentoId: 1, conversaId })),
     clienteAnterior: comHistorico ? (t) => api.ultimoCliente(t) : undefined,
@@ -85,6 +87,23 @@ describe('servidor', () => {
     await ocioso();
     expect(interpretadorPara).toHaveBeenCalledWith('5586999990000');
     expect(interpretadorPara.mock.results[0]!.value).not.toBeNull();
+  });
+
+  it('responde palavras-chave antes do RAG e usa RAG como reserva para números habilitados', async () => {
+    const rag = vi.fn(async () => 'Resposta da base sem palavra-chave.');
+    const { ocioso, chatwoot, enviar } = montar(['5586999990000'], undefined, false, rag);
+    await enviar('oi');
+    await enviar('4');
+    await enviar('qual o preço do gás?');
+    await ocioso();
+    expect(chatwoot.responder).toHaveBeenCalledWith(7, expect.stringContaining('R$ 110,00'));
+    expect(rag).not.toHaveBeenCalled();
+
+    await enviar('4');
+    await enviar('qual a capital da França?');
+    await ocioso();
+    expect(rag).toHaveBeenCalledWith('qual a capital da França?');
+    expect(chatwoot.responder).toHaveBeenLastCalledWith(7, expect.stringContaining('Resposta da base'));
   });
 
   it('áudio sem texto recebe pedido para escrever', async () => {

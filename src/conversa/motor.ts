@@ -5,6 +5,7 @@ import type { HistoricoVenda, SituacaoRevenda, VendaResumo } from '../vendas/api
 import type { ResultadoRegistro } from '../vendas/registrar.js';
 import { ehEmergencia, normalizar, pedeCancelar, pedeHumano } from './emergencia.js';
 import * as M from './mensagens.js';
+import { extrairRegras, separarEndereco } from './regras.js';
 
 export type Estado =
   | 'INICIO' | 'NOME' | 'PRODUTO' | 'QUANTIDADE' | 'ENDERECO' | 'PAGAMENTO' | 'TROCO' | 'RESUMO' | 'CORRIGIR' | 'REGISTRADO'
@@ -249,10 +250,39 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
   // "menu" ou "voltar" em qualquer etapa: o pedido em andamento fica guardado.
   if (pedeMenu(texto)) return irMenu();
 
+  // Pedido completo em texto livre: aplica primeiro as regras e evita qualquer chamada à IA.
+  if (s.estado === 'INICIO' && s.pedido.nome && parecePedido(texto)) {
+    const campos = extrairRegras(texto, cat);
+    const enderecoTexto = texto.match(/\b(?:pra|para)\s+(.+)$/i)?.[1];
+    const endereco = enderecoTexto ? separarEndereco(enderecoTexto) : null;
+    Object.assign(s.pedido, campos);
+    if (endereco) s.pedido.endereco = { ...s.pedido.endereco, ...endereco };
+    if (campos.produto || campos.quantidade || campos.pagamento || endereco) {
+      if (await revendaFechada()) return irMenu(M.REVENDA_FECHADA);
+      completarUf(s.pedido);
+      if (s.pedido.nome) return comecarPedido();
+      responder(M.BOAS_VINDAS);
+      s.estado = 'NOME';
+      responder(M.PERGUNTA_NOME);
+      return fim();
+    }
+  }
+
   // Números de menu não gastam chamada de IA.
   // A IA precisa saber qual parte do endereço foi perguntada: sem isso, "Dirceu" (o bairro) virava a rua.
   const etapa = s.estado === 'ENDERECO' ? `ENDERECO (pergunta atual: ${CAMPOS_ENDERECO.find((c) => !s.pedido.endereco?.[c])})` : s.estado;
-  let ia = deps.interpretador && !SEM_IA.includes(s.estado) && !/^\s*\d+\s*$/.test(texto)
+  const regrasExtraidas = extrairRegras(texto, cat);
+  const regrasDaMensagem = Object.fromEntries(
+    Object.entries(regrasExtraidas).filter(([campo]) =>
+      s.pedido[campo as keyof Pedido] === undefined && !(s.estado === 'PRODUTO' && campo === 'quantidade' && /^\s*\d+\s*$/.test(texto)),
+    ),
+  ) as ReturnType<typeof extrairRegras>;
+  const enderecoDaMensagem = s.estado === 'ENDERECO' && CAMPOS_ENDERECO.every((c) => !s.pedido.endereco?.[c])
+    ? separarEndereco(texto.match(/\b(?:pra|para)\s+(.+)$/i)?.[1] ?? texto)
+    : null;
+  const regraResolveEtapa = !['INICIO', 'MENU', 'NOME'].includes(s.estado) && (Object.keys(regrasDaMensagem).length > 0 || !!enderecoDaMensagem);
+  let ia = deps.interpretador && !SEM_IA.includes(s.estado) && !/^\s*\d+\s*$/.test(texto) &&
+    !regraResolveEtapa
     ? await deps.interpretador.interpretar(texto, etapa)
     : null;
 
@@ -400,7 +430,14 @@ export async function processar(anterior: Sessao, texto: string, deps: Deps): Pr
 
   // Daqui em diante: as etapas do pedido (NOME ... TROCO).
   const lista = s.estado === 'PRODUTO' ? await disponiveis() : cat;
-  let avancou = ia ? aplicarEntidades(s.pedido, ia.entidades) : false;
+  const camposRegra = regrasDaMensagem;
+  let avancou = false;
+  if (s.estado !== 'NOME' && Object.keys(camposRegra).length) avancou = aplicarEntidades(s.pedido, camposRegra as Interpretacao['entidades']);
+  if (s.estado === 'ENDERECO' && CAMPOS_ENDERECO.every((c) => !s.pedido.endereco?.[c])) {
+    const endereco = enderecoDaMensagem;
+    if (endereco) { s.pedido.endereco = { ...s.pedido.endereco, ...endereco }; avancou = true; }
+  }
+  if (!avancou) avancou = ia ? aplicarEntidades(s.pedido, ia.entidades) : false;
   if (!avancou) {
     const r = aplicarTexto(s, texto, cat, lista);
     if (typeof r === 'string') return s.estado === 'PRODUTO' ? falhou(r + '\n' + M.menuProdutos(lista)) : falhou(r);
